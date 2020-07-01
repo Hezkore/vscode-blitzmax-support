@@ -12,8 +12,9 @@ More information about how to develop a debug adapter can be found
 
 The LSP is written in BlitzMax NG and uses [JSON-RPC 2.0](https://www.jsonrpc.org/specification).
 Use the [LSP inspector](https://microsoft.github.io/language-server-protocol/inspector/) sample.log to get a clearer picture of how this works.
-More LSP information can be found
+More VS Code LSP information can be found
 [here](https://code.visualstudio.com/api/language-extensions/language-server-extension-guide).
+And the LSP specifications [here](https://microsoft.github.io/language-server-protocol/specifications/specification-current/).
 
 
 Or discuss this proof of concept on Discord: [![Discord Chat](https://img.shields.io/discord/613699895139762176.svg?logo=discord&style=social)](https://discord.gg/DrrVwhz)

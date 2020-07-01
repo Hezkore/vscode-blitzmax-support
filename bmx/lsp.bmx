@@ -1,6 +1,7 @@
 SuperStrict
 
 Framework brl.standardio
+Import text.JConv
 
 Global stream:TStream = WriteStream("lsp-output.txt")
 OnEnd(CleanUp)
@@ -34,25 +35,52 @@ Wend
 
 Function ProcessContent(content:String)
 	Log("Processing: " + content)
+	
+	' Convert into a type we can easily read
+	Local json:String = content
+	Local jconv:TJConv = New TJConvBuilder.Build()
+	Local jrequest:TRequest = TRequest(jconv.FromJson(json, "TRequest"))
+	
+	' Debug output of the type again..
+	Log("Debug Type:")
+	Log(jconv.ToJson(jrequest))
 
 	Local result:String = "{~qjsonrpc~q:~q2.0~q, ~qid~q:0}" ' Bare minimum repsonse it seems
 	ToVSCode(result)
 EndFunction
 
 Function ToVSCode(content:String)
+	
 	StandardIOStream.WriteString("Content-Length: " + content.Length + Chr(10) + Chr(10))
 	Log("SENT: " + "Content-Length: " + content.Length)
+	
 	StandardIOStream.WriteString(content)
 	Log("Response: " + content)
+	
 	StandardIOStream.Flush()
 EndFunction
 
 Function CleanUp()
+	
 	Log("EOF")
 	CloseStream(stream)
 EndFunction
 
 Function Log(str:String)
+	
 	WriteLine(stream, str)
 	stream.Flush()
 EndFunction
+
+Type TRequest
+	Field _jsonrpc:String { serializedName = "jsonrpc" }
+	Field _id:Int { serializedName = "id" }
+	Field _method:String { serializedName = "method" }
+	Field _params:TRequestParams { serializedName = "params" }
+EndType
+
+Type TRequestParams
+    Field _processId:Int { serializedName = "processId" }
+	Field _rootPath:String { serializedName = "rootPath" }
+	Field _rootUri:String { serializedName = "rootUri" }
+End Type

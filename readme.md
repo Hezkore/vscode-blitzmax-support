@@ -6,9 +6,15 @@ The LSP and debug adapter are both incomplete and will not work as intended.
 The sample is meant as an educational piece showing how to implement a BlitzMax debug
 adapter and LSP  client for VS Code. It can be used as a starting point for developing a real adapter and LSP.
 
-More information about how to develop a new debug adapter can be found
-[here](https://code.visualstudio.com/docs/extensions/example-debuggers). LSP information can be found
+The debugger is a standard VS Code debug adapter.
+More information about how to develop a debug adapter can be found
+[here](https://code.visualstudio.com/docs/extensions/example-debuggers).
+
+The LSP is written in BlitzMax NG and uses [JSON-RPC 2.0](https://www.jsonrpc.org/specification).
+Use the [LSP inspector](https://microsoft.github.io/language-server-protocol/inspector/) sample.log to get a clearer picture of how this works.
+More LSP information can be found
 [here](https://code.visualstudio.com/api/language-extensions/language-server-extension-guide).
+
 
 Or discuss this proof of concept on Discord: [![Discord Chat](https://img.shields.io/discord/613699895139762176.svg?logo=discord&style=social)](https://discord.gg/DrrVwhz)
 
@@ -16,7 +22,8 @@ Or discuss this proof of concept on Discord: [![Discord Chat](https://img.shield
 
 ## Build and Run
 
-* Make sure any previous BlitzMax extensions are disabled or uninstalled.
+* Make sure any previous BlitzMax VS Code extensions are disabled or uninstalled.
+* Make sure you have [Node.js](https://nodejs.org/) installed.
 * Clone the project [https://github.com/Hezkore/vscode-blitzmax-concept.git](https://github.com/Hezkore/vscode-blitzmax-concept.git)
 * Open the project folder in VS Code.
 * Type `npm install` in the terminal.

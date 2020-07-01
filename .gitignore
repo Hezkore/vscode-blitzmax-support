@@ -1,0 +1,15 @@
+/.travis.yml
+/.vscode
+/.vscodeignore
+/appveyor.yml
+/bmx
+/CHANGELOG.md
+/images
+/language-configuration.json
+/node_modules
+/out
+/package-lock.json
+/package.json
+/src
+/syntaxes
+/yarn.lock

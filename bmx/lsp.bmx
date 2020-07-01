@@ -3,6 +3,8 @@ SuperStrict
 Framework brl.standardio
 Import text.JConv
 
+Import "trequest.bmx"
+
 Global stream:TStream = WriteStream("lsp-output.txt")
 OnEnd(CleanUp)
 
@@ -44,7 +46,7 @@ Function ProcessContent(content:String)
 	' Debug output of the type again..
 	Log("Debug Type:")
 	Log(jconv.ToJson(jrequest))
-
+	
 	Local result:String = "{~qjsonrpc~q:~q2.0~q, ~qid~q:0}" ' Bare minimum repsonse it seems
 	ToVSCode(result)
 EndFunction
@@ -71,16 +73,3 @@ Function Log(str:String)
 	WriteLine(stream, str)
 	stream.Flush()
 EndFunction
-
-Type TRequest
-	Field _jsonrpc:String { serializedName = "jsonrpc" }
-	Field _id:Int { serializedName = "id" }
-	Field _method:String { serializedName = "method" }
-	Field _params:TRequestParams { serializedName = "params" }
-EndType
-
-Type TRequestParams
-    Field _processId:Int { serializedName = "processId" }
-	Field _rootPath:String { serializedName = "rootPath" }
-	Field _rootUri:String { serializedName = "rootUri" }
-End Type

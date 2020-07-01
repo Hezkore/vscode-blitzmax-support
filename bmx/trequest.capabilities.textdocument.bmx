@@ -1,0 +1,5 @@
+SuperStrict
+
+Type TRequestCapabilitiesTextDocument
+	
+EndType

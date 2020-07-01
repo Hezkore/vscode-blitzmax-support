@@ -12,3 +12,6 @@ bmx/.vscode
 npm-debug.log
 bmx-debug.txt
 lsp-output.txt
+*.BLIdeUS
+*.BLIdeUS.*
+*.blpo

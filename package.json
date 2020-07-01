@@ -1,0 +1,179 @@
+{
+	"name": "blitzmax",
+	"displayName": "BlitzMax",
+	"version": "0.0.1",
+	"publisher": "Hezkore",
+	"description": "BlitzMax IntelliSense, debugging, and code browsing.",
+	"author": {
+		"name": "Hezkore",
+		"email": "Hezkore@GMail.com"
+	},
+	"license": "MIT",
+	"keywords": [
+		"multi-root ready",
+		"BlitzMax",
+		"BlitzMax NG",
+		"bmax",
+		"bmx"
+	],
+	"engines": {
+		"vscode": "^1.46.0"
+	},
+	"icon": "images/blitzmax-icon.png",
+	"categories": [
+		"Programming Languages",
+		"Formatters",
+		"Debuggers",
+		"Snippets",
+		"Other"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Hezkore/vscode-blitzmax-concept"
+	},
+	"bugs": {
+		"url": "https://github.com/Hezkore/vscode-blitzmax-concept/issues"
+	},
+	"scripts": {
+		"vscode:prepublish": "yarn run compile",
+		"compile": "tsc -p ./src",
+		"lint": "eslint src --ext ts",
+		"watch": "tsc -watch -p ./src",
+		"pretest": "yarn run compile && yarn run lint",
+		"test": "node ./out/test/runTest.js",
+		"package": "vsce package",
+		"publish": "vsce publish"
+	},
+	"dependencies": {
+		"await-notify": "1.0.1",
+		"vscode-debugadapter": "1.41.0",
+		"vscode-languageclient": "^6.1.3"
+	},
+	"devDependencies": {
+		"@types/vscode": "^1.46.0",
+		"@types/glob": "^7.1.2",
+		"@types/mocha": "^7.0.2",
+		"@types/node": "^14.0.14",
+		"eslint": "^7.3.1",
+		"@typescript-eslint/parser": "^3.5.0",
+		"@typescript-eslint/eslint-plugin": "^3.5.0",
+		"glob": "^7.1.6",
+		"mocha": "^8.0.1",
+		"typescript": "^3.9.5",
+		"vscode-test": "^1.4.0",
+		"vscode-debugadapter-testsupport": "1.41.0",
+		"vsce": "1.77.0"
+	},
+	"main": "./out/extension",
+	"activationEvents": [
+		"onDebug",
+		"onDebugDynamicConfigurations:bmx",
+		"onLanguage:blitzmax"
+	],
+	"contributes": {
+		"languages": [
+			{
+				"id": "blitzmax",
+				"extensions": [
+					".bmx"
+				],
+				"aliases": [
+					"BlitzMax NG",
+					"BlitzMax",
+					"bmx"
+				],
+				"configuration": "./language-configuration.json"
+			}
+		],
+		"grammars": [
+			{
+				"language": "blitzmax",
+				"scopeName": "source.bmx",
+				"path": "./syntaxes/blitzmax.json"
+			}
+		],
+		"problemMatchers": [
+			{
+				"name": "blitzmax",
+				"owner": "blitzmax",
+				"source": "BlitzMax",
+				"fileLocation": "absolute",
+				"label": "The standard BlitzMax problem matcher",
+				"background": {
+					"beginsPattern": ".",
+					"endsPattern": "."
+				},
+				"pattern": [
+					{
+						"regexp": "^Compile (Error|Warning)?: (.*)",
+						"message": 2,
+						"severity": 1
+					},
+					{
+						"regexp": "^\\[(.*.bmx);(\\d+);(\\d+)]",
+						"file": 1,
+						"line": 2,
+						"endColumn": 3
+					}
+				]
+			}
+		],
+		"debuggers": [
+			{
+				"type": "bmx",
+				"label": "BlitzMax Debug",
+				"program": "./out/debug/debug.js",
+				"configurationAttributes": {
+					"launch": {
+						"required": [
+							"source"
+						],
+						"properties": {
+							"source": {
+								"type": "string",
+								"description": "Absolute path to a BlitzMax .bmx file or executable.",
+								"default": "${file}"
+							},
+							"trace": {
+								"type": "boolean",
+								"description": "Enable logging.",
+								"default": false
+							}
+						}
+					}
+				},
+				"initialConfigurations": [
+					{
+						"type": "bmx",
+						"name": "Default BlitzMax debug",
+						"request": "launch",
+						"source": "${file}"
+					}
+				],
+				"configurationSnippets": [
+					{
+						"label": "BlitzMax Debug",
+						"description": "A new configuration for debugging a BlitzMax .bmx file.",
+						"body": {
+							"type": "bmx",
+							"name": "Default BlitzMax debug",
+							"request": "launch",
+							"source": "${file}"
+						}
+					}
+				]
+			}
+		],
+		"configuration": {
+			"type": "object",
+			"title": "BlitzMax",
+			"properties": {
+				"blitzmax.lsp.path": {
+					"type": "string",
+					"description": "Absolute path to LSP executable.",
+					"scope": "resource"
+				}
+			}
+		}
+	}
+}

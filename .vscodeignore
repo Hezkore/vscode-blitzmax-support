@@ -1,0 +1,17 @@
+.vscode/**/*
+.gitignore
+.travis.yml
+appveyor.yml
+.vscode/**
+.vscode-test/**
+out/test/**
+test/**
+src/**
+**/*.map
+.gitignore
+tsconfig.json
+vsc-extension-quickstart.md
+modules-*.json
+npm-debug.log
+bmx-debug.txt
+lsp-output.txt

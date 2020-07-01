@@ -1,0 +1,208 @@
+{
+	"version" : "",
+	"name" : "BlitzMax",
+	"scopeName" : "source.bmx",
+	"patterns" : [
+		{
+			"match" : "\\n",
+			"name" : "meta.ending-space.bmx"
+		},
+		{
+			"begin" : "^(?:[ \\t]+)?(?i:rem\\b)($|\\s)",
+			"end" : "^(?:[ \\t]+)?(?i:end\\s*?rem)",
+			"name" : "comment.block.bmx"
+		},
+		{
+			"begin" : "^(?=\\t)",
+			"end" : "(?=[^\\t])",
+			"name" : "meta.leading-space",
+			"patterns" : [
+				{
+					"captures" : {
+						"1" : {
+							"name" : "meta.odd-tab.tabs.bmx"
+						},
+						"2" : {
+							"name" : "meta.even-tab.tabs.bmx"
+						}
+					},
+					"match" : "(\\t)(\\t)?"
+				}
+			]
+		},
+		{
+			"begin" : "^(?= )",
+			"end" : "(?=[^ ])",
+			"name" : "meta.leading-space",
+			"patterns" : [
+				{
+					"captures" : {
+						"1" : {
+							"name" : "meta.odd-tab.spaces.bmx"
+						},
+						"2" : {
+							"name" : "meta.even-tab.spaces.bmx"
+						}
+					},
+					"match" : "(  )(  )?"
+				}
+			]
+		},
+		{
+			"captures" : {
+				"1" : {
+					"name" : "storage.type.function.bmx"
+				},
+				"2" : {
+					"name" : "entity.name.function.bmx"
+				},
+				"3" : {
+					"name" : "punctuation.definition.parameters.bmx"
+				},
+				"4" : {
+					"name" : "variable.parameter.function.bmx"
+				},
+				"5" : {
+					"name" : "punctuation.definition.parameters.bmx"
+				}
+			},
+			"match" : "(?i:\\s*\\b(Function|End\\s*?Function|Method|End\\s*?Method)\\b\\s*)",
+			"name" : "meta.function.bmx"
+		},
+		{
+			"begin" : "(^[ \\t]+)?(?=')",
+			"beginCaptures" : {
+				"1" : {
+					"name" : "punctuation.whitespace.comment.leading.bmx"
+				}
+			},
+			"end" : "(?!\\G)",
+			"patterns" : [
+				{
+					"begin" : "'",
+					"beginCaptures" : {
+						"0" : {
+							"name" : "punctuation.definition.comment.bmx"
+						}
+					},
+					"end" : "\\n",
+					"name" : "comment.line.apostrophe.bmx"
+				}
+			]
+		},
+		{
+			"match" : "(?i:\\b(If|Then|Else|Else\\s*?If|End\\s*?If|Try|Catch|End\\s*?Try|Finally|While|Wend|End\\s*?While|Goto|DefData|ReadData|RestoreData|For|To|Each|EachIn|Case|Select|End\\s*?Select|Step|Return|Continue|Repeat|Until|Forever|Next|Exit|Mod|Shl|Shr|Sar|And|Not|Or|Xor|Operator)\\b)",
+			"name" : "keyword.control.bmx"
+		},
+		{
+			"match" : "",
+			"name" : "keyword.operator.bmx"
+		},
+		{
+			"captures" : {
+				"1" : {
+					"name" : "storage.type.bmx"
+				},
+				"2" : {
+					"name" : "variable.other.bfeac.bmx"
+				},
+				"3" : {
+					"name" : "meta.separator.comma.bmx"
+				}
+			},
+			"match" : "(?i:(dim)\\s*(?:(\\b[a-zA-Z_x7f-xff][a-zA-Z0-9_x7f-xff]*?\\b)\\s*(,?)))",
+			"name" : "variable.other.dim.bmx"
+		},
+		{
+			"match" : "(?i:\\s*\\b(Local|Global|Const|Field|ReadOnly|Self|New|Release|Delete|Super)\\b\\s*)",
+			"name" : "storage.type.bmx"
+		},
+		{
+			"match" : "(?i:\\b(Framework|Import|NoDebug|Alias|Include|Extern|End\\s*?Extern|Export|Incbin|IncbinPtr|IncbinLen|Module|ModuleInfo|Strict|SuperStrict|Private|Public|Protected|Default|Abstract|Implements|Extends|Final|Override|Where)\\b)",
+			"name" : "storage.modifier.bmx"
+		},
+		{
+			"match" : "(?i:\\s*\\b(False|Null|True)\\b)",
+			"name" : "constant.language.bmx"
+		},
+		{
+			"begin" : "\"\"\"",
+			"beginCaptures" : {
+				"0" : {
+					"name" : "punctuation.definition.string.block.begin.bmx"
+				}
+			},
+			"end" : "\"\"\"",
+			"endCaptures" : {
+				"0" : {
+					"name" : "punctuation.definition.string.block.end.bmx"
+				}
+			},
+			"name" : "string.quoted.block.bmx",
+			"patterns" : [
+				{
+					"match" : "\"\"\"\"\"\"",
+					"name" : "constant.character.block.escape.apostrophe.bmx"
+				}
+			]
+		},
+		{
+			"begin" : "\"",
+			"beginCaptures" : {
+				"0" : {
+					"name" : "punctuation.definition.string.begin.bmx"
+				}
+			},
+			"end" : "\"",
+			"endCaptures" : {
+				"0" : {
+					"name" : "punctuation.definition.string.end.bmx"
+				}
+			},
+			"name" : "string.quoted.double.bmx",
+			"patterns" : [
+				{
+					"match" : "\"\"",
+					"name" : "constant.character.escape.apostrophe.bmx"
+				}
+			]
+		},
+		{
+			"match" : "^(?:\\?(?:.+)?)",
+			"name" : "string.conditional.bmx"
+		},
+		{
+			"match" : "-?\\b(?:(0(?:x|X)[0-9a-zA-Z]+)|(?:[0-9](?:\\.|[a-fA-F]+)?)+)\\b",
+			"name" : "constant.numeric.bmx"
+		},
+		{
+			"match" : "(?i:\\s*\\b(Type|End\\s*?Type|Enum|End\\s*?Enum|Struct|End\\s*?Struct|Interface|End\\s*?Interface)\\b\\s*)",
+			"name" : "support.class.collection.bmx"
+		},
+		{
+			"match" : "(?i:\\b(OnEnd|End|Throw|Pi|Assert|TNullMethodException|TNullFunctionException|TNullObjectException|TArrayBoundsException|TRuntimeException)\\b)",
+			"name" : "support.function.event.bmx"
+		},
+		{
+			"match" : "(?i:\\b(Object|Byte|Short|Int|UInt|Long|ULong|Float|Double|String|Size_T|Float64|Int128|Float128|Double128|Typename|ElementType|ReturnTypeValueType Ptr|VariableType Var)\\b)",
+			"name" : "support.type.bmx"
+		},
+		{
+			"match" : "(?i:\\b(Var|Ptr|Varptr)\\b)",
+			"name" : "support.function.bmx"
+		},
+		{
+			"match" : "\\b(?i:(?<!\\:)((?!\\d)\\w+\\b)(?=\\:?\\w*(?:\\<\\w*\\>)?(?:\\[\\])?(?:[%#!$]?)(?:\\s*?)\\())",
+			"name" : "entity.name.function.bmx"
+		},
+		{
+			"match": "(%|#|!|\\$|\\*|\\-|\\+|\\;|\\:|~|=|!=|<=|>=|<>|<|>|&|\\||\\/|\\.|\\(|\\)|\\[|\\]|\\,)",
+			"name" : "keyword.operator.bmx"
+		},
+		{
+			"begin" : "{",
+			"end" : "}",
+			"name" : "variable.parameter.meta.bmx"
+		}
+	]
+}

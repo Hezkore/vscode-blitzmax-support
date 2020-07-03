@@ -31,7 +31,7 @@ Or discuss this proof of concept on Discord: [![Discord Chat](https://img.shield
 * Press `F5` to build and launch in a new VS Code window.
 
 ### LSP
-* Compile *bmx/lsp.bmx* in MaxIDE.
+* Compile *bmx/lsp/main.bmx* in MaxIDE.
 * In the new VS Code window.
   * Open Settings and navigate to *Extensions > BlitzMax > LSP Path*.
   * Enter the absolute path to your newly compiled LSP executable.

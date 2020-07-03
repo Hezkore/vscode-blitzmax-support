@@ -37,12 +37,17 @@ export function registerBmxLsp( context: vscode.ExtensionContext ) {
 		}
 	}
 
+	let args: string[] = []
+	args.push("--lsp")
+	args.push("-loglevel"); args.push("0")
+	args.push("-mode"); args.push("stdio")
+
 	var path: string | undefined = vscode.workspace.getConfiguration( 'blitzmax.lsp' ).get( 'path' )
 	if (path) {
 		console.log( 'Launching LSP ' + path )
 
 		client = new LanguageClient('BlitzMax Language Server',
-			{ command: path, args: undefined, options: { env: undefined } },
+			{ command: path, args: args, options: { env: undefined } },
 			clientOptions
 		)
 		context.subscriptions.push( client.start() )

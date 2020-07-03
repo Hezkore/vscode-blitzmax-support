@@ -17,5 +17,5 @@ While myLsp.Running()
 Wend
 
 ' Exit
-If Not myLsp.WasTerminated myLsp.Terminate()
+If Not myLsp.WasTerminated() myLsp.Terminate()
 End

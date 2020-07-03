@@ -19,7 +19,6 @@ Type TLsp
 	
 	' Looping
 	Field _isTerminated:Byte = False
-	Field WasTerminated:Byte = False
 	
 	' Header & Content
 	Field _lastStdioLine:String
@@ -292,10 +291,14 @@ Type TLsp
 		EndIf
 	EndMethod
 	
+	Method WasTerminated:Byte()
+		
+		Return Self._isTerminated
+	EndMethod
+	
 	Method Terminate()
 		
 		Self._isTerminated = True
-		Self.WasTerminated = True
 		
 		' Log the ending time
 		Self.Log("Log end " + CurrentDate() + " " + CurrentTime(),, , True)

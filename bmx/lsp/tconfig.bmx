@@ -168,7 +168,7 @@ Type TConfigItem_LogLevel Extends TConfigItem
 		Self.ArgName = "loglevel"
 		Self.DefaultValue = 0
 		
-		Register()
+		Self.Register()
 	EndMethod
 	
 	Method OnChange(newValue:String)
@@ -193,7 +193,7 @@ Type TConfigItem_StartLSP Extends TConfigItem
 		Self.ArgName = "start"
 		Self.HasValue = False
 		
-		Register()
+		Self.Register()
 	EndMethod
 	
 	Method OnChange(newValue:String)
@@ -219,7 +219,7 @@ Type TConfigItem_LSPMode Extends TConfigItem
 		Self.ArgName = "mode"
 		Self.DefaultValue = "stdio"
 		
-		Register()
+		Self.Register()
 	EndMethod
 	
 	Method OnChange(newValue:String)
@@ -242,7 +242,7 @@ Type TConfigItem_DataStreamIdle Extends TConfigItem
 		Self.ArgName = "dsidle"
 		Self.DefaultValue = 25
 		
-		Register()
+		Self.Register()
 	EndMethod
 	
 	Method OnChange(newValue:String)

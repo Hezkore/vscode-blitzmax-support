@@ -6,7 +6,8 @@ Import brl.linkedlist
 Import "tlogger.bmx"
 Import "tconfig.bmx"
 Import "json.helper.bmx"
-	
+Import "tmessagehandler.bmx"
+
 Global DataManager:TDataManager
 Type TDataManager
 	
@@ -18,9 +19,11 @@ Type TDataManager
 			
 			Case "stdio" Self._streamer = New TDataStreamer_STDIO
 			Case "tcp" Self._streamer = New TDataStreamer_TCP
+			'Case ' Erm, what else can be read from? 
 			
 			Default
-				Logger.Log("Unknown data mode ~q" + Config.Get("lspmode") + "~q", ELogType.Error)
+				Logger.Log("Unknown data mode ~q" + Config.Get("lspmode") + "~q",  ..
+					ELogType.Error)
 		EndSelect
 		
 		If Self._streamer Then
@@ -44,6 +47,13 @@ Type TDataManager
 			Logger.Log(dataLog.Text,dataLog.LogType,dataLog.NewLine,dataLog.ForceShow)
 			Self._streamer._mutex.Unlock()
 		EndIf
+		
+		' Check for data message
+		If Self._streamer._messageStack.Count() > 0 Then
+						
+			MessageHandler.GetMessage(GetNextMessage()._method).Receive()
+		EndIf
+		
 	EndMethod
 	
 	Method PeekNextMessage:TDataMessage()
@@ -136,6 +146,7 @@ Type TDataStreamer Abstract
 	Method OnWantsHeader() Abstract
 	Method OnWantsContent() Abstract
 	Method OnInit() Abstract
+	Method OnFree() Abstract
 	
 	Method PushMessage(message:TDataMessage)
 		
@@ -228,6 +239,8 @@ EndType
 Type TDataStreamer_STDIO Extends TDataStreamer
 
 	Method OnInit()
+		
+		' Nothing to do
 	EndMethod
 	
 	Method OnWantsHeader()
@@ -241,17 +254,33 @@ Type TDataStreamer_STDIO Extends TDataStreamer
 		Self._lastContent = StandardIOStream.ReadString(Self._expectedContentLength)
 		Self.ProcessContentData(Self._lastContent)
 	EndMethod
+	
+	Method OnFree()
+		
+		' Nothing to do
+	EndMethod
 EndType
 
 ' Read data via TCP
 Type TDataStreamer_TCP Extends TDataStreamer
 	
 	Method OnInit()
+		
+		' Initialize the server here
 	EndMethod
 	
 	Method OnWantsHeader()
+		
+		' Wait for TCP header data here
 	EndMethod
 	
 	Method OnWantsContent()
+		
+		' Wait for TCP content data here
+	EndMethod
+	
+	Method OnFree()
+		
+		' Close the TCP server here
 	EndMethod
 EndType

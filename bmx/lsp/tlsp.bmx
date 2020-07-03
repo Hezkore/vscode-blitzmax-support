@@ -2,7 +2,10 @@ SuperStrict
 
 Import "tlogger.bmx"
 
+Global LSP:TLsp
 Type TLsp
+	
+	Field _wantTerminate:Byte
 		
 	Method New()
 		
@@ -14,6 +17,11 @@ Type TLsp
 	
 	Method Running:Byte()
 		
-		Return True
+		Return Not Self._wantTerminate
+	EndMethod
+	
+	Method Terminate()
+		
+		Self._wantTerminate = True
 	EndMethod
 EndType

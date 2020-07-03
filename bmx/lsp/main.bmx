@@ -9,6 +9,7 @@ Import "tconfig.bmx"
 Import "tlsp.bmx"
 Import "tlogger.bmx"
 Import "tdatamanager.bmx"
+Import "tmessagehandler.bmx"
 
 ' Version
 Global Version:String = "0.1"
@@ -40,21 +41,22 @@ Logger.NotifyLogLevel()
 ' Setup the data manager
 DataManager = New TDataManager()
 
+' Setup the messager handler
+
 ' Setup LSP
-Local lsp:TLsp = New TLsp()
+LSP = New TLsp()
 
 ' Main loop
 While lsp.Running()
 	
 	lsp.Update()
 	DataManager.Update()
-	
-	Local testMsg:TDataMessage = DataManager.GetNextMessage()
-	If testMsg Then
-		Logger.Log("Got message - " + testMsg._method)
-	EndIf
 Wend
 
 ' Exit
-'If Not lsp.WasTerminated() lsp.Terminate()
+Config.Free()
+DataManager.Free()
+'MessageHandler.Free()
+'LSP.Free()
+Logger.Free()
 End

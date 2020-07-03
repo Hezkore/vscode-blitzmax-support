@@ -74,7 +74,7 @@ Type TDataManager
 		Self._streamer._mutex.Lock()
 		message = TDataMessage(Self._streamer._messageStack.RemoveFirst())
 		Self._streamer._mutex.Unlock()
-			
+		
 		Return message
 	EndMethod
 	
@@ -222,6 +222,8 @@ Type TDataStreamer Abstract
 		If StandardIOStream.ReadString(1)[0] <> 10 Self.Log( ..
 			"Expected line feed after " + headerKey + " was omitted!",  ..
 			ELogType.Error)
+			
+		Self._lastHeader = Null
 	EndMethod
 	
 	Method ProcessContentData(data:String)
@@ -232,6 +234,8 @@ Type TDataStreamer Abstract
 		message._method = message._json.GetPathString("method").ToLower()
 		
 		Self.PushMessage(message)
+		
+		Self._expectedContentLength = 0
 	EndMethod
 EndType
 

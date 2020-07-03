@@ -86,6 +86,7 @@ Type TLSPMessage_Shutdown Extends TLSPMessage
 	
 	Method Receive()
 		
+		Logger.Log("Shutdown requested")
 		LSP.Terminate()
 	EndMethod
 EndType

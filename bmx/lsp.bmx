@@ -1,75 +1,21 @@
+' BlitzMax LSP
+' Specs: https://microsoft.github.io/language-server-protocol/specifications/specification-current
+
 SuperStrict
 
 Framework brl.standardio
-Import text.JConv
 
-Import "trequest.bmx"
+Import "tlsp.bmx"
 
-Global stream:TStream = WriteStream("lsp-output.txt")
-OnEnd(CleanUp)
+' Setup LSP
+Local myLsp:TLsp = New TLsp()
 
-Log("START")
-
-Local count:Int
-For Local arg:String = EachIn AppArgs
-	Log("ARG" + Count + ": " + Arg)
-	Count:+1
-Next
-
-Local stdinput:String
-While True
-	'Local c:String = StandardIOStream.ReadString(1)
-	'If c Then Log(c + "(" + Asc(c) + ")")
-	'Continue
-	stdinput = StandardIOStream.ReadLine()
-
-	If stdinput Then
-		Log("GOT: " + stdinput)
-		If stdinput.StartsWith("Content-Length: ") Then
-			Local contLen:Int = Int(stdinput.Split(": ")[1])
-			Local padding:Int = 1 ' There's two CHR(10) and ReadLine (above) stops at the first one, so we need to skip one
-			StandardIOStream.ReadString(padding)
-			ProcessContent(StandardIOStream.ReadString(contLen))
-		EndIf
-	EndIf
-	Delay(100)
+' Main loop
+While myLsp.Running()
+	
+	myLsp.Update()
 Wend
 
-Function ProcessContent(content:String)
-	Log("Processing: " + content)
-	
-	' Convert into a type we can easily read
-	Local json:String = content
-	Local jconv:TJConv = New TJConvBuilder.Build()
-	Local jrequest:TRequest = TRequest(jconv.FromJson(json, "TRequest"))
-	
-	' Debug output of the type again..
-	Log("Debug Type:")
-	Log(jconv.ToJson(jrequest))
-	
-	Local result:String = "{~qjsonrpc~q:~q2.0~q, ~qid~q:0}" ' Bare minimum repsonse it seems
-	ToVSCode(result)
-EndFunction
-
-Function ToVSCode(content:String)
-	
-	StandardIOStream.WriteString("Content-Length: " + content.Length + Chr(10) + Chr(10))
-	Log("SENT: " + "Content-Length: " + content.Length)
-	
-	StandardIOStream.WriteString(content)
-	Log("Response: " + content)
-	
-	StandardIOStream.Flush()
-EndFunction
-
-Function CleanUp()
-	
-	Log("EOF")
-	CloseStream(stream)
-EndFunction
-
-Function Log(str:String)
-	
-	WriteLine(stream, str)
-	stream.Flush()
-EndFunction
+' Exit
+If Not myLsp.WasTerminated myLsp.Terminate()
+End

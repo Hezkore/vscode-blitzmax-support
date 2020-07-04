@@ -10,6 +10,7 @@ Import "tlsp.bmx"
 Import "tlogger.bmx"
 Import "tdatamanager.bmx"
 Import "tmessagehandler.bmx"
+Import "tdebugger.bmx"
 
 ' Version
 Global Version:String = "0.1"
@@ -65,4 +66,5 @@ DataManager.Free()
 'MessageHandler.Free()
 'LSP.Free()
 Logger.Free()
+Debugger.Free()
 End

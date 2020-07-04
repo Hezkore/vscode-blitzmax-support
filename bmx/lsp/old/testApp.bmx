@@ -3,6 +3,8 @@ SuperStrict
 Framework brl.standardio
 Import brl.linkedlist
 
+
+
 Type MyTestType
 	Field someField:Int = 50
 	Field stringArray:String[] = ["one", "two", "three"]

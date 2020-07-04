@@ -2,6 +2,7 @@ SuperStrict
 
 Import brl.system
 
+Import "tdebugger.bmx"
 
 ' Enumerator for log message types
 Enum ELogType
@@ -51,19 +52,28 @@ Type TLogger
 				' Check the log level or if forced message
 				If Not forceShow And Self.LogLevel > logType.Ordinal() Then Return
 				Self._logStream.WriteString("[")
+				Debugger.Log("[")
 				' Prepend type of message
 				Self._logStream.WriteString(logType.ToString())
+				Debugger.Log(logType.ToString())
 				
 				For Local i:Int = logType.ToString().Length Until 6
 					Self._logStream.WriteString(" ")
+					Debugger.Log(" ")
 				Next
 				
 				Self._logStream.WriteString("- " + CurrentTime() + "] ")
+				Debugger.Log("- " + CurrentTime() + "] ")
 			EndIf
 			
 			' Write the actual message
 			Self._logStream.WriteString(text)
-			If newLine Self._logStream.WriteString("~r~n") ' New line?
+			Debugger.Log(text)
+			If newLine Then ' New line?
+				Self._logStream.WriteString("~r~n")
+				Debugger.Log("~r~n")
+			EndIf
+			
 			If Self.PrintLog Print(text)
 			
 			' Store if this line had a new line

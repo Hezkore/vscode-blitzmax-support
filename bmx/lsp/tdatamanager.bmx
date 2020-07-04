@@ -1,3 +1,9 @@
+' Okay a few rules here
+' First of all, a big part of this will end up being inside another thread
+' Which means you can't just access stuff freely
+' Use the Stacks/Queue (well, TList for now) to queue things up
+' For example TDataStreamer needs to use Self.Log to log things
+
 SuperStrict
 
 Import brl.threads
@@ -60,8 +66,10 @@ Type TDataManager
 				Local lspMsg:TLSPMessage = MessageHandler.GetMessage(nextMsg._method)
 				If lspMsg Then
 					lspMsg.ID = nextMsg._id
-					lspMsg.Json = nextMsg._json
+					lspMsg.ReceiveJson = nextMsg._json
 					lspMsg.OnReceive()
+				Else
+					Logger.Log("Message content " + nextMsg._json.ToString())
 				EndIf
 			ElseIf nextMsg._error
 				' Error message
@@ -108,8 +116,8 @@ Type TDataManager
 	
 	Method SendMessage(msg:TLSPMessage)
 		
-		Logger.Log("Sending " + msg.Json.ToString())
-		Self._streamer.OnWriteMessage(msg.Json.ToStringCompact())
+		Logger.Log("Sending " + msg.SendJson.ToString())
+		Self._streamer.OnWriteMessage(msg.SendJson.ToStringCompact())
 	EndMethod
 	
 	Method Free()
@@ -345,6 +353,7 @@ Type TDataStreamer_TCP Extends TDataStreamer
 	Method OnInit()
 		
 		' Initialize the server here
+		Self.Log("TCP data stream is not yet supported", ELogType.Error)
 	EndMethod
 	
 	Method OnWantsHeader()

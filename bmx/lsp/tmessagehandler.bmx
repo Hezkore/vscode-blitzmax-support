@@ -45,12 +45,16 @@ Type TMessageHandler
 		If Not msg Then Return ' Error is reported at GetMessage
 		
 		' Prepare the JSON here I suppose
-		' Remember to use msg.MethodName and not Local methodName!!
-		msg.Json = New TJSONHelper( ..
-			"{~qjsonrpc~q:~q2.0~q,~qmethod~q:~q" + ..
-			msg.MethodName + ..
-			"~q}")
-		If id >= 0 Then msg.Json.SetPathInteger("id", id)
+		msg.Json = New TJSONHelper("{~qjsonrpc~q:~q2.0~q}")
+		
+		If id >= 0 Then
+			' This is a reponse to previous message with this id!
+			msg.Json.SetPathInteger("id", id)
+		Else
+			
+			' Remember to use msg.MethodName and not Local methodName!!
+			MSG.Json.SetPathString("method", msg.MethodName)
+		EndIf
 		
 		' Do the changes needed via OnSend
 		msg.OnSend()
@@ -64,6 +68,7 @@ Type TLSPMessage Abstract
 	
 	Field MethodName:String = "noName" ' The name of the message
 	Field Json:TJSONHelper
+	Field ID:Int = -1
 	
 	Method OnSend()
 		
@@ -98,26 +103,32 @@ Type TLSPMessage_Initialize Extends TLSPMessage
 	Method OnSend()
 		
 		' We should insert our capabilities here
-		' TODO: Add a Self.AddParam(<string path here>)
-		Self.Json.SetPathInteger("params/capabilities/textDocumentSync", 1)
-		Self.Json.SetPathBool("params/capabilities/completionProvider/resolveProvider", False)
-		Self.Json.SetPathString("params/capabilities/completionProvider/triggerCharacters[0]", "/")
-		Self.Json.SetPathBool("params/capabilities/hoverProvider", True)
-		Self.Json.SetPathBool("params/capabilities/documentSymbolProvider", True)
-		Self.Json.SetPathBool("params/capabilities/referencesProvider", True)
-		Self.Json.SetPathBool("params/capabilities/definitionProvider", True)
-		Self.Json.SetPathBool("params/capabilities/documentHighlightProvider", True)
-		Self.Json.SetPathBool("params/capabilities/codeActionProvider", True)
-		Self.Json.SetPathBool("params/capabilities/renameProvider", True)
+		' This message is a reponse (cause it had an ID)
+		' That means we don't use 'params'
+		' We use 'result'
+		' TODO: Add a Self.AddResult/Param(<string path here>)
+		Self.Json.SetPathInteger("result/capabilities/textDocumentSync", 1)
+		Self.Json.SetPathBool("result/capabilities/completionProvider/resolveProvider", False)
+		Self.Json.SetPathString("result/capabilities/completionProvider/triggerCharacters[0]", "/")
+		Self.Json.SetPathBool("result/capabilities/hoverProvider", True)
+		Self.Json.SetPathBool("result/capabilities/documentSymbolProvider", True)
+		Self.Json.SetPathBool("result/capabilities/referencesProvider", True)
+		Self.Json.SetPathBool("result/capabilities/definitionProvider", True)
+		Self.Json.SetPathBool("result/capabilities/documentHighlightProvider", True)
+		Self.Json.SetPathBool("result/capabilities/codeActionProvider", True)
+		Self.Json.SetPathBool("result/capabilities/renameProvider", True)
 		' "colorProvider": {},
-		Self.Json.SetPathBool("params/capabilities/foldingRangeProvider", True)
+		Self.Json.SetPathBool("result/capabilities/foldingRangeProvider", True)
+		
+		Self.Json.SetPathString("result/serverInfo/name", "BlitzMax Language Server Protocol")
+		Self.Json.SetPathString("result/serverInfo/version", "0.0") ' FIX: Actually use the version here!!
 	EndMethod
 	
 	Method OnReceive()
 		
 		' When we get this message we need to return the initialize message
 		' But with what we actually support
-		MessageHandler.SendMessage("initialize", 0)
+		MessageHandler.SendMessage("initialize", Self.ID)
 	EndMethod
 EndType
 
@@ -138,8 +149,10 @@ Type TLSPMessage_Initialized Extends TLSPMessage
 	'Method OnSend()
 	'EndMethod
 	
-	'Method OnReceive()
-	'EndMethod
+	Method OnReceive()
+		
+		Logger.Log("Client is " + Self.MethodName)
+	EndMethod
 EndType
 
 ' Shutdown
@@ -161,5 +174,26 @@ Type TLSPMessage_Shutdown Extends TLSPMessage
 		
 		Logger.Log("Shutdown requested")
 		LSP.Terminate()
+	EndMethod
+EndType
+
+' Hezkore is cool
+' Test of custom notification
+New TLSPMessage_HezkoreIsReallyCool
+Type TLSPMessage_HezkoreIsReallyCool Extends TLSPMessage
+	
+	Method New()
+		
+		MethodName = "hezkore/isReallyCool"
+		
+		Self.Register()
+	EndMethod
+	
+	'Method OnSend()
+	'EndMethod
+	
+	Method OnReceive()
+		
+		Logger.Log("Client claims that Hezkore is a cool dude")
 	EndMethod
 EndType

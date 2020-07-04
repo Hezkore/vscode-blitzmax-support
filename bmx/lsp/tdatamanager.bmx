@@ -58,7 +58,10 @@ Type TDataManager
 			If nextMsg._method Then
 				' Normal message
 				Local lspMsg:TLSPMessage = MessageHandler.GetMessage(nextMsg._method)
-				If lspMsg Then lspMsg.OnReceive()
+				If lspMsg Then
+					lspMsg.ID = nextMsg._id
+					lspMsg.OnReceive()
+				EndIf
 			ElseIf nextMsg._error
 				' Error message
 				Logger.Log("Error " + nextMsg._error + ..
@@ -121,6 +124,7 @@ EndType
 Type TDataMessage
 	
 	Field _method:String
+	Field _id:Int = -1
 	Field _error:Int
 	Field _errorMessage:String
 	Field _json:TJSONHelper
@@ -272,6 +276,9 @@ Type TDataStreamer Abstract
 			
 			message._error = message._json.GetPathInteger("error/code")
 			message._errorMessage = message._json.GetPathString("error/message")
+		Else
+			
+			message._id = message._json.GetPathInteger("id")
 		EndIf
 		
 		' We need SOMETHING to push this message...

@@ -6,8 +6,6 @@ import * as url from 'url'
 
 export function registerBmxLsp( context: vscode.ExtensionContext ) {
 
-	let client: LanguageClient
-
 	let myOutput = vscode.window.createOutputChannel("BMX")
 	myOutput.show(true)
 
@@ -46,10 +44,14 @@ export function registerBmxLsp( context: vscode.ExtensionContext ) {
 	if (path) {
 		console.log( 'Launching LSP ' + path )
 
-		client = new LanguageClient('BlitzMax Language Server',
+		let client: LanguageClient = new LanguageClient('BlitzMax Language Server',
 			{ command: path, args: args, options: { env: undefined } },
 			clientOptions
 		)
+		client.onReady().then(() => { // Test custom method
+			client.sendNotification('hezkore/isReallyCool')
+		})
+
 		context.subscriptions.push( client.start() )
 	} else console.log( 'No LSP path configured' )
 }

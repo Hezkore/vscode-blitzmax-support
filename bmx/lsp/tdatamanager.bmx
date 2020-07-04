@@ -48,11 +48,35 @@ Type TDataManager
 			Self._streamer._mutex.Unlock()
 		EndIf
 		
-		' Check for data message
+		' Check for incoming messages
 		If Self._streamer._messageStack.Count() > 0 Then
-						
-			MessageHandler.GetMessage(GetNextMessage()._method).Receive()
+			
+			' Fetch the next message
+			Local nextMsg:TDataMessage = Self.GetNextMessage()
+			
+			' What exactly is this?
+			If nextMsg._method Then
+				' Normal message
+				Local lspMsg:TLSPMessage = MessageHandler.GetMessage(nextMsg._method)
+				If lspMsg Then lspMsg.OnReceive()
+			ElseIf nextMsg._error
+				' Error message
+				Logger.Log("Error " + nextMsg._error + ..
+					" from client (" + nextMsg._errorMessage + ")",  ..
+					ELogType.Error)
+			Else
+				' No idea
+				Logger.Log("Unknown message in queue" + nextMsg._json.ToString(),  ..
+					ELogType.Error)
+			EndIf
+			
 		EndIf
+		
+		' Check for outgoing messages (Should be okay as a 'While')
+		While MessageHandler._sendMessageQueue.Count() > 0
+			
+			Self.SendMessage(TLSPMessage(MessageHandler._sendMessageQueue.RemoveFirst()))
+		Wend
 		
 	EndMethod
 	
@@ -78,6 +102,12 @@ Type TDataManager
 		Return message
 	EndMethod
 	
+	Method SendMessage(msg:TLSPMessage)
+		
+		Logger.Log("Sending " + msg.Json.ToString())
+		Self._streamer.OnWriteMessage(msg.Json.ToStringCompact())
+	EndMethod
+	
 	Method Free()
 		
 		If Self._streamer Then
@@ -91,6 +121,8 @@ EndType
 Type TDataMessage
 	
 	Field _method:String
+	Field _error:Int
+	Field _errorMessage:String
 	Field _json:TJSONHelper
 EndType
 
@@ -145,6 +177,7 @@ Type TDataStreamer Abstract
 	
 	Method OnWantsHeader() Abstract
 	Method OnWantsContent() Abstract
+	Method OnWriteMessage(msg:String) Abstract
 	Method OnInit() Abstract
 	Method OnFree() Abstract
 	
@@ -228,14 +261,35 @@ Type TDataStreamer Abstract
 	
 	Method ProcessContentData(data:String)
 		
+		' Prepare this message
 		Local message:TDataMessage = New TDataMessage
-		
 		message._json = New TJSONHelper(data)
-		message._method = message._json.GetPathString("method").ToLower()
+		message._method = message._json.GetPathString("method")
 		
-		Self.PushMessage(message)
+		' Did we get a method name?
+		' Otherwise it's probably an error
+		If Not message._method Then
+			
+			message._error = message._json.GetPathInteger("error/code")
+			message._errorMessage = message._json.GetPathString("error/message")
+		EndIf
 		
+		' We need SOMETHING to push this message...
+		If message._method Or message._error Then
+			
+			Self.PushMessage(message)
+		Else
+			
+			Self.Log("Unknown message " + message._json.ToString(), ELogType.Warn)
+		EndIf
+		
+		' This is important to reset!
 		Self._expectedContentLength = 0
+	EndMethod
+	
+	Method CalcContentLength:String(msg:String)
+		
+		Return "Content-Length: " + msg.Length + Chr(10) + Chr(10)
 	EndMethod
 EndType
 
@@ -257,6 +311,18 @@ Type TDataStreamer_STDIO Extends TDataStreamer
 		
 		Self._lastContent = StandardIOStream.ReadString(Self._expectedContentLength)
 		Self.ProcessContentData(Self._lastContent)
+	EndMethod
+	
+	Method OnWriteMessage(msg:String)
+		
+		' This calculates the length and returns -
+		' Content-Length: <length>/r/n/r/n
+		StandardIOStream.WriteString(Self.CalcContentLength(msg))
+		
+		' Now we're free to actually write the message
+		StandardIOStream.WriteString(msg)
+		
+		StandardIOStream.Flush()
 	EndMethod
 	
 	Method OnFree()
@@ -281,6 +347,11 @@ Type TDataStreamer_TCP Extends TDataStreamer
 	Method OnWantsContent()
 		
 		' Wait for TCP content data here
+	EndMethod
+	
+	Method OnWriteMessage(msg:String)
+		
+		' Write TCP data here
 	EndMethod
 	
 	Method OnFree()

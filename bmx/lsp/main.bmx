@@ -47,11 +47,17 @@ DataManager = New TDataManager()
 LSP = New TLsp()
 
 ' Main loop
-While lsp.Running()
-	
-	lsp.Update()
-	DataManager.Update()
-Wend
+Try
+	While lsp.Running()
+		
+		lsp.Update()
+		DataManager.Update()
+	Wend
+Catch ex:Object
+	' Just log any crazyness we might encouter and continue
+	' Only works in debug?
+	Logger.Log("BlitzMax Error ~q" + ex.ToString() + "~q", ELogType.Error)
+EndTry
 
 ' Exit
 Config.Free()

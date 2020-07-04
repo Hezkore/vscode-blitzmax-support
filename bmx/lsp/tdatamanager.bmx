@@ -68,8 +68,8 @@ Type TDataManager
 					lspMsg.ID = nextMsg._id
 					lspMsg.ReceiveJson = nextMsg._json
 					lspMsg.OnReceive()
-				Else
-					Logger.Log("Message content " + nextMsg._json.ToString())
+				'Else
+				'	Logger.Log("Message content " + nextMsg._json.ToString())
 				EndIf
 			ElseIf nextMsg._error
 				' Error message
@@ -78,7 +78,7 @@ Type TDataManager
 					ELogType.Error)
 			Else
 				' No idea
-				Logger.Log("Unknown message in queue" + nextMsg._json.ToString(),  ..
+				Logger.Log("Unknown message in queue " + nextMsg._json.ToString(),  ..
 					ELogType.Error)
 			EndIf
 			
@@ -116,7 +116,8 @@ Type TDataManager
 	
 	Method SendMessage(msg:TLSPMessage)
 		
-		Logger.Log("Sending " + msg.SendJson.ToString())
+		'Logger.Log("Sending " + msg.SendJson.ToString())
+		If Debugger.ShowSend Debugger.Log("Sending " + msg.SendJson.ToString() + "~r~n")
 		Self._streamer.OnWriteMessage(msg.SendJson.ToStringCompact())
 	EndMethod
 	
@@ -278,6 +279,8 @@ Type TDataStreamer Abstract
 		Local message:TDataMessage = New TDataMessage
 		message._json = New TJSONHelper(data)
 		message._method = message._json.GetPathString("method")
+		
+		If Debugger.ShowSend Debugger.Log("Receiving " + message._json.ToString() + "~r~n")
 		
 		' Did we get a method name?
 		' Otherwise it's probably an error

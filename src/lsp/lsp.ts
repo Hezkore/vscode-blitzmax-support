@@ -49,7 +49,7 @@ export function registerBmxLsp( context: vscode.ExtensionContext ) {
 			clientOptions
 		)
 		client.onReady().then(() => { // Test custom method
-			client.sendNotification('hezkore/isReallyCool')
+			client.sendNotification('hezkore/isReallyCool',{really:'Is he though?'})
 		})
 
 		context.subscriptions.push( client.start() )

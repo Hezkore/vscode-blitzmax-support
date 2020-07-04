@@ -60,6 +60,7 @@ Type TDataManager
 				Local lspMsg:TLSPMessage = MessageHandler.GetMessage(nextMsg._method)
 				If lspMsg Then
 					lspMsg.ID = nextMsg._id
+					lspMsg.Json = nextMsg._json
 					lspMsg.OnReceive()
 				EndIf
 			ElseIf nextMsg._error

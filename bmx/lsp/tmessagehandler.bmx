@@ -73,13 +73,15 @@ Type TLSPMessage Abstract
 	Method OnSend()
 		
 		Logger.Log( ..
-			"Message ~q" + Self.MethodName + "~q cannot be sent")
+			"Message ~q" + Self.MethodName + ..
+			"~q cannot be sent")
 	EndMethod
 	
 	Method OnReceive()
 		
 		Logger.Log( ..
-			"Message ~q" + Self.MethodName + "~q cannot be received")
+			"Message ~q" + Self.MethodName + ..
+			"~q cannot be received")
 	EndMethod
 	
 	Method Register()
@@ -194,6 +196,9 @@ Type TLSPMessage_HezkoreIsReallyCool Extends TLSPMessage
 	
 	Method OnReceive()
 		
-		Logger.Log("Client claims that Hezkore is a cool dude")
+		Logger.Log("Client claims that Hezkore is a cool dude (" + ..
+			Self.Json.GetPathString("params/really") + ")")
+		
+		'Logger.Log(Self.Json.ToString())
 	EndMethod
 EndType

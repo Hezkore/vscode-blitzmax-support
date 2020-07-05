@@ -391,21 +391,32 @@ EndType
 New TLSPMessage_TextDocument_Completion
 Type TLSPMessage_TextDocument_Completion Extends TLSPMessage
 	
+	Field SupportedTriggers:String[]
+	Field CurrentTrigger:String
+	Field LookingForTrigger:String
+	
 	Method New()
 		
 		MethodName = "textDocument/completion"
 		
-		Self.AddCapability("completionProvider/triggerCharacters[0]", "/")
-		Self.AddCapability("completionProvider/triggerCharacters[1]", ".")
+		Local triggers:String[] = ["/", "."]
+		
+		For Local i:Int = 0 Until triggers.Length
+			Self.AddCapability( ..
+				"completionProvider/triggerCharacters[" + i + "]",  ..
+				triggers[i])
+		Next
+		
+		Self.SupportedTriggers = triggers
 		
 		Self.Register()
 	EndMethod
 	
 	Method OnSend()
 		
-		Self.SetResultBool("isIncomplete", False)
+		Self.SetResultBool("isIncomplete", True)
 		
-		If Self.GetParamString("context/triggerCharacter") = "/"
+		If Self.CurrentTrigger = "/"
 			
 			Self.SetResultString("items[0]//label", "Hezkore")
 			Self.SetResultString("items[1]//label", "Ron")
@@ -422,8 +433,18 @@ Type TLSPMessage_TextDocument_Completion Extends TLSPMessage
 	
 	Method OnReceive()
 		
-		'Logger.Log(Self.ReceiveJson.ToString())
-		Self.Respond()
+		' Is this a trigger we support?
+		Self.LookingForTrigger = Self.GetParamString("context/triggerCharacter")
+		For Self.CurrentTrigger = EachIn Self.SupportedTriggers
+			If Self.LookingForTrigger = Self.CurrentTrigger Then
+				' Yep!
+				Self.Respond()
+				Return
+			EndIf
+		Next
+		
+		' Nope!
+		Self.Cancel()
 	EndMethod
 EndType
 

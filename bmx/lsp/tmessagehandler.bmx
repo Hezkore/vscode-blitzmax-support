@@ -487,6 +487,15 @@ Type TLSPMessage_TextDocument_DidOpen Extends TLSPMessage
 		DocumentHandler.DocumentOpened( ..
 			UriToPath(Self.GetParamString("textDocument/uri")),  ..
 			Self.GetParamString("textDocument/text"))
+		
+		' Check what workspace it's part of, just for fun
+		Local workspace:TWorkspace = WorkspaceManager.DocumentPartOfWorkspace( ..
+			UriToPath(Self.GetParamString("textDocument/uri")))
+		If workspace Then
+			Logger.Log("Document part of workspace ~q" + workspace.Name + "~q")
+		Else
+			Logger.Log("Document is not part of any workspace")
+		EndIf
 	EndMethod
 EndType
 

@@ -10,10 +10,13 @@ SuperStrict
 Import brl.linkedlist
 Import brl.system
 
+Import "utils.bmx"
 Import "tlsp.bmx"
 Import "tconfig.bmx"
 Import "tlogger.bmx"
 Import "json.helper.bmx"
+Import "tdocumentmanager.bmx"
+Import "tworkspacemanager.bmx"
 
 Global MessageHandler:TMessageHandler = New TMessageHandler()
 Type TMessageHandler
@@ -254,7 +257,7 @@ Type TLSPMessage_Initialize Extends TLSPMessage
 	
 	Method New()
 		
-		MethodName = "initialize"
+		Self.MethodName = "initialize"
 		
 		Self.Register()
 	EndMethod
@@ -309,6 +312,19 @@ Type TLSPMessage_Initialize Extends TLSPMessage
 		' When we get this message we need to return the initialize message
 		' But with what we actually support
 		
+		' Store some workspace info
+		WorkspaceManager.ClearWorkspaces()
+		Local workspaceCount:Int = Self.ReceiveJson.GetPathSize( ..
+			"params/workspaceFolders")
+		For Local i:Int = 0 Until workspaceCount
+			Local workspaceJson:TJSONObject = TJSONObject( ..
+				Self.ReceiveJson.GetPathJSON("params/workspaceFolders[" + i + "]"))
+			
+			If workspaceJson WorkspaceManager.OpenWorkspace( ..
+				workspaceJson.GetString("name"),  ..
+				UriToPath(workspaceJson.GetString("uri")))
+		Next
+		
 		'MessageHandler.SendMessage(Self.MethodName, Self.ID) ' This
 		Self.Respond() ' Is the same as this
 	EndMethod
@@ -323,7 +339,7 @@ Type TLSPMessage_Initialized Extends TLSPMessage
 	
 	Method New()
 		
-		MethodName = "initialized"
+		Self.MethodName = "initialized"
 		
 		Self.Register()
 	EndMethod
@@ -344,7 +360,7 @@ Type TLSPMessage_Shutdown Extends TLSPMessage
 	
 	Method New()
 		
-		MethodName = "shutdown"
+		Self.MethodName = "shutdown"
 		
 		Self.Register()
 	EndMethod
@@ -366,14 +382,14 @@ Type TLSPMessage_CancelRequest Extends TLSPMessage
 	
 	Method New()
 		
-		MethodName = "$/cancelRequest"
+		Self.MethodName = "$/cancelRequest"
 		
 		Self.Register()
 	EndMethod
 	
 	Method OnSend()
 		
-		Logger.Log("Asking for cancel of ID " + Self.ID)
+		'Logger.Log("Asking for cancel of ID " + Self.ID)
 		Self.SetParamInteger("id", Self.ID)
 		Self.ID = -1 ' Is a reponse, sent as notification
 	EndMethod
@@ -397,16 +413,19 @@ Type TLSPMessage_TextDocument_Completion Extends TLSPMessage
 	
 	Method New()
 		
-		MethodName = "textDocument/completion"
+		Self.MethodName = "textDocument/completion"
 		
+		' Register your triggers here
 		Local triggers:String[] = ["/", "."]
 		
+		' Automatically add all triggers to capabilities
 		For Local i:Int = 0 Until triggers.Length
 			Self.AddCapability( ..
 				"completionProvider/triggerCharacters[" + i + "]",  ..
 				triggers[i])
 		Next
 		
+		' Store these triggers for later
 		Self.SupportedTriggers = triggers
 		
 		Self.Register()
@@ -448,6 +467,83 @@ Type TLSPMessage_TextDocument_Completion Extends TLSPMessage
 	EndMethod
 EndType
 
+' textDocument/didOpen
+' 
+New TLSPMessage_TextDocument_DidOpen
+Type TLSPMessage_TextDocument_DidOpen Extends TLSPMessage
+	
+	Method New()
+		
+		Self.MethodName = "textDocument/didOpen"
+		
+		Self.Register()
+	EndMethod
+	
+	'Method OnSend()
+	'EndMethod
+	
+	Method OnReceive()
+		
+		DocumentHandler.DocumentOpened( ..
+			UriToPath(Self.GetParamString("textDocument/uri")),  ..
+			Self.GetParamString("textDocument/text"))
+	EndMethod
+EndType
+
+' textDocument/didClose
+' 
+New TLSPMessage_TextDocument_DidClose
+Type TLSPMessage_TextDocument_DidClose Extends TLSPMessage
+	
+	Method New()
+		
+		Self.MethodName = "textDocument/didClose"
+		
+		Self.Register()
+	EndMethod
+	
+	'Method OnSend()
+	'EndMethod
+	
+	Method OnReceive()
+		
+		DocumentHandler.DocumentClosed( ..
+			UriToPath(Self.GetParamString("textDocument/uri")))
+	EndMethod
+EndType
+
+' textDocument/didChange
+' 
+New TLSPMessage_TextDocument_DidChange
+Type TLSPMessage_TextDocument_DidChange Extends TLSPMessage
+	
+	Method New()
+		
+		Self.MethodName = "textDocument/didChange"
+		
+		Self.Register()
+	EndMethod
+	
+	'Method OnSend()
+	'EndMethod
+	
+	Method OnReceive()
+		
+		Local arrSize:Int = Self.ReceiveJson.GetPathSize("params/contentChanges")
+		
+		Local changes:String[arrSize]
+		For Local i:Int = 0 Until changes.Length
+			Local contentJson:TJSONObject = TJSONObject( ..
+				Self.ReceiveJson.GetPathJSON("params/contentChanges[" + i + "]"))
+			
+			If contentJson changes[i] = contentJson.GetString("text")
+		Next
+		
+		DocumentHandler.DocumentChanged( ..
+			UriToPath(Self.GetParamString("textDocument/uri")), changes)
+	EndMethod
+EndType
+
 ' Hezkore is cool
 ' Test of custom notification
 New TLSPMessage_HezkoreIsReallyCool
@@ -455,7 +551,7 @@ Type TLSPMessage_HezkoreIsReallyCool Extends TLSPMessage
 	
 	Method New()
 		
-		MethodName = "hezkore/isReallyCool"
+		Self.MethodName = "hezkore/isReallyCool"
 		
 		Self.Register()
 	EndMethod

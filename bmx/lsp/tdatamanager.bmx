@@ -117,7 +117,11 @@ Type TDataManager
 	Method SendMessage(msg:TLSPMessage)
 		
 		'Logger.Log("Sending " + msg.SendJson.ToString())
-		If Debugger.ShowSend Debugger.Log("Sending " + msg.SendJson.ToString() + "~r~n")
+		'If msg.Error Then
+		'	Debugger.StoreMessage("Error " + msg.Error, msg.SendJson.ToString())
+		'Else
+			Debugger.StoreMessage(msg.MethodName, msg.SendJson.ToString(), True)
+		'Endif
 		Self._streamer.OnWriteMessage(msg.SendJson.ToStringCompact())
 	EndMethod
 	
@@ -280,17 +284,19 @@ Type TDataStreamer Abstract
 		message._json = New TJSONHelper(data)
 		message._method = message._json.GetPathString("method")
 		
-		If Debugger.ShowSend Debugger.Log("Receiving " + message._json.ToString() + "~r~n")
-		
 		' Did we get a method name?
 		' Otherwise it's probably an error
 		If Not message._method Then
 			
 			message._error = message._json.GetPathInteger("error/code")
 			message._errorMessage = message._json.GetPathString("error/message")
+			
+			Debugger.StoreMessage("Error " + message._error, message._json.ToString(), False)
 		Else
 			
 			message._id = message._json.GetPathInteger("id")
+			
+			Debugger.StoreMessage(message._method, message._json.ToString(), False)
 		EndIf
 		
 		' We need SOMETHING to push this message...

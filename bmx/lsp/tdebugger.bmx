@@ -30,6 +30,7 @@ Global Debugger:TDebugger = New TDebugger
 		Field _menu:TGadget
 		Field _menuShowSend:TGadget
 		Field _menuShowReceive:TGadget
+		Field _font:TGuiFont
 		Field ShowSend:Byte = True
 		Field ShowReceive:Byte = True
 		
@@ -68,9 +69,11 @@ Global Debugger:TDebugger = New TDebugger
 			
 			Local instance:TDebugger = TDebugger(data)
 			
-			instance._window = CreateWindow("BlitzMax LSP Debug", 0, 0,  ..
+			instance._window = CreateWindow("BlitzMax LSP Debug", 0, 8,  ..
 				Int(DesktopWidth() * 0.2), Int(DesktopHeight() * 0.75), Desktop(), ..
 				WINDOW_RESIZABLE | WINDOW_TOOL | WINDOW_TITLEBAR | WINDOW_MENU)
+			
+			instance._font = LookupGuiFont(GUIFONT_MONOSPACED, 9, FONT_BOLD)
 			
 			instance._msgComboBox = CreateComboBox(0, 0,  ..
 				ClientWidth(instance._window), 26, instance._window, 0)
@@ -78,13 +81,14 @@ Global Debugger:TDebugger = New TDebugger
 			instance._msgTextArea = CreateTextArea(0, GadgetHeight(instance._msgComboBox),  ..
 				ClientWidth(instance._window), ClientHeight(instance._window) / 2, instance._window,  ..
 				TEXTAREA_READONLY)
+			SetTextAreaFont(instance._msgTextArea, instance._font)
 			
 			instance._logTextArea:TGadget = maxgui_driver.CreateGadget(GADGET_TEXTAREA, "", 0,  ..
 				GadgetY(instance._msgTextArea) + GadgetHeight(instance._msgTextArea),  ..
 				ClientWidth(instance._window),  ..
 				ClientHeight(instance._window) - GadgetY(instance._msgTextArea) - GadgetHeight(instance._msgTextArea),  ..
 				instance._window, TEXTAREA_READONLY)' | TEXTAREA_WORDWRAP)
-			TextAreaSetLineNumberEnable(instance._logTextArea, False)
+			SetTextAreaFont(instance._logTextArea, instance._font)
 			SetGadgetLayout(instance._logTextArea, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_ALIGNED)
 			
 			instance._menu = CreateMenu("&Filter", 0, WindowMenu(instance._window))
@@ -98,16 +102,14 @@ Global Debugger:TDebugger = New TDebugger
 			While Not instance._isTerminated
 				
 				' Add any log message
-				If instance._logStack.Count() > 0 Then
+				While instance._logStack.Count() > 0
 					LockMutex(instance._mutex)
-					SetGadgetText(instance._logTextArea, GadgetText(instance._logTextArea) + ..
-						String(instance._logStack.RemoveFirst()))
+					AddTextAreaText(instance._logTextArea, String(instance._logStack.RemoveFirst()))
 					UnlockMutex(instance._mutex)
-					SelectTextAreaText(instance._logTextArea, instance._logTextArea.GetText().Length)
-				EndIf
+				Wend
 				
 				' Add any lsp messages
-				If instance._messageStack.Count() > 0 Then
+				While instance._messageStack.Count() > 0
 					LockMutex(instance._mutex)
 					Local message:TDebuggerMessage = TDebuggerMessage( ..
 						instance._messageStack.RemoveFirst())
@@ -121,7 +123,7 @@ Global Debugger:TDebugger = New TDebugger
 					If instance._msgComboBox.ItemCount() = 1 ..
 						instance.UpdateMessageBox()
 					UnlockMutex(instance._mutex)
-				EndIf
+				Wend
 				
 				While PollEvent()
 					Select EventID()

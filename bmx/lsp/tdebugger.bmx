@@ -6,6 +6,7 @@ SuperStrict
 
 Import MaxGui.Drivers
 Import maxgui.win32maxguiex
+'Import MaxGUI.MaxGUITextAreaScintilla
 Import brl.threads
 Import brl.eventqueue
 Import brl.linkedlist
@@ -78,10 +79,12 @@ Global Debugger:TDebugger = New TDebugger
 				ClientWidth(instance._window), ClientHeight(instance._window) / 2, instance._window,  ..
 				TEXTAREA_READONLY)
 			
-			instance._logTextArea:TGadget = CreateTextArea(0,  ..
+			instance._logTextArea:TGadget = maxgui_driver.CreateGadget(GADGET_TEXTAREA, "", 0,  ..
 				GadgetY(instance._msgTextArea) + GadgetHeight(instance._msgTextArea),  ..
-				ClientWidth(instance._window), ClientHeight(instance._window), instance._window,  ..
-				TEXTAREA_READONLY)' | TEXTAREA_WORDWRAP)
+				ClientWidth(instance._window),  ..
+				ClientHeight(instance._window) - GadgetY(instance._msgTextArea) - GadgetHeight(instance._msgTextArea),  ..
+				instance._window, TEXTAREA_READONLY)' | TEXTAREA_WORDWRAP)
+			TextAreaSetLineNumberEnable(instance._logTextArea, False)
 			SetGadgetLayout(instance._logTextArea, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_ALIGNED)
 			
 			instance._menu = CreateMenu("&Filter", 0, WindowMenu(instance._window))
@@ -160,6 +163,7 @@ Global Debugger:TDebugger = New TDebugger
 			SetGadgetText(Self._msgTextArea,  ..
 				TDebuggerMessage(Self._msgComboBox.ItemExtra( ..
 					Self._msgComboBox.SelectedItem())).Data)
+			TextAreaHighlight(Self._msgTextArea)
 		EndMethod
 	EndType
 ?Not Debug

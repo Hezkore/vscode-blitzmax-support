@@ -6,12 +6,13 @@
 
 SuperStrict
 
+Import brl.collections
 Import brl.linkedlist
 
-'Import "utils.bmx"
+Import "utils.bmx"
 Import "tlogger.bmx"
 
-Global DocumentHandler:TDocumentManager = New TDocumentManager
+Global DocumentManager:TDocumentManager = New TDocumentManager
 Type TDocumentManager
 	
 	' The root path to the workspace
@@ -19,55 +20,76 @@ Type TDocumentManager
 	
 	' All documents open in the IDE
 	' Just a string to compare against
-	Field _openedDocuments:TList
+	Field _openedDocuments:TStringMap
+	
+	' All known modify dates for files
+	Field _modifyDates:TStringMap
 	
 	Method New()
 		
-		Self._openedDocuments = CreateList()
+		Self._openedDocuments = New TStringMap
+		Self._modifyDates = New TStringMap
 	EndMethod
 	
-	Method Get:String(path:String)
+	Method GetModifyDate:Long(path:String)
+		
+		' FIX: This "Long to String" stuff
+		' Do we already know this modify date?
+		If _modifyDates.Contains(path) ..
+			Return Long(Self._modifyDates.ValueForKey(path).ToString())
+		
+		' Fetch the date
+		Self.SetModifyDate(path, FileTime(path, FILETIME_MODIFIED))
+	EndMethod
+	
+	Method SetModifyDate(path:String, time:Long)
+		
+		' FIX: Ugly Long to String
+		Self._modifyDates.Insert(path, String(time))
+	EndMethod
+	
+	' Tries to get text from open document
+	' Otherwise reads from disk
+	Method GetTextFromAny:String(path:String)
 		
 		' Attempt to use open documents
-		For Local o:TOpenDocument = EachIn Self._openedDocuments
-			
-			If o.AbsolutePath = path Return o.Text
-		Next
+		If Self.IsOpened(path) ..
+			Return Self.GetTextFromOpened(path)
 		
 		' Read directly from disk
-		Return Self.GetFromDisk(path)
+		Return Self.GetTextFromDisk(path)
 	EndMethod
 	
-	Method GetFromDisk:String(path:String)
+	' Only from disk
+	Method GetTextFromDisk:String(path:String)
 		Return LoadString(path)
 	EndMethod
 	
-	Method GetFromOpened:String(path:String)
-		For Local o:TOpenDocument = EachIn Self._openedDocuments
-			If o.AbsolutePath = path Return o.Text
-		Next
-		Return ""
+	' Only from opened
+	Method GetTextFromOpened:String(path:String)
+		
+		Return TOpenDocument( ..
+			Self._openedDocuments.ValueForKey(path)).Text
 	EndMethod
 	
 	Method IsOpened:TOpenDocument(path:String)
 		
-		For Local o:TOpenDocument = EachIn Self._openedDocuments
-			
-			If o.AbsolutePath = path Then Return o
-		Next
+		Return TOpenDocument( ..
+			Self._openedDocuments.ValueForKey(path))
 	EndMethod
 	
 	Method DocumentOpened(path:String, text:String)
 		
-		' TODO: Check if already opened
+		If Self.IsOpened(path) Then
+			Logger.Log("Document already open ~q" + path + "~q")
+			Return
+		EndIf
 		
 		Local newDoc:TOpenDocument = New TOpenDocument
 		newDoc.AbsolutePath = path
 		newDoc.Text = text
 		
-		'Logger.Log("Text: " + newDoc.Text)
-		
-		Self._openedDocuments.AddLast(newDoc)
+		Self._openedDocuments.Insert(path, newDoc)
 		
 		Logger.Log("Opened document ~q" + path + "~q")
 	EndMethod
@@ -75,9 +97,8 @@ Type TDocumentManager
 	Method DocumentClosed(path:String)
 		
 		' Is this document even opened?
-		Local openDoc:TOpenDocument = Self.IsOpened(path)
-		If openDoc Then
-			Self._openedDocuments.Remove(openDoc)
+		If Self.IsOpened(path) Then
+			Self._openedDocuments.Remove(path)
 			Logger.Log("Closed document ~q" + path + "~q")
 			Return
 		EndIf
@@ -92,6 +113,7 @@ Type TDocumentManager
 		' Is this document even opened?
 		Local openDoc:TOpenDocument = Self.IsOpened(path)
 		If openDoc Then
+			Self._modifyDates.Insert(path, String(CurrentUnixTime()))
 			'Logger.Log("Changes " + changes.Length)
 			For Local i:Int = 0 Until changes.Length
 				'Logger.Log("Text: " + changes[i])

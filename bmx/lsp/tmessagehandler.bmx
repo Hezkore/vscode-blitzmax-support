@@ -17,6 +17,7 @@ Import "tlogger.bmx"
 Import "json.helper.bmx"
 Import "tdocumentmanager.bmx"
 Import "tworkspacemanager.bmx"
+Import "tbmxparser.bmx"
 
 Global MessageHandler:TMessageHandler = New TMessageHandler()
 Type TMessageHandler
@@ -317,13 +318,11 @@ Type TLSPMessage_Initialize Extends TLSPMessage
 		Local workspaceCount:Int = Self.ReceiveJson.GetPathSize( ..
 			"params/workspaceFolders")
 		For Local i:Int = 0 Until workspaceCount
-			Local workspaceJson:TJSONObject = TJSONObject( ..
-				Self.ReceiveJson.GetPathJSON("params/workspaceFolders[" + i + "]"))
-			
-			If workspaceJson WorkspaceManager.OpenWorkspace( ..
-				workspaceJson.GetString("name"),  ..
-				UriToPath(workspaceJson.GetString("uri")))
+			WorkspaceManager.OpenWorkspace( ..
+				Self.GetParamString("workspaceFolders[" + i + "]/name"),  ..
+				UriToPath(Self.GetParamString("workspaceFolders[" + i + "]/uri")))
 		Next
+		
 		
 		'MessageHandler.SendMessage(Self.MethodName, Self.ID) ' This
 		Self.Respond() ' Is the same as this
@@ -433,20 +432,20 @@ Type TLSPMessage_TextDocument_Completion Extends TLSPMessage
 	
 	Method OnSend()
 		
-		Self.SetResultBool("isIncomplete", True)
+		Self.SetResultBool("isIncomplete", False)
 		
 		If Self.CurrentTrigger = "/"
 			
-			Self.SetResultString("items[0]//label", "Hezkore")
-			Self.SetResultString("items[1]//label", "Ron")
-			Self.SetResultString("items[2]//label", "Brucey")
+			Self.SetResultString("items[0]/label", "Hezkore")
+			Self.SetResultString("items[1]/label", "Ron")
+			Self.SetResultString("items[2]/label", "Brucey")
 		Else
 			
-			Self.SetResultString("items[0]//label", "standardio")
-			Self.SetResultString("items[0]/[0]/detail", "Lots of text stuff")
+			Self.SetResultString("items[0]/label", "standardio")
+			Self.SetResultString("items[0]/detail", "Lots of text stuff")
 			
-			Self.SetResultString("items[1]//label", "linkedlist")
-			Self.SetResultString("items[1]/[1]/detail", "TList!")
+			Self.SetResultString("items[1]/label", "linkedlist")
+			Self.SetResultString("items[1]/detail", "TList!")
 		EndIf
 	EndMethod
 	
@@ -484,7 +483,7 @@ Type TLSPMessage_TextDocument_DidOpen Extends TLSPMessage
 	
 	Method OnReceive()
 		
-		DocumentHandler.DocumentOpened( ..
+		DocumentManager.DocumentOpened( ..
 			UriToPath(Self.GetParamString("textDocument/uri")),  ..
 			Self.GetParamString("textDocument/text"))
 		
@@ -516,7 +515,7 @@ Type TLSPMessage_TextDocument_DidClose Extends TLSPMessage
 	
 	Method OnReceive()
 		
-		DocumentHandler.DocumentClosed( ..
+		DocumentManager.DocumentClosed( ..
 			UriToPath(Self.GetParamString("textDocument/uri")))
 	EndMethod
 EndType
@@ -539,17 +538,39 @@ Type TLSPMessage_TextDocument_DidChange Extends TLSPMessage
 	Method OnReceive()
 		
 		Local arrSize:Int = Self.ReceiveJson.GetPathSize("params/contentChanges")
-		
 		Local changes:String[arrSize]
 		For Local i:Int = 0 Until changes.Length
-			Local contentJson:TJSONObject = TJSONObject( ..
-				Self.ReceiveJson.GetPathJSON("params/contentChanges[" + i + "]"))
-			
-			If contentJson changes[i] = contentJson.GetString("text")
+			changes[i] = Self.GetParamString("contentChanges[" + i + "]/text")
 		Next
 		
-		DocumentHandler.DocumentChanged( ..
+		DocumentManager.DocumentChanged( ..
 			UriToPath(Self.GetParamString("textDocument/uri")), changes)
+		
+		BmxParser.Parse( ..
+			UriToPath(Self.GetParamString( ..
+				"textDocument/uri")))
+	EndMethod
+EndType
+
+' textDocument/didChange
+' 
+New TLSPMessage_Workspace_DidChangeWatchedFiles
+Type TLSPMessage_Workspace_DidChangeWatchedFiles Extends TLSPMessage
+	
+	Method New()
+		
+		Self.MethodName = "workspace/didChangeWatchedFiles"
+		
+		Self.Register()
+	EndMethod
+	
+	'Method OnSend()
+	'EndMethod
+	
+	Method OnReceive()
+		
+		' Something in the folder changed!
+		WorkspaceManager.UpdateAllRelatedFiles()
 	EndMethod
 EndType
 

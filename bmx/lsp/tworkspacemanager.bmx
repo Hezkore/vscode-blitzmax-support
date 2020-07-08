@@ -70,6 +70,14 @@ Type TWorkspaceManager
 		For Local w:TWorkspace = EachIn Self._workspaces
 			
 			If w.Path = docPath Return w
+			If w.Path = Left(docPath, w.Path.Length) Return w
+		Next
+	EndMethod
+	
+	Method UpdateAllRelatedFiles()
+		
+		For Local w:TWorkspace = EachIn Self._workspaces
+			w.UpdateRelatedFiles()
 		Next
 	EndMethod
 EndType
@@ -78,10 +86,14 @@ Type TWorkspace
 	
 	Field _path:String
 	Field _name:String
+	Field _relatedFiles:TList
 	
 	Method New(name:String, path:String)
 		Self._name = name
 		Self._path = path
+		Self._relatedFiles = CreateList()
+		
+		Self.UpdateRelatedFiles()
 	EndMethod
 	
 	Method Path:String()
@@ -90,5 +102,55 @@ Type TWorkspace
 	
 	Method Name:String()
 		Return Self._name
+	EndMethod
+	
+	Method UpdateRelatedFiles()
+		
+		' Sub helper function
+		Function AddRecursive(path:String, list:TList)
+			Local fType:Int
+			Local fPath:String
+			Local files:String[] = LoadDir(path)
+			For Local s:String = EachIn files
+				fPath = path + "/" + s
+				fType = FileType(fPath)
+				If fType = FILETYPE_FILE
+					list.AddLast(fPath)
+				ElseIf fType = FILETYPE_DIR
+					AddRecursive(fPath, list)
+				EndIf
+			Next
+		EndFunction
+		Self._relatedFiles.Clear()
+		AddRecursive(Self._path, Self._relatedFiles)
+		
+		'Rem
+		Logger.Log("Related Files: ",, False)
+		For Local i:Int = 0 Until Self._relatedFiles.Count()
+			If i = Self._relatedFiles.Count() - 1 Then
+				Logger.Log(String(Self._relatedFiles.ValueAtIndex(i)))
+			Else
+				Logger.Log(String(Self._relatedFiles.ValueAtIndex(i)) + ", ",, False)
+			EndIf
+		Next
+		'EndRem
+	EndMethod
+	
+	Method RelatedFiles:String[] ()
+		
+		' No files, let's try and update it
+		If Self._relatedFiles.Count() <= 0 ..
+			Self.UpdateRelatedFiles()
+		
+		' Send what we have
+		If Self._relatedFiles.Count() > 0
+			Local files:String[Self._relatedFiles.Count()]
+			For Local i:Int = 0 Until files.Length
+				files[i] = String(Self._relatedFiles.ValueAtIndex(i))
+			Next
+			Return files
+		EndIf
+		
+		Return New String[0]
 	EndMethod
 EndType

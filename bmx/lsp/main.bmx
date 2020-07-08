@@ -11,6 +11,8 @@ Import "tlogger.bmx"
 Import "tdatamanager.bmx"
 Import "tmessagehandler.bmx"
 Import "tdebugger.bmx"
+Import "tbmxparser.bmx"
+Import "utils.bmx"
 
 ' Version
 Global Version:String = "0.1"
@@ -53,6 +55,7 @@ Try
 		
 		lsp.Update()
 		DataManager.Update()
+		BmxParser.Update()
 	Wend
 Catch ex:Object
 	' Just log any crazyness we might encouter and continue

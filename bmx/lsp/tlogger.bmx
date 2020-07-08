@@ -2,6 +2,7 @@ SuperStrict
 
 Import brl.system
 
+Import "utils.bmx"
 Import "tdebugger.bmx"
 
 ' Enumerator for log message types

@@ -2,6 +2,7 @@ SuperStrict
 
 Import Text.Json
 Import Brl.StandardIO
+Import brl.reflection
 
 
 Type TJSONHelper
@@ -14,9 +15,9 @@ Type TJSONHelper
 
 
 	Method New(json:String)
-		if not json 
+		If Not json 
 			defaultJSON = New TJSONObject.Create()
-		else
+		Else
 			defaultJSON = TJSON.Load(json, 0, jsonError)
 		EndIf
 	End Method
@@ -24,7 +25,7 @@ Type TJSONHelper
 	
 	Method CreateDefault:TJSONHelper()
 		defaultJSON = New TJSONObject.Create()
-		Return self
+		Return Self
 	End Method
 	
 	
@@ -32,10 +33,10 @@ Type TJSONHelper
 		If Not json Then Return Null
 		If Not path Then Return json
 		
-		local pathParts:String[] = path.split("/")
-		local currentJSON:TJSON = json
+		Local pathParts:String[] = path.split("/")
+		Local currentJSON:TJSON = json
 
-		For local pathIndex:int = 0 until pathParts.length
+		For Local pathIndex:Int = 0 Until pathParts.length
 			'array requested?
 			Local arrayIndex:Int = -1
 			Local arrayIndexStart:Int = pathParts[pathIndex].find("[")
@@ -48,22 +49,22 @@ Type TJSONHelper
 
 			'print "processing: " + pathParts[pathIndex] +"    arrayIndex="+arrayIndex
 			
-			if arrayIndex >= 0
-				local keyWithoutIndex:String = pathParts[pathIndex][.. arrayIndexStart]
+			If arrayIndex >= 0
+				Local keyWithoutIndex:String = pathParts[pathIndex][.. arrayIndexStart]
 				currentJSON = TJSONObject(currentJSON).Get(keyWithoutIndex)
 				
 
-				If TJSONArray(currentJSON) and TJSONArray(currentJSON).Size() > arrayIndex
+				If TJSONArray(currentJSON) And TJSONArray(currentJSON).Size() > arrayIndex
 					currentJSON = TJSONArray(currentJSON).Get(arrayIndex)
 					'found valid for this path part
-					Exit
+'					Exit
 				'iterate over keys of a key-value table to find the n-th element
-				ElseIf TJSONObject(currentJSON) and TJSONObject(currentJSON).Size() > arrayIndex
+				ElseIf TJSONObject(currentJSON) And TJSONObject(currentJSON).Size() > arrayIndex
 
-					local childIndex:Int = 0
-					local validChildJSON:TJSON
-					For local childJSON:TJSON = EachIn TJSONObject(currentJSON)
-						if childIndex = arrayIndex
+					Local childIndex:Int = 0
+					Local validChildJSON:TJSON
+					For Local childJSON:TJSON = EachIn TJSONObject(currentJSON)
+						If childIndex = arrayIndex
 							validChildJSON = childJSON
 							Exit
 						EndIf
@@ -82,10 +83,10 @@ Type TJSONHelper
 				currentJSON = TJSONObject(currentJSON).Get( pathParts[pathIndex] )
 			EndIf
 			
-			If currentJSON = Null Then exit
+			If currentJSON = Null Then Exit
 		Next
 			
-		return currentJSON
+		Return currentJSON
 	End Function
 	
 	
@@ -95,28 +96,28 @@ Type TJSONHelper
 
 	
 	Method GetPathJSON:TJSON(path:String, json:TJSON = Null)
-		if not json then json = defaultJSON
+		If Not json Then json = defaultJSON
 		Return _GetPathJSON(path, json)
 	End Method
 
 	
 	Method HasPath:Int(path:String, json:TJSON = Null)
-		if not json then json = defaultJSON
+		If Not json Then json = defaultJSON
 		Return _HasPath(path, json)
 	End Method
 
 
 	Method GetPathSize:Int(path:String, json:TJSON = Null)
 		Local res:TJSON = GetPathJSON(path, json)
-		if TJSONArray(res) Then return TJSONArray(res).Size()
-		if TJSONObject(res) Then return TJSONObject(res).Size()
+		If TJSONArray(res) Then Return TJSONArray(res).Size()
+		If TJSONObject(res) Then Return TJSONObject(res).Size()
 		Return 0
 	End Method
 	
 	
 	Method GetPathInteger:Long(path:String, json:TJSON = Null, defaultValue:Long = 0)
 		Local res:TJSON = GetPathJSON(path, json)
-		If Not TJSONInteger(res) Then return defaultValue
+		If Not TJSONInteger(res) Then Return defaultValue
 		
 		Return TJSONInteger(res).Value()
 	End Method
@@ -124,7 +125,7 @@ Type TJSONHelper
 
 	Method GetPathReal:Double(path:String, json:TJSON = Null, defaultValue:Double = 0.0)
 		Local res:TJSON = GetPathJSON(path, json)
-		If Not TJSONReal(res) Then return defaultValue
+		If Not TJSONReal(res) Then Return defaultValue
 		
 		Return TJSONReal(res).Value()
 	End Method
@@ -132,7 +133,7 @@ Type TJSONHelper
 
 	Method GetPathBool:Int(path:String, json:TJSON = Null, defaultValue:Int = False)
 		Local res:TJSON = GetPathJSON(path, json)
-		If Not TJSONBool(res) Then return defaultValue
+		If Not TJSONBool(res) Then Return defaultValue
 		
 		Return TJSONBool(res).isTrue
 	End Method
@@ -140,7 +141,7 @@ Type TJSONHelper
 
 	Method GetPathString:String(path:String, json:TJSON = Null, defaultValue:String = "")
 		Local res:TJSON = GetPathJSON(path, json)
-		If Not TJSONString(res) Then return defaultValue
+		If Not TJSONString(res) Then Return defaultValue
 		
 		Return TJSONString(res).Value()
 	End Method
@@ -163,7 +164,7 @@ Type TJSONHelper
 	End Function
 
 
-	Function _SplitArrayIndex2(path:String, key:String var, index:Int var)
+	Function _SplitArrayIndex2(path:String, key:String Var, index:Int Var)
 		index = -1
 		key = path
 		
@@ -171,7 +172,7 @@ Type TJSONHelper
 		If arrayIndexStart >= 0 
 			Local arrayIndexEnd:Int = path.FindLast("]")
 			If arrayIndexStart < arrayIndexEnd
-				index = int(path[arrayIndexStart + 1 ..][.. arrayIndexEnd - arrayIndexStart])
+				index = Int(path[arrayIndexStart + 1 ..][.. arrayIndexEnd - arrayIndexStart])
 				key = path[.. arrayIndexStart]
 			EndIf
 		EndIf
@@ -197,37 +198,53 @@ Type TJSONHelper
 	'paths are elements whose last "part" is a container (jsonarray or jsonobject) 
 	Function _EnsurePathExistence:TJSON(path:String, json:TJSON)
 		Local lastJSON:TJSON = json
-		local lastPath:String
+		Local lastPath:String
 		
-		If not lastJSON Then Throw "invalid JSON object passed to _EnsurePathExistence"
+		If Not lastJSON Then Throw "invalid JSON object passed to _EnsurePathExistence"
 
-		local lastIndex:Int = -1
-		local lastKey:String
-		local currentPath:String
-		For local pathPart:String = EachIn path.Split("/")
-			local key:String
-			local index:Int
-			local currentJSON:TJSON
+		Local lastIndex:Int = -1
+		Local lastKey:String
+		Local currentPath:String
+		For Local pathPart:String = EachIn path.Split("/")
+			Local key:String
+			Local index:Int
+			Local currentJSON:TJSON
 			_SplitArrayIndex2(pathPart, key, index)
 
 			lastPath = currentPath
-			if currentPath Then currentPath :+ "/"
+			If currentPath Then currentPath :+ "/"
 			currentPath :+ pathPart
-
+'print "pathPart:" + pathPart + "  key="+key
 			'check if element exists already
 			If TJSONObject(lastJSON)
-				currentJSON = TJSONObject(lastJSON).Get(key)
+				'requesting a specific object index?
+				If key = "" 
+					If index >= 0
+						Local subIndex:Int = 0
+						For Local subJSON:TJSON = EachIn TJSONObject(lastJSON)
+							If subIndex = index 
+								currentJSON = subJSON
+								Exit
+							EndIf
+							subIndex :+ 1
+						Next
+					Else
+						currentJSON = Null
+					EndIf
+				Else
+					currentJSON = TJSONObject(lastJSON).Get(key)
+				EndIf
 			ElseIf TJSONArray(lastJSON)
 				currentJSON = TJSONArray(lastJSON).Get(index)
 			EndIf
 
-			If not currentJSON
+			If Not currentJSON
 				'current will be an array?
-				If index >= 0
-					currentJSON = new TJSONArray.Create()
+				If index >= 0 And key <> ""
+					currentJSON = New TJSONArray.Create()
 					'print "element not existing. Path="+currentPath + "   created array."
 				Else
-					currentJSON = new TJSONObject.Create()
+					currentJSON = New TJSONObject.Create()
 					'print "element not existing. Path="+currentPath + "   created obj."
 				EndIf
 				
@@ -236,8 +253,10 @@ Type TJSONHelper
 						Throw "Failed to set new child element"
 					EndIf
 				ElseIf TJSONArray(lastJSON)
-					If TJSONArray(lastJSON).Insert(lastIndex, currentJSON) = -1
-						Throw "Failed to insert new array element at index="+lastIndex
+					If TJSONArray(lastJSON).Insert(index, currentJSON) = -1
+						Throw "Failed to insert new array element at index="+index
+					'else
+					'	Print "Inserted new array element at ~q" + currentPath + "~q."
 					EndIf
 				EndIf
 				
@@ -260,130 +279,319 @@ Type TJSONHelper
 	
 
 	Method EnsurePathExistence:TJSON(path:String, json:TJSON = Null)
-		if not json then json = defaultJSON
+		If Not json Then json = defaultJSON
 		Return _EnsurePathExistence(path, json)
 	End Method
-
 	
-	Function _SetJSONElement(path:String, element:TJSON, json:TJSON)
-		Local pathSplit:String[] = _SplitPathAndKey(path)
-		'first level entries
-		if not pathSplit[1]
-			pathSplit[1] = pathsplit[0]
-			pathSplit[0] = ""
-		endif
-
-		Local parentPath:String = pathSplit[0]
-		Local key:String
-		Local index:Int
-
-
-		_SplitArrayIndex2(pathSplit[1], key, index)
-			
-
-
-		local parentKey:String
-		Local parentIndex:Int
-		_SplitArrayIndex2(parentPath, parentKey, parentIndex)
-
-		'check path and create if required
-		If parentPath
-			json = _EnsurePathExistence(parentPath, json)
-		EndIf
-
-		'assign new value
-		If index >= 0 'array?
-			'create/fetch array node first
-			local arrayJSON:TJSON
-			if TJSONObject(json)
-				arrayJSON = TJSONObject(json).Get(key)
-				if not arrayJSON then arrayJSON = new TJSONArray.Create()
-				TJSONObject(json).Set(key, arrayJSON)
-			elseif TJSONArray(json)
-				arrayJSON = TJSONArray(json).Get(parentIndex)
-				if not arrayJSON then arrayJSON = new TJSONArray.Create()
-				if TJSONArray(json).Get(parentIndex)
-					TJSONArray(json).Set(parentIndex, arrayJSON)
-				else
-					TJSONArray(json).Insert(parentIndex, arrayJSON)
-				endif
-			else
-				Throw "Trying to add to unsupported json type"
-			EndIf
-			json = arrayJSON
-
-
-			'assign value to either object or array
-			If TJSONObject(json)
-				TJSONObject(json).Set(key, element)
-			ElseIf TJSONArray(json)
-				'either set or insert depending on existence
-				if TJSONArray(json).Get(index)
-					TJSONArray(json).Set(index, element)
-				else
-					TJSONArray(json).Insert(index, element)
-				endif
-			EndIf
-		Else
-			If TJSONObject(json)
-				TJSONObject(json).Set(key, element)
-'				print "  add to object: key="+key
-			ElseIf TJSONArray(json)
-				if parentIndex
-					local arrayJSON:TJSON = TJSONArray(json).Get(parentIndex)
-					if not arrayJSON then Throw "array not found"
-					if TJSONArray(json).Get(parentIndex)
-						TJSONArray(json).Set(parentIndex, arrayJSON)
-					else
-						TJSONArray(json).Insert(parentIndex, arrayJSON)
-					endif
-				else
-					TJSONArray(json).Append(element)
-				endif
-'				print "  append to array"
+	
+	Function _ArrObjSet:TJSON(obj:TJSON, key:String  = "", index:Int = -1, value:TJSON)
+		If TJSONObject(obj) 
+			TJSONObject(obj).Set(key, value)
+		ElseIf TJSONArray(obj) 
+			If TJSONArray(obj).Size() > index
+				' simple set() does only work if the array slot existed 
+				' already and "null" slots seem to not be possible
+				TJSONArray(obj).Set(index, value)
 			Else
-				Throw "Cannot add child element to non-array and non-object json nodes."
+				' we cannot "precreate" empty (null) array entries
+				' they just get automatically skipped
+				' so any index request > array size +1 (append) cannot
+				' be fulfilled
+				If TJSONArray(obj).Size() < index
+					Throw "Cannot set new entry to array exceeding array size + 1. size="+TJSONArray(obj).Size() + "  index="+index
+				EndIf
+
+				TJSONArray(obj).Append(value)
 			EndIf
-'			print "  => object json value="+json.SaveString()
 		EndIf
+		Return value
+	End Function
+
+
+	Function _ArrObjNew:TJSON(obj:TJSON, key:String = "", index:Int = -1, jsonPathType:Int)
+		' create the new object
+		Local newObj:TJSON
+		Select jsonPathType
+			Case  TJSONPathToken.JSON_ARRAY
+				newObj = New TJSONArray.Create()
+			Case  TJSONPathToken.JSON_OBJECT
+				newObj = New TJSONObject.Create()
+			Default
+				Throw "_ArrObjNew cannot create new json type with pathType " + jsonPathType
+		End Select
+
+
+		' set the new object to its parent 
+		If TJSONObject(obj) 
+			TJSONObject(obj).Set(key, newObj)
+		ElseIf TJSONArray(obj) 
+			' if we add something to an array we need to ensure having a 
+			' valid index. Without index we append...
+			If index = -1 Then index = TJSONArray(obj).Size()
+			
+			If TJSONArray(obj).Size() > index
+				' simple set() does only work if the array slot existed 
+				' already and "null" slots seem to not be possible
+				TJSONArray(obj).Set(index, newObj)
+			Else
+				' we cannot "precreate" empty (null) array entries
+				' they just get automatically skipped
+				' so any index request > array size +1 (append) cannot
+				' be fulfilled
+				If TJSONArray(obj).Size() < index
+					Throw "Cannot add new entry to array exceeding array size + 1."
+				EndIf
+
+				TJSONArray(obj).Append(newObj)
+			EndIf
+		EndIf
+		
+		Return newObj
+	End Function
+
+
+	Function _ArrObjGet:TJSON(obj:TJSON, key:String = "", index:Int = -1)
+		If TJSONObject(obj) 
+			Return TJSONObject(obj).Get(key)
+		ElseIf TJSONArray(obj)
+			Return TJSONArray(obj).Get(index)
+		EndIf
+	End Function
+
+		
+	Function _SetJSONElement:TJSON(path:String, element:TJSON, json:TJSON)
+		Local jsonPath:TJSONPath = New TJSONPath(path)
+		Local currentJSON:TJSON = json
+
+		' iterate over all path tokens and check if they exist 
+		' if not, create them
+		' reaching a value field just assigns the given element
+		Local totalPath:String
+		For Local tokenNum:Int = 0 Until jsonPath.token.length
+			Local t:TJSONPathToken = jsonPath.token[tokenNum]
+
+		
+			If totalPath Then totalPath :+ "/"
+			totalPath :+ t.GetPath()
+'print "handling ~q"+totalPath+"~q"
+'if totalPath = "results{}/arr[0]/obj{}" Then Debugstop
+			'if previous token was an array, ensure we defined as so
+			Local parentIndex:Int = -1
+			If tokenNum > 0 And jsonPath.token[tokenNum-1].jsonType = TJSONPathToken.JSON_ARRAY
+				parentIndex = jsonPath.token[tokenNum-1].index
+			EndIf
+
+
+			If t.jsonType = TJSONPathToken.JSON_ARRAY Or t.jsonType = TJSONPathToken.JSON_OBJECT
+				Local existingObj:TJSON
+				If TJSONObject(currentJSON) 
+					existingObj = TJSONObject(currentJSON).Get(t.value)
+				ElseIf TJSONArray(currentJSON)
+					existingObj = TJSONArray(currentJSON).Get(parentIndex)
+				EndIf
+
+				'wrong types?
+				'remove the old stuff (eg a wrapper array element)
+				if existingObj
+					if (t.jsonType = TJSONPathToken.JSON_ARRAY and not TJSONArray(existingObj)) or ..
+					   (t.jsonType = TJSONPathToken.JSON_OBJECT and not TJSONObject(existingObj))
+
+						If TJSONObject(currentJSON) 
+							TJSONObject(currentJSON).Del(t.value)
+						ElseIf TJSONArray(currentJSON)
+							TJSONArray(currentJSON).Remove(parentIndex)
+						EndIf
+
+						existingObj = null
+					endif
+				endif
+
+					
+				'create base
+				if not existingObj
+					existingObj = _ArrObjNew(currentJSON, t.value, t.index, t.jsonType)
+				'	print "  created base"
+				'else
+				'	print "  existing base"
+				endif
+
+				'check for specific array element?
+				If t.index >= 0 and TJSONArray(existingObj)
+					local arrayElement:TJSON = TJSONArray(existingObj).Get(t.index)
+
+					if not arrayElement ' and tokenNum <= jsonPath.token.length-1
+						arrayElement = _ArrObjNew(existingObj, t.value, t.index, t.jsonType)
+						'print "    created array entry " + t.index
+						
+					'	existingObj = arrayElement
+					EndIf
+				endif
+
+				currentJSON = existingObj
+			EndIf
+			
+			'set value to last one or value fields
+			If t.jsonType = TJSONPathToken.JSON_VALUE Or tokenNum = jsonPath.token.length -1
+				if TJSONArray(currentJSON) and t.index = -1 and t.value and parentIndex >= 0
+					local wrap:TJSONObject = TJSONObject(TJSONArray(currentJSON).Get(parentIndex))
+					if not wrap 
+						wrap = new TJSONObject.Create()
+						TJSONArray(currentJSON).Set(parentIndex, wrap)
+					endif
+					wrap.Set(t.value, element)
+				else
+					_ArrObjSet(currentJSON, t.value, t.index, element)
+				EndIf
+
+			EndIf
+		Next
 	End Function
 	
 
-	Method SetPathString:Int(path:String, value:String, json:TJSON = Null)
-		if not json then json = defaultJSON
-		_SetJSONElement(path, New TJSONString.Create(value), json)
+	Method SetPathString:TJSON(path:String, value:String, json:TJSON = Null)
+		If Not json Then json = defaultJSON
+		Return _SetJSONElement(path, New TJSONString.Create(value), json)
 	End Method
 
 
-	Method SetPathInteger:Int(path:String, value:Long, json:TJSON = Null)
-		if not json then json = defaultJSON
-		_SetJSONElement(path, New TJSONInteger.Create(value), json)
+	Method SetPathInteger:TJSON(path:String, value:Long, json:TJSON = Null)
+		If Not json Then json = defaultJSON
+		Return _SetJSONElement(path, New TJSONInteger.Create(value), json)
 	End Method
 
 
-	Method SetPathBool:Int(path:String, value:Int, json:TJSON = Null)
-		if not json then json = defaultJSON
-		_SetJSONElement(path, New TJSONBool.Create(value), json)
+	Method SetPathBool:TJSON(path:String, value:Int, json:TJSON = Null)
+		If Not json Then json = defaultJSON
+		Return _SetJSONElement(path, New TJSONBool.Create(value), json)
 	End Method
 
 
-	Method SetPathBoolString:Int(path:String, value:String, json:TJSON = Null)
-		if not json then json = defaultJSON
-		if value.ToLower() = "true" or value = "1"
-			_SetJSONElement(path, New TJSONBool.Create(true), json)
-		else
-			_SetJSONElement(path, New TJSONBool.Create(false), json)
-		endif
+	Method SetPathBoolString:TJSON(path:String, value:String, json:TJSON = Null)
+		If Not json Then json = defaultJSON
+		If value.ToLower() = "true" Or value = "1"
+			Return _SetJSONElement(path, New TJSONBool.Create(True), json)
+		Else
+			Return _SetJSONElement(path, New TJSONBool.Create(False), json)
+		EndIf
 	End Method
 
 		
 	Method ToString:String()
-		if defaultJSON Then Return defaultJSON.SaveString(0, 2)
+		If defaultJSON Then Return defaultJSON.SaveString(0, 2)
 		Return "" 
 	End Method
 
 	Method ToStringCompact:String()
-		if defaultJSON Then Return defaultJSON.SaveString(JSON_COMPACT, 0)
+		If defaultJSON Then Return defaultJSON.SaveString(JSON_COMPACT, 0)
 		Return "" 
+	End Method
+End Type
+
+
+
+
+Type TJSONPath
+	Field token:TJSONPathToken[]
+	Field path:String
+	
+	Method New(path:String)
+		Local parts:String[] = path.split("/")
+		token = New TJSONPathToken[ parts.length ]
+
+		For Local i:Int = 0 Until parts.length
+			Local index:Int = -1
+			Local value:String = parts[i]
+			Local jsonType:Int
+
+			Local arrayIndexStart:Int = parts[i].FindLast("[")
+			If arrayIndexStart >= 0 
+				Local arrayIndexEnd:Int = parts[i].FindLast("]")
+				If arrayIndexStart < arrayIndexEnd
+					index = Int(parts[i][arrayIndexStart + 1 ..][.. arrayIndexEnd - arrayIndexStart])
+					value = parts[i][.. arrayIndexStart]
+				EndIf
+			EndIf
+			Local objectIndexStart:Int = parts[i].FindLast("{")
+			If objectIndexStart >= 0 
+				Local objectIndexEnd:Int = parts[i].FindLast("}")
+				If objectIndexStart < objectIndexEnd
+					index = Int(parts[i][objectIndexStart + 1 ..][.. objectIndexEnd - objectIndexStart])
+					value = parts[i][.. objectIndexStart]
+				EndIf
+			EndIf
+			
+			If arrayIndexStart >= 0
+				jsonType = TJSONPathToken.JSON_ARRAY
+			ElseIf i < parts.length -1 Or objectIndexStart >= 0
+				jsonType = TJSONPathToken.JSON_OBJECT
+			Else
+				jsonType = TJSONPathToken.JSON_VALUE
+			EndIf
+
+			If i = 0
+				token[i] = New TJSONPathToken(parts[i], value, index, jsonType, Null)
+			Else
+				token[i] = New TJSONPathToken(parts[i], value, index, jsonType, token[i-1])
+			EndIf
+		Next
+		
+		Self.path = path
+	End Method
+	
+	
+	Method ToString:String()
+		Local tokenS:String
+		Local typeS:String
+		For Local t:TJSONPathToken = EachIn token
+			If tokenS Then tokenS :+ " / "
+			If typeS Then typeS :+ " / "
+			
+			Local tokenPath:String = t.GetPath()
+			
+			If Not tokenPath
+				tokenS :+ " . "
+			Else
+				tokenS :+ tokenPath[.. Max(3, tokenPath.length)]
+			EndIf
+			Select t.jsonTYPE
+				Case TJSONPathToken.JSON_OBJECT	typeS :+ "OBJ"[.. Max(3, tokenPath.length)]
+				Case TJSONPathToken.JSON_ARRAY	typeS :+ "ARR"[.. Max(3, tokenPath.length)]
+				Case TJSONPathToken.JSON_VALUE	typeS :+ "VAL"[.. Max(3, tokenPath.length)]
+			End Select
+		Next
+		Return tokenS + "~n" + typeS
+	End Method
+End Type
+
+
+
+
+Type TJSONPathToken
+	Field jsonType:Int 'JSON_OBJECT, JSON_ARRAY, JSON_VALUE
+	Field value:String
+	Field index:Int = -1
+	Field path:String
+	Field previousToken:TJSONPathToken
+	
+	Const JSON_OBJECT:Int = 1
+	Const JSON_ARRAY:Int = 2
+	Const JSON_VALUE:Int = 3
+	
+
+	Method New(path:String, value:String, index:Int, jsonType:Int, previousToken:TJSONPathToken)
+		Self.path = path
+		Self.value = value
+		Self.index = index
+		Self.jsonType = jsonType
+		Self.previousToken = previousToken
+	End Method
+	
+	
+	Method GetPath:String()
+		Select jsonType
+			Case JSON_OBJECT	Return value + "{}"
+			Case JSON_ARRAY		Return value + "[" + index + "]"
+			Default				Return value
+		End Select
 	End Method
 End Type

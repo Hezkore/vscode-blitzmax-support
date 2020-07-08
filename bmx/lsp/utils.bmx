@@ -17,13 +17,13 @@ EndFunction
 
 Struct SPosition
 	
-	Field x:Int
-	Field y:Int
-	Field length:Int
+	Field Line:Int
+	Field Character:Int
+	Field Length:Int
 	
-	Method New(x:Int, y:Int, length:Int)
-		Self.x = x
-		Self.y = y
-		Self.length = length
+	Method New(character:Int, line:Int, length:Int)
+		Self.Line = line
+		Self.Character = character
+		Self.Length = Length
 	EndMethod
 EndStruct

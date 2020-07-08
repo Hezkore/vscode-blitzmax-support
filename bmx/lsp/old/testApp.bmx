@@ -1,4 +1,5 @@
-SuperStrict
+Super..
+	Strict
 
 Framework brl.standardio
 Import brl.linkedlist
@@ -35,4 +36,7 @@ hellur()
 Print( "Now pause..." )
 Delay(5000)
 Print( "We're all done here!" )
+
+Super..
+	Strict
 

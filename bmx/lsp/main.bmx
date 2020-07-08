@@ -12,6 +12,7 @@ Import "tdatamanager.bmx"
 Import "tmessagehandler.bmx"
 Import "tdebugger.bmx"
 Import "tbmxparser.bmx"
+Import "tcompletionmanager.bmx"
 Import "utils.bmx"
 
 ' Version
@@ -56,6 +57,7 @@ Try
 		lsp.Update()
 		DataManager.Update()
 		BmxParser.Update()
+		CompletionManager.Update()
 	Wend
 Catch ex:Object
 	' Just log any crazyness we might encouter and continue

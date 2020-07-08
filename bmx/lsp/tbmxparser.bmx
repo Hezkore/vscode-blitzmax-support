@@ -3,9 +3,19 @@ SuperStrict
 Import brl.map
 Import brl.vector
 
+Import "tmessagehandler.bmx"
 Import "utils.bmx"
 Import "tlogger.bmx"
 Import "tdocumentmanager.bmx"
+
+Function OnDidChangeHook(msg:TLSPMessage)
+	
+	If msg.IsSending Return
+	
+	BmxParser.Parse( ..
+		UriToPath(msg.GetParamString( ..
+			"textDocument/uri")))
+EndFunction
 
 Global BmxParser:TBmxParser = New TBmxParser
 Type TBmxParser
@@ -16,12 +26,16 @@ Type TBmxParser
 	Field _maxParsingThreads:Int = 2
 	Field _mutex:TMutex
 	
+	Field _itemParsers:TList
+	
 	Method New()
 		
 		Self._parsed = New TStringMap
 		Self._parsingQueue = CreateList()
 		Self._parsingThreads = CreateList()
 		Self._mutex = CreateMutex()
+		Self._itemParsers = CreateList()
+		MessageHandler.RegisterHook("textDocument/didChange", OnDidChangeHook)
 	EndMethod
 	
 	Method Parse(path:String)
@@ -83,6 +97,7 @@ Type TBmxParser
 			If Not p.Thread.Running Then
 				' Grab all the data we got and remove
 				
+				Self._parsed.Insert(p.Path, p.Result)
 				Self._parsingThreads.Remove(p)
 			EndIf
 		Next
@@ -156,19 +171,77 @@ Type TParseThread
 	
 	Method Parse(text:String)
 		
-		Self.Result = New TParsedBmx
+		Self.Result = New TParsedBmx(Self.Path)
+		Self.Result.Text = text
 		
-		For Local i:Int = 0 Until text:String
+		Local InString:Byte
+		Local LineNr:Long
+		Local Char:String
+		Local Word:TStringBuilder = New TStringBuilder
+		Local LineWords:TList = CreateList()
+		Local WordStart:Long
+		Local WordSeparators:String[] = [" ", ".", "(", ")", "[", "]", "{", "}"]
+		Local WordSeparator:String
+		For Local i:Long = 0 Until text.Length
+			Char = Chr(text[i])
 			
+			' Is this the end of a line?
+			If Char = "~r" Continue
+			If Char = "~n" Then
+				If Word.Length > 0 Then
+					'Logger.Log(Word.ToString())
+					LineWords.AddLast(New TItemWord(Word.ToString(), WordStart, LineNr))
+					Word = New TStringBuilder
+				EndIf
+				Self.ParseLine(TItemWord[] (LineWords.ToArray()), LineNr)
+				LineWords.Clear()
+				'Logger.Log("NEW LINE")
+				LineNr:+1
+				Continue
+			EndIf
+			
+			' Is this a word separator?
+			For WordSeparator = EachIn WordSeparators
+				If Char = WordSeparator Then
+					If Word.Length > 0 Then
+						'Logger.Log(Word.ToString())
+						LineWords.AddLast(New TItemWord(Word.ToString(), WordStart, LineNr))
+						Word = New TStringBuilder
+					EndIf
+					Continue
+				EndIf
+			Next
+			
+			' Looks like it's just a character!
+			If Word.Length <= 0 WordStart = i
+			Word.AppendChar(text[i])
 		Next
+		If Word.Length > 0 Then LineWords.AddLast(New TItemWord(Word.ToString(), WordStart, LineNr))
+		If LineWords.Count() > 0 Self.ParseLine(TItemWord[] (LineWords.ToArray()), LineNr)
 		
-		' Just add random stuff for now
-		AddBmxItem("MyFunction", EBmxItemType.BmxFunction, New SPosition(0, 0, 0))
 	EndMethod
 	
-	Method AddBmxItem(name:String, bmxType:EBmxItemType, position:SPosition)
+	Method ParseLine(words:TItemWord[], lineNr:Long)
 		
-		Result.Items.AddLast(New TParsedBmxItem(name, bmxType, position))
+		If words.Length <= 0 Return
+		
+		'Logger.Log("Finding match for line: ",, False)
+		'For Local w:TItemWord = EachIn Words
+		'	Logger.Log(w.Word,, False)
+		'Next
+		'Logger.Log("")
+		
+		For Local i:TItemParser = EachIn BmxParser._itemParsers
+			
+			' Just try each and every one until we get a Return True
+			If i.OnLine(words, Self.Result) Then Return
+		Next
+		
+		'Logger.Log("Unknown line at " + lineNr + ": ", ELogType.Warn, False)
+		'For Local w:TItemWord = EachIn words	
+		'	Logger.Log(w.Word + " ",, False)
+		'Next
+		'Logger.Log("",, True)
 	EndMethod
 EndType
 
@@ -176,11 +249,22 @@ Type TParsedBmx
 	
 	Field ParseTime:Long
 	Field Path:String
+	Field Text:String
 	Field Items:TList
+	Field Imports:TList
+	Field Includes:TList
 	
-	Method New()
+	Method New(path:String)
 		
+		Self.Path = path
 		Self.Items = CreateList()
+		Self.Imports = CreateList()
+		Self.Includes = CreateList()
+	EndMethod
+	
+	Method AddItem(name:String, bmxType:EBmxItemType, position:SPosition)
+		
+		Self.Items.AddLast(New TParsedBmxItem(name, bmxType, position))
 	EndMethod
 EndType
 
@@ -198,8 +282,50 @@ Type TParsedBmxItem
 	EndMethod
 EndType
 
+Type TItemWord
+	
+	Field Word:String
+	Field Position:SPosition
+	
+	Method New(word:String, character:Long, line:Long)
+		
+		Self.Word = word
+		Self.Position.Character = character
+		Self.Position.Line = line
+	EndMethod
+EndType
+
 Enum EBmxItemType
 	
-	BmxFunction
-	BmxMethod
+	DefineFunction
 EndEnum
+
+Type TItemParser Abstract
+	
+	Method OnLine:Byte(words:TItemWord[], bmx:TParsedBmx) Abstract
+	
+	Method New()
+		Self.Register()
+	EndMethod
+	
+	Method Register()
+		
+		BmxParser._itemParsers.AddLast(Self)
+	EndMethod
+EndType
+
+New TItemParser_DefineFunction
+Type TItemParser_DefineFunction Extends TItemParser
+	
+	Method OnLine:Byte(words:TItemWord[], bmx:TParsedBmx)
+		
+		' If the first word is Function, we know it's a definition
+		If words[0].Word.ToLower() = "function" Then
+			
+			bmx.AddItem(words[1].Word, EBmxItemType.DefineFunction, words[0].Position)
+			
+			' Report that we're done
+			Return True
+		EndIf
+	EndMethod
+EndType

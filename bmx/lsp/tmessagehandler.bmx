@@ -11,13 +11,11 @@ Import brl.linkedlist
 Import brl.system
 
 Import "utils.bmx"
-Import "tlsp.bmx"
 Import "tconfig.bmx"
 Import "tlogger.bmx"
 Import "json.helper.bmx"
 Import "tdocumentmanager.bmx"
 Import "tworkspacemanager.bmx"
-Import "tbmxparser.bmx"
 
 Global MessageHandler:TMessageHandler = New TMessageHandler()
 Type TMessageHandler
@@ -26,6 +24,7 @@ Type TMessageHandler
 	Field _sendMessageQueue:TList
 	Field _canceledRequests:TList
 	Field _capabilities:TList
+	Field _registeredHooks:TList
 	
 	Method New()
 		
@@ -33,6 +32,7 @@ Type TMessageHandler
 		Self._sendMessageQueue = CreateList()
 		Self._canceledRequests = CreateList()
 		Self._capabilities = CreateList()
+		Self._registeredHooks = CreateList()
 	EndMethod
 	
 	Method GetMessage:TLSPMessage(methodName:String)
@@ -83,15 +83,17 @@ Type TMessageHandler
 		
 		Local msg:TLSPMessage = Self.GetMessage(methodName)
 		If Not msg Then Return ' Error is reported at GetMessage
+		msg.IsSending = True
 		
 		' Prepare the JSON here I suppose
-		msg.SendJson = New TJSONHelper("{~qjsonrpc~q:~q2.0~q}")
+		msg.PrepareSend()
 		
 		' Make sure the ID is set
 		msg.ID = id
 		
-		' Do the changes needed via OnSend
+		' Do the changes needed via OnSend and hooks
 		msg.OnSend()
+		If msg.TriggerHook TriggerHook(methodName, msg)
 		
 		' Is ID still set?
 		If msg.id >= 0 Then
@@ -111,6 +113,33 @@ Type TMessageHandler
 		
 		Self._canceledRequests.AddLast( ..
 			New TLSPCanceledRequest(id, CurrentTime()))
+	EndMethod
+	
+	Method RegisterHook(methodName:String, func(msg:TLSPMessage))
+		
+		Self._registeredHooks.AddLast(New TLSPMessageHook( ..
+			methodName,  ..
+			func))
+	EndMethod
+	
+	Method TriggerHook(methodName:String, msg:TLSPMessage)
+		
+		For Local h:TLSPMessageHook = EachIn Self._registeredHooks
+			
+			If h.MethodName = methodName h.Func(msg)
+		Next
+	EndMethod
+EndType
+
+Type TLSPMessageHook
+	
+	Field MethodName:String
+	Field Func(msg:TLSPMessage)
+	
+	Method New(methodName:String, func(msg:TLSPMessage))
+		
+		Self.MethodName = methodName
+		Self.Func = func
 	EndMethod
 EndType
 
@@ -142,22 +171,24 @@ EndType
 Type TLSPMessage Abstract
 	
 	Field MethodName:String = "noName" ' The name of the message
+	Field IsSending:Byte = False
+	Field TriggerHook:Byte = True
 	Field ReceiveJson:TJSONHelper
 	Field SendJson:TJSONHelper
 	Field ID:Int = -1
 	
 	Method OnSend()
 		
-		Logger.Log( ..
-			"Message ~q" + Self.MethodName + ..
-			"~q cannot be sent")
+		'Logger.Log( ..
+		'	"Message ~q" + Self.MethodName + ..
+		'	"~q cannot be sent")
 	EndMethod
 	
 	Method OnReceive()
 		
-		Logger.Log( ..
-			"Message ~q" + Self.MethodName + ..
-			"~q cannot be received")
+		'Logger.Log( ..
+		'	"Message ~q" + Self.MethodName + ..
+		'	"~q cannot be received")
 	EndMethod
 	
 	Method Register()
@@ -199,7 +230,13 @@ Type TLSPMessage Abstract
 	
 	Method Cancel()
 		
+		Self.TriggerHook = False
 		MessageHandler.SendMessage("$/cancelRequest", Self.ID)
+	EndMethod
+	
+	Method PrepareSend()
+		If Not Self.SendJson ..
+			Self.SendJson = New TJSONHelper("{~qjsonrpc~q:~q2.0~q}")
 	EndMethod
 	
 	' Quick methods for getting received JSON params
@@ -221,32 +258,38 @@ Type TLSPMessage Abstract
 	' Quick methods for setting sent JSON params
 	Method SetParamString(path:String, value:String)
 		
+		Self.PrepareSend()
 		Self.SendJson.SetPathString("params/" + path, value)
 	EndMethod
 	
 	Method SetParamInteger(path:String, value:Long)
 		
+		Self.PrepareSend()
 		Self.SendJson.SetPathInteger("params/" + path, value)
 	EndMethod
 	
 	Method SetParamBool(path:String, value:Byte)
 		
+		Self.PrepareSend()
 		Self.SendJson.SetPathBool("params/" + path, value)
 	EndMethod
 	
 	' Quick method for setting send JSON results
 	Method SetResultString(path:String, value:String)
 		
+		Self.PrepareSend()
 		Self.SendJson.SetPathString("result/" + path, value)
 	EndMethod
 	
 	Method SetResultInteger(path:String, value:Long)
 		
+		Self.PrepareSend()
 		Self.SendJson.SetPathInteger("result/" + path, value)
 	EndMethod
 	
 	Method SetResultBool(path:String, value:Byte)
 		
+		Self.PrepareSend()
 		Self.SendJson.SetPathBool("result/" + path, value)
 	EndMethod
 EndType
@@ -367,11 +410,8 @@ Type TLSPMessage_Shutdown Extends TLSPMessage
 	'Method OnSend()
 	'EndMethod
 	
-	Method OnReceive()
-		
-		Logger.Log("Shutdown requested")
-		LSP.Terminate()
-	EndMethod
+	'Method OnReceive()
+	'EndMethod
 EndType
 
 ' $/cancelRequest
@@ -407,8 +447,8 @@ New TLSPMessage_TextDocument_Completion
 Type TLSPMessage_TextDocument_Completion Extends TLSPMessage
 	
 	Field SupportedTriggers:String[]
-	Field CurrentTrigger:String
-	Field LookingForTrigger:String
+	'Field CurrentTrigger:String
+	'Field LookingForTrigger:String
 	
 	Method New()
 		
@@ -432,6 +472,7 @@ Type TLSPMessage_TextDocument_Completion Extends TLSPMessage
 	
 	Method OnSend()
 		
+		Rem
 		Self.SetResultBool("isIncomplete", False)
 		
 		If Self.CurrentTrigger = "/"
@@ -447,22 +488,21 @@ Type TLSPMessage_TextDocument_Completion Extends TLSPMessage
 			Self.SetResultString("items[1]/label", "linkedlist")
 			Self.SetResultString("items[1]/detail", "TList!")
 		EndIf
+		Endrem
 	EndMethod
 	
 	Method OnReceive()
 		
 		' Is this a trigger we support?
-		Self.LookingForTrigger = Self.GetParamString("context/triggerCharacter")
-		For Self.CurrentTrigger = EachIn Self.SupportedTriggers
-			If Self.LookingForTrigger = Self.CurrentTrigger Then
-				' Yep!
-				Self.Respond()
-				Return
-			EndIf
-		Next
+		'Self.LookingForTrigger = Self.GetParamString("context/triggerCharacter")
+		'Logger.Log("Trigger for: " + Self.LookingForTrigger)
+		'For Self.CurrentTrigger = EachIn Self.SupportedTriggers
+		'	If Self.LookingForTrigger = Self.CurrentTrigger Return
+		'Next
 		
 		' Nope!
-		Self.Cancel()
+		'Logger.Log("Unsupported trigger: " + Self.LookingForTrigger)
+		'Self.Cancel()
 	EndMethod
 EndType
 
@@ -545,10 +585,6 @@ Type TLSPMessage_TextDocument_DidChange Extends TLSPMessage
 		
 		DocumentManager.DocumentChanged( ..
 			UriToPath(Self.GetParamString("textDocument/uri")), changes)
-		
-		BmxParser.Parse( ..
-			UriToPath(Self.GetParamString( ..
-				"textDocument/uri")))
 	EndMethod
 EndType
 

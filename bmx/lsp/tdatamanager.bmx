@@ -66,8 +66,14 @@ Type TDataManager
 				Local lspMsg:TLSPMessage = MessageHandler.GetMessage(nextMsg._method)
 				If lspMsg Then
 					lspMsg.ID = nextMsg._id
+					lspMsg.IsSending = False
 					lspMsg.ReceiveJson = nextMsg._json
+					lspMsg.TriggerHook = True
+					lspMsg.SendJson = Null
+					lspMsg.PrepareSend()
 					lspMsg.OnReceive()
+					If lspMsg.TriggerHook ..
+						MessageHandler.TriggerHook(lspMsg.MethodName, lspMsg)
 				'Else
 				'	Logger.Log("Message content " + nextMsg._json.ToString())
 				EndIf

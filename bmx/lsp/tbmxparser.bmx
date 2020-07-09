@@ -7,8 +7,18 @@ Import "tmessagehandler.bmx"
 Import "utils.bmx"
 Import "tlogger.bmx"
 Import "tdocumentmanager.bmx"
+Import "tblitzmax.bmx"
 
 Function OnDidChangeHook(msg:TLSPMessage)
+	
+	If msg.IsSending Return
+	
+	BmxParser.Parse( ..
+		UriToPath(msg.GetParamString( ..
+			"textDocument/uri")), True)
+EndFunction
+
+Function OnDidOpenHook(msg:TLSPMessage)
 	
 	If msg.IsSending Return
 	
@@ -23,7 +33,7 @@ Type TBmxParser
 	Field _parsed:TStringMap
 	Field _parsingQueue:TList
 	Field _parsingThreads:TList
-	Field _maxParsingThreads:Int = 2
+	Field _maxParsingThreads:Int = 4
 	Field _mutex:TMutex
 	
 	Field _itemParsers:TList
@@ -35,10 +45,14 @@ Type TBmxParser
 		Self._parsingThreads = CreateList()
 		Self._mutex = CreateMutex()
 		Self._itemParsers = CreateList()
+		
 		MessageHandler.RegisterHook("textDocument/didChange", OnDidChangeHook)
+		MessageHandler.RegisterHook("textDocument/didOpen", OnDidOpenHook)
 	EndMethod
 	
-	Method Parse(path:String)
+	Method Parse(path:String, force:Byte = False)
+		
+		If Not path.ToLower().EndsWith(".bmx") Return
 		
 		' Oh god, I'm in no position to do this
 		
@@ -57,10 +71,10 @@ Type TBmxParser
 		If Not parsed Then parsed = Self.LoadParsed(path)
 		
 		' Has it actually been changed?
-		If parsed Then
+		If parsed And Not force Then
 			If parsed.ParseTime = ..
 				DocumentManager.GetModifyDate(path) Then
-				Logger.Log("Parsed file is already up to date: " + path)
+				'Logger.Log("Parsed file is already up to date: " + path)
 				Return
 			EndIf
 		EndIf
@@ -73,6 +87,7 @@ Type TBmxParser
 	Method _parse(path:String)
 		
 		' Is this item already being parsed?
+		Local didRestart:Byte = False
 		Self._mutex.Lock()
 		For Local p:TParseThread = EachIn Self._parsingThreads
 			
@@ -80,10 +95,12 @@ Type TBmxParser
 				
 				p.WantsRestart = True
 				Logger.Log("Parsing process will restart for: " + path)
-				Return
+				didRestart = True
+				Exit
 			EndIf
 		Next
 		Self._mutex.Unlock()
+		If didRestart Return
 		
 		Local parseRequest:TParseQueueRequest = New TParseQueueRequest
 		parseRequest.Path = path
@@ -97,17 +114,22 @@ Type TBmxParser
 			If Not p.Thread.Running Then
 				
 				' Grab all the data and remove
-				If p.Result Self._parsed.Insert(p.Path, p.Result)
+				If p.Result Then
+					Self._parsed.Insert(p.Path, p.Result)
+					DocumentManager.SetModifyDate(p.Path, p.Result.ParseTime)
+				EndIf
 				Self._parsingThreads.Remove(p)
 				
 				' Did this return some imports or includes?
 				' Do we parse imports and includes?
 				If p.Result And p.Result.ParseImportsAndIncludes Then
 					If p.Result.Imports.Count() > 0 Or p.Result.Includes.Count() > 0 Then
+						
 						For Local s:String = EachIn p.Result.Imports
 							Self.Parse(s)
 						Next					
 						
+					
 						For Local s:String = EachIn p.Result.Includes
 							Self.Parse(s)
 						Next
@@ -127,7 +149,8 @@ Type TBmxParser
 		' Grab the first job from the queue
 		If Self._parsingQueue.Count() > 0 Then
 			Self._mutex.Lock()
-			Local parseThread:TParseThread = New TParseThread(TParseQueueRequest(Self._parsingQueue.RemoveFirst()).Path)
+			Local parseThread:TParseThread = New TParseThread( ..
+				TParseQueueRequest(Self._parsingQueue.RemoveFirst()).Path)
 			Self._parsingThreads.AddLast(parseThread)
 			parseThread.Thread = CreateThread(TParseThread.Main, parseThread)
 			Self._mutex.Unlock()
@@ -191,6 +214,7 @@ Type TParseThread
 		
 		Self.Result = New TParsedBmx(Self.Path)
 		Self.Result.Text = text
+		Self.Result.ParseTime = CurrentUnixTime()
 		
 		Local InString:Byte
 		Local InRemBlock:Byte
@@ -444,7 +468,7 @@ Type TItemParser_ImportModule Extends TItemParser
 				
 				' Add full path to the module!!
 				' We should scan for existing modules instead
-				bmx.AddImport("C:/SomeBlitzMaxPath/" + ..
+				bmx.AddImport(BlitzMax.ModPath + ..
 					words[1].Word + ".mod/" + words[2].Word + ".mod/" + words[2].Word + ".bmx")
 				Return True
 			EndIf

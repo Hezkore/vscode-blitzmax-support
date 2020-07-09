@@ -353,6 +353,7 @@ Type TLSPMessage_Initialize Extends TLSPMessage
 	
 	Method OnReceive()
 		
+		' FIX: Do this via WorksspaceManager hooks
 		' When we get this message we need to return the initialize message
 		' But with what we actually support
 		
@@ -523,6 +524,7 @@ Type TLSPMessage_TextDocument_DidOpen Extends TLSPMessage
 	
 	Method OnReceive()
 		
+		' FIX: Do all of this via hooks in the DocumentManager instead!
 		DocumentManager.DocumentOpened( ..
 			UriToPath(Self.GetParamString("textDocument/uri")),  ..
 			Self.GetParamString("textDocument/text"))
@@ -577,6 +579,7 @@ Type TLSPMessage_TextDocument_DidChange Extends TLSPMessage
 	
 	Method OnReceive()
 		
+		' FIX: Do this via DocumentManager hooks
 		Local arrSize:Int = Self.ReceiveJson.GetPathSize("params/contentChanges")
 		Local changes:String[arrSize]
 		For Local i:Int = 0 Until changes.Length

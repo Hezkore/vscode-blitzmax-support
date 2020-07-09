@@ -14,6 +14,7 @@ Import "tdebugger.bmx"
 Import "tbmxparser.bmx"
 Import "tcompletionmanager.bmx"
 Import "utils.bmx"
+Import "tblitzmax.bmx"
 
 ' Version
 Global Version:String = "0.1"
@@ -46,6 +47,9 @@ Logger.NotifyLogLevel()
 DataManager = New TDataManager()
 
 ' Setup the messager handler
+
+' Setup BlitzMax
+Logger.Log("BlitzMax Path: " + BlitzMax.Path)
 
 ' Setup LSP
 LSP = New TLsp()

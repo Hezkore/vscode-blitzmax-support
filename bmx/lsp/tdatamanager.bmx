@@ -71,9 +71,9 @@ Type TDataManager
 					lspMsg.TriggerHook = True
 					lspMsg.SendJson = Null
 					lspMsg.PrepareSend()
-					lspMsg.OnReceive()
 					If lspMsg.TriggerHook ..
 						MessageHandler.TriggerHook(lspMsg.MethodName, lspMsg)
+					lspMsg.OnReceive()
 				'Else
 				'	Logger.Log("Message content " + nextMsg._json.ToString())
 				EndIf

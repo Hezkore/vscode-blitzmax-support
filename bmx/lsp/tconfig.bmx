@@ -108,8 +108,10 @@ Type TConfig
 		For Local c:TConfigItem = Eachin Self._supportedConfigItems
 			If c.KeyName = key Then
 				If c.Value <> value Then
-					Logger.Log("Config ~q" + c.KeyName + "~q changed from " + ..
-						c.Value + " to " + value)
+					If c.Value.Length > 0 Then
+						Logger.Log("Config ~q" + c.KeyName + "~q changed from " + ..
+							c.Value + " to " + value)
+					EndIf
 					c.OnChange(value)
 					c.Value = value
 				EndIf
@@ -251,3 +253,4 @@ Type TConfigItem_DataStreamIdle Extends TConfigItem
 	Method OnArg(value:String)
 	EndMethod
 EndType
+

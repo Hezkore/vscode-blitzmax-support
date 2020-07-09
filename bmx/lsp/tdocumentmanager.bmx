@@ -35,7 +35,7 @@ Type TDocumentManager
 		
 		' FIX: This "Long to String" stuff
 		' Do we already know this modify date?
-		If _modifyDates.Contains(path) ..
+		If Self._modifyDates.Contains(path) ..
 			Return Long(Self._modifyDates.ValueForKey(path).ToString())
 		
 		' Fetch the date
@@ -97,6 +97,9 @@ Type TDocumentManager
 	
 	Method DocumentClosed(path:String)
 		
+		' Reset the modify date
+		Self._modifyDates.Remove(path)
+		
 		' Is this document even opened?
 		If Self.IsOpened(path) Then
 			Self._openedDocuments.Remove(path)
@@ -110,6 +113,9 @@ Type TDocumentManager
 	EndMethod
 	
 	Method DocumentChanged(path:String, changes:String[])
+		
+		' Set the modify date
+		Self.SetModifyDate(path, CurrentUnixTime())
 		
 		' Is this document even opened?
 		Local openDoc:TOpenDocument = Self.IsOpened(path)
@@ -125,7 +131,7 @@ Type TDocumentManager
 				EndIf
 			Next
 			
-			'Logger.Log("Text: " + openDoc.Text)
+			'Logger.Log("Doc changed: " + openDoc.AbsolutePath)
 			Return
 		EndIf
 		

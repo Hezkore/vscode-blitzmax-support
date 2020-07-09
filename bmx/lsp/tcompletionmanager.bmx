@@ -9,6 +9,9 @@ Function OnCompletionHook(msg:TLSPMessage)
 	
 	If msg.IsSending Return
 	
+	BmxParser.Parse( ..
+		UriToPath(msg.GetParamString( ..
+			"textDocument/uri")))
 	CompletionManager.RequestFromMessage(msg)
 EndFunction
 
@@ -21,6 +24,8 @@ Type TCompletionManager
 	Field Position:SPosition
 	
 	Field CompletionList:TList
+	
+	Field MaxCompletionItems:Int = 50
 	
 	Method New()
 		
@@ -44,6 +49,7 @@ Type TCompletionManager
 		
 		' Are we actually clear to provide a completion list?
 		If BmxParser._parsingThreads.Count() > 0 Return
+		If BmxParser._parsingQueue.Count() > 0 Return
 		
 		CompletionList.Clear()
 		
@@ -55,46 +61,56 @@ Type TCompletionManager
 			Self.Message = Null
 			Return
 		EndIf
-		Logger.Log("Providing completion for: " + parsed.Path)
+		'Logger.Log("Providing completion for: " + parsed.Path)
 		
 		For Local i:TParsedBmxItem = EachIn parsed.Items
 			
 			Self.AddItemFromBmxItem(i)
+			If Self.ReachedMaxItems() Exit
 		Next
 		
 		' Get items from files this file imports
-		For Local s:String = EachIn parsed.Includes
-			
-			parsed = BmxParser.GetParsed(s)
-			If parsed Then
-				For Local i:TParsedBmxItem = EachIn parsed.Items
-					
-					Self.AddItemFromBmxItem(i)
-				Next
-			EndIf
-		Next
-		For Local s:String = EachIn parsed.Imports
-			
-			parsed = BmxParser.GetParsed(s)
-			If parsed Then
-				For Local i:TParsedBmxItem = EachIn parsed.Items
-					
-					Self.AddItemFromBmxItem(i)
-				Next
-			EndIf
-		Next
+		If Not Self.ReachedMaxItems() Then
+			For Local s:String = EachIn parsed.Includes
+				
+				parsed = BmxParser.GetParsed(s)
+				If parsed Then
+					For Local i:TParsedBmxItem = EachIn parsed.Items
+						
+						Self.AddItemFromBmxItem(i)
+						If Self.ReachedMaxItems() Exit
+					Next
+				EndIf
+			Next
+			For Local s:String = EachIn parsed.Imports
+				
+				parsed = BmxParser.GetParsed(s)
+				If parsed Then
+					For Local i:TParsedBmxItem = EachIn parsed.Items
+						
+						Self.AddItemFromBmxItem(i)
+						If Self.ReachedMaxItems() Exit
+					Next
+				EndIf
+			Next
+		EndIf
 		
 		' Get items from files that imports this file
+		' NOPE!
 		
-		
-		
-		Self.Message.SetResultBool("isIncomplete", False)
+		Self.Message.SetResultBool("isIncomplete", Self.ReachedMaxItems())
 		
 		' Add all items to message
 		Self.CompletionListToMessage()
 		Self.Message.Respond()
 		Self.Path = Null
 		Self.Message = Null
+	EndMethod
+	
+	Method ReachedMaxItems:Byte()
+		If Self.CompletionList.Count() >=..
+			Self.MaxCompletionItems Return True
+		Return False
 	EndMethod
 	
 	Method AddItemFromBmxItem(item:TParsedBmxItem)

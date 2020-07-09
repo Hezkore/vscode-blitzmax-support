@@ -174,7 +174,7 @@ Global Debugger:TDebugger = New TDebugger
 		Field ShowReceive:Byte = False
 		Method Log(text:String)
 		EndMethod
-		Method StoreMessage(name:String, data:String)
+		Method StoreMessage(name:String, data:String, sent:Byte)
 		EndMethod
 		Method Free()
 		EndMethod

@@ -39,6 +39,7 @@ export function registerBmxLsp( context: vscode.ExtensionContext ) {
 	args.push("--lsp")
 	args.push("-loglevel"); args.push("0")
 	args.push("-mode"); args.push("stdio")
+	args.push("-bmx"); args.push("D:/Applications/BlitzMaxNG")
 
 	var path: string | undefined = vscode.workspace.getConfiguration( 'blitzmax.lsp' ).get( 'path' )
 	if (path) {

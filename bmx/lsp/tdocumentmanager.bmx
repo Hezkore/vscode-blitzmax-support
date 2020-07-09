@@ -62,6 +62,7 @@ Type TDocumentManager
 	
 	' Only from disk
 	Method GetTextFromDisk:String(path:String)
+		If FileSize(path) <= 0 Return ""
 		Return LoadString(path)
 	EndMethod
 	

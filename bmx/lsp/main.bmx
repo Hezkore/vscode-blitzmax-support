@@ -51,19 +51,18 @@ DataManager = New TDataManager()
 LSP = New TLsp()
 
 ' Main loop
-Try
-	While lsp.Running()
-		
+While lsp.Running()
+	Try
 		lsp.Update()
 		DataManager.Update()
 		BmxParser.Update()
 		CompletionManager.Update()
-	Wend
-Catch ex:Object
-	' Just log any crazyness we might encouter and continue
-	' Only works in debug?
-	Logger.Log("BlitzMax Error ~q" + ex.ToString() + "~q", ELogType.Error)
-EndTry
+	Catch ex:Object
+		' Just log any crazyness we might encouter and continue
+		' Only works in debug?
+		Logger.Log("BlitzMax Error ~q" + ex.ToString() + "~q", ELogType.Error)
+	EndTry
+Wend
 
 ' Exit
 Config.Free()

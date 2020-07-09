@@ -49,6 +49,12 @@ Type TCompletionManager
 		
 		' Get items directly from the file itself
 		Local parsed:TParsedBmx = BmxParser.GetParsed(Self.Path)
+		If Not parsed Then
+			Message.Cancel()
+			Self.Path = Null
+			Self.Message = Null
+			Return
+		EndIf
 		Logger.Log("Providing completion for: " + parsed.Path)
 		
 		For Local i:TParsedBmxItem = EachIn parsed.Items

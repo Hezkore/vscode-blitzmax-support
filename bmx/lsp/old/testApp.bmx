@@ -3,6 +3,8 @@ Super..
 
 Framework brl.standardio
 Import brl.linkedlist
+Import "lsp.sanitycheck.bmx"
+
 
 Type MyTestType
 	Field someField:Int = 50

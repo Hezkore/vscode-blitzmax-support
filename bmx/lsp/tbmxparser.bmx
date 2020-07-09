@@ -95,10 +95,26 @@ Type TBmxParser
 		' Check for threads that are done
 		For Local p:TParseThread = EachIn Self._parsingThreads
 			If Not p.Thread.Running Then
-				' Grab all the data we got and remove
 				
-				Self._parsed.Insert(p.Path, p.Result)
+				' Grab all the data and remove
+				If p.Result Self._parsed.Insert(p.Path, p.Result)
 				Self._parsingThreads.Remove(p)
+				
+				' Did this return some imports or includes?
+				' Do we parse imports and includes?
+				If p.Result And p.Result.ParseImportsAndIncludes Then
+					If p.Result.Imports.Count() > 0 Or p.Result.Includes.Count() > 0 Then
+						For Local s:String = EachIn p.Result.Imports
+							Self.Parse(s)
+						Next					
+						
+						For Local s:String = EachIn p.Result.Includes
+							Self.Parse(s)
+						Next
+						
+						Return
+					EndIf
+				EndIf
 			EndIf
 		Next
 		
@@ -138,7 +154,7 @@ Type TParseQueueRequest
 	Field Path:String
 EndType
 
-' FIX: All of the above needs a custom LOG method!
+' FIX: All of the below needs a custom LOG method!
 ' (do we even need to log from here?)
 Type TParseThread
 	
@@ -151,13 +167,15 @@ Type TParseThread
 	Function Main:Object(data:Object)
 		
 		Local instance:TParseThread = TParseThread(data)
+		Local text:String = DocumentManager.GetTextFromAny(instance.path)
+		If Not text Return Null
 		Logger.Log("Parsing: " + instance.path)
 		
 		Repeat
 			If instance.WantsRestart ..
 				Logger.Log("Re-parsing: " +instance.Path)
 			instance.WantsRestart = False
-			instance.Parse(DocumentManager.GetTextFromAny(instance.path))
+			instance.Parse(text)
 		Until Not instance.WantsRestart
 		
 		
@@ -175,61 +193,129 @@ Type TParseThread
 		Self.Result.Text = text
 		
 		Local InString:Byte
+		Local InRemBlock:Byte
 		Local LineNr:Long
 		Local Char:String
+		Local NextChar:String[9]
+		Local NextCharIndex:Int
 		Local Word:TStringBuilder = New TStringBuilder
 		Local LineWords:TList = CreateList()
 		Local WordStart:Long
-		Local WordSeparators:String[] = [" ", ".", "(", ")", "[", "]", "{", "}"]
+		Local WordSeparators:String[] = [" ", ":", ".", "(", ")", "[", "]", "{", "}",  ..
+			"+", "-", "=", "/", "*", "^"]
+		Local WasWordSeparator:Byte
 		Local WordSeparator:String
+		Local PreSeparator:String
+		Local PostSeparator:String
 		For Local i:Long = 0 Until text.Length
 			Char = Chr(text[i])
+			If Char = "~t" Continue
 			
 			' Is this the end of a line?
 			If Char = "~r" Continue
 			If Char = "~n" Then
-				If Word.Length > 0 Then
-					'Logger.Log(Word.ToString())
-					LineWords.AddLast(New TItemWord(Word.ToString(), WordStart, LineNr))
-					Word = New TStringBuilder
+				If Not InString And Not InRemBlock Then
+					If Word.Length > 0 Then
+						'Logger.Log(Word.ToString())
+						LineWords.AddLast(New TItemWord( ..
+							Word.ToString(), WordStart, LineNr, PreSeparator, Null))
+						Word = New TStringBuilder
+					EndIf
+					Self.ParseLine(TItemWord[] (LineWords.ToArray()), LineNr)
+					LineWords.Clear()
 				EndIf
-				Self.ParseLine(TItemWord[] (LineWords.ToArray()), LineNr)
-				LineWords.Clear()
 				'Logger.Log("NEW LINE")
 				LineNr:+1
+				PostSeparator = Null
+				PreSeparator = Null
 				Continue
 			EndIf
 			
+			For NextCharIndex = 0 Until NextChar.Length
+				If i + NextCharIndex + 1 < NextChar.Length Then
+					NextChar[NextCharIndex] = Chr(text[i + NextCharIndex + 1]).ToLower()
+				Else
+					NextChar[NextCharIndex] = Null
+				EndIf
+			Next
+			
+			' Check for string
+			'Logger.Log(Char)
+			'Logger.Log("InString" + InString)
+			If Not InRemBlock And Char = "~q" Then
+				InString = Not InString
+				If Not InString And Word.Length > 0 Then
+					LineWords.AddLast(New TItemWord( ..
+						Word.ToString(), WordStart, LineNr, PreSeparator, PostSeparator))
+					Word = New TStringBuilder
+				EndIf
+				Continue
+			EndIf
+			If InString Then
+				PreSeparator = "~q"
+				PostSeparator = "~q"
+				Word.AppendChar(text[i])
+				Continue
+			EndIf
+			
+			' Check for REM block
+			If Not InRemBlock Then
+				If Char.ToLower() = "r" And NextChar[0] = "e" And NextChar[1] = "m" Then
+					If NextChar[2] = "~n" Or NextChar[2] = "~r" Or NextChar[2] = " " Then
+						InRemBlock = True
+					EndIf
+				EndIf
+			Else
+				If Char.ToLower() = "e" And NextChar[0] = "n" And NextChar[1] = "d" Then
+					If NextChar[2] = "r" And NextChar[3] = "e" And NextChar[4] = "m" Then
+						If NextChar[5] = "~n" Or NextChar[5] = "~r" Or NextChar[5] = " " Then
+							InRemBlock = False
+						EndIf
+					Endif
+				EndIf
+			EndIf
+			If InRemBlock Continue
+			
 			' Is this a word separator?
+			WasWordSeparator = False
 			For WordSeparator = EachIn WordSeparators
 				If Char = WordSeparator Then
+					'Logger.Log("SEPARATOR [" + Char + "]")
+					PostSeparator = WordSeparator
 					If Word.Length > 0 Then
 						'Logger.Log(Word.ToString())
-						LineWords.AddLast(New TItemWord(Word.ToString(), WordStart, LineNr))
+						LineWords.AddLast(New TItemWord( ..
+							Word.ToString(), WordStart, LineNr, PreSeparator, PostSeparator))
 						Word = New TStringBuilder
 					EndIf
-					Continue
+					PreSeparator = PostSeparator
+					WasWordSeparator = True
+					Exit
 				EndIf
 			Next
 			
 			' Looks like it's just a character!
-			If Word.Length <= 0 WordStart = i
-			Word.AppendChar(text[i])
+			If Not WasWordSeparator Then
+				If Word.Length <= 0 WordStart = i
+				'Logger.Log("Adding [" + Char + "]")
+				Word.AppendChar(text[i])
+			EndIf
 		Next
-		If Word.Length > 0 Then LineWords.AddLast(New TItemWord(Word.ToString(), WordStart, LineNr))
+		If Word.Length > 0 Then
+			LineWords.AddLast(New TItemWord( ..
+			Word.ToString(), WordStart, LineNr, PreSeparator, Null))
+		EndIf
 		If LineWords.Count() > 0 Self.ParseLine(TItemWord[] (LineWords.ToArray()), LineNr)
-		
 	EndMethod
 	
 	Method ParseLine(words:TItemWord[], lineNr:Long)
 		
 		If words.Length <= 0 Return
 		
-		'Logger.Log("Finding match for line: ",, False)
+		'Logger.Log("Finding match for line: ")
 		'For Local w:TItemWord = EachIn Words
-		'	Logger.Log(w.Word,, False)
+		'	Logger.Log("[" + w.PreSeparator + "]" + w.Word + "[" + w.PostSeparator + "]")
 		'Next
-		'Logger.Log("")
 		
 		For Local i:TItemParser = EachIn BmxParser._itemParsers
 			
@@ -253,6 +339,7 @@ Type TParsedBmx
 	Field Items:TList
 	Field Imports:TList
 	Field Includes:TList
+	Field ParseImportsAndIncludes:Byte = True
 	
 	Method New(path:String)
 		
@@ -265,6 +352,17 @@ Type TParsedBmx
 	Method AddItem(name:String, bmxType:EBmxItemType, position:SPosition)
 		
 		Self.Items.AddLast(New TParsedBmxItem(name, bmxType, position))
+	EndMethod
+	
+	' These should probably be a type
+	Method AddImport(name:String)
+		
+		Self.Imports.AddLast(name)
+	EndMethod
+	
+	Method AddInclude(name:String)
+		
+		Self.Includes.AddLast(name)
 	EndMethod
 EndType
 
@@ -286,12 +384,16 @@ Type TItemWord
 	
 	Field Word:String
 	Field Position:SPosition
+	Field PreSeparator:String
+	Field PostSeparator:String
 	
-	Method New(word:String, character:Long, line:Long)
+	Method New(word:String, character:Long, line:Long, preSeparator:String, postSeparator:String)
 		
 		Self.Word = word
 		Self.Position.Character = character
 		Self.Position.Line = line
+		Self.PreSeparator = preSeparator
+		Self.PostSeparator = postSeparator
 	EndMethod
 EndType
 
@@ -319,12 +421,47 @@ Type TItemParser_DefineFunction Extends TItemParser
 	
 	Method OnLine:Byte(words:TItemWord[], bmx:TParsedBmx)
 		
+		If words.Length <= 1 Then Return False
 		' If the first word is Function, we know it's a definition
-		If words[0].Word.ToLower() = "function" Then
+		If words[0].PostSeparator = " " And words[0].Word.ToLower() = "function" Then
 			
 			bmx.AddItem(words[1].Word, EBmxItemType.DefineFunction, words[0].Position)
 			
 			' Report that we're done
+			Return True
+		EndIf
+	EndMethod
+EndType
+
+New TItemParser_ImportModule
+Type TItemParser_ImportModule Extends TItemParser
+	
+	Method OnLine:Byte(words:TItemWord[], bmx:TParsedBmx)
+		
+		If words.Length <= 2 Then Return False
+		If words[1].PreSeparator = " " And words[2].PreSeparator = "." Then
+			If words[0].Word.ToLower() = "import" Or words[0].Word.ToLower() = "framework" Then
+				
+				' Add full path to the module!!
+				' We should scan for existing modules instead
+				bmx.AddImport("C:/SomeBlitzMaxPath/" + ..
+					words[1].Word + ".mod/" + words[2].Word + ".mod/" + words[2].Word + ".bmx")
+				Return True
+			EndIf
+		EndIf
+	EndMethod
+EndType
+
+New TItemParser_ImportSource
+Type TItemParser_ImportSource Extends TItemParser
+	
+	Method OnLine:Byte(words:TItemWord[], bmx:TParsedBmx)
+		
+		If words.Length <= 1 Then Return False
+		If words[1].PreSeparator = "~q" And words[0].Word.ToLower() = "import" Then
+			
+			' Add full path to import!
+			bmx.AddImport(ExtractDir(bmx.Path) + "/" + words[1].Word)
 			Return True
 		EndIf
 	EndMethod

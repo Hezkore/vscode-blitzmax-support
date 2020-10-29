@@ -19,15 +19,15 @@ And the LSP specifications are found [here](https://microsoft.github.io/language
 
 ### ***The extension does *not* feature a task provider yet!***
 ---
-This means it cannot build any BlitzMax source files or projects.\
-Any BlitzMax source files must be compiled outside of VS Code or using a separate extension.
+This means it cannot build any BlitzMax source files *(`.bmx`)* or projects.\
+Any BlitzMax source files *(`.bmx`)* must be compiled outside of VS Code or using a separate extension.
 
 # Instructions
 ## Build and Run
 * Make sure any previous BlitzMax VS Code extensions are disabled or uninstalled
 * Make sure you have [Node.js](https://nodejs.org/) installed
-* Clone the project [https://github.com/Hezkore/vscode-blitzmax-concept.git](https://github.com/Hezkore/vscode-blitzmax-concept.git)
-* Open the project folder in VS Code
+* Clone [https://github.com/Hezkore/vscode-blitzmax-concept.git](https://github.com/Hezkore/vscode-blitzmax-concept.git) to any folder
+* Open the folder in VS Code
 * Type `npm install` in the terminal
 * Press `F5` to build and launch in a new VS Code window
 
@@ -45,4 +45,4 @@ The debugger currently only launches an existing already-built executable.
   *(ie. `test.bmx` will need a `test.debug.exe` on Windows)*
   * Press `F5` and select `BlitzMax Debug` to start debugging the executable
 
-Go [here](https://code.visualstudio.com/docs/editor/debugging#_run-view) to learn more about debugging in VS Code and how to setup a `launch.json` *(not required)* configuration.
+Go [here](https://code.visualstudio.com/docs/editor/debugging#_run-view) to learn more about debugging in VS Code and how to *(not required)* setup a `launch.json` configuration.

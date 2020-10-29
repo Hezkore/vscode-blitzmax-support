@@ -1,6 +1,6 @@
-Copyright (c) Robin C.
+Copyright (c) Rob C.
 
-All rights reserved. 
+All rights reserved.
 
 MIT License
 

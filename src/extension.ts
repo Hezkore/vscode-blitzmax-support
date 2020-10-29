@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode'
 import { registerBmxLsp } from './lsp/lsp'
-import { registerBmxDebugger } from './debug/debug'
+import { registerBmxDebugger } from './debugger/debugger'
 
 export function activate( context: vscode.ExtensionContext ) {
 

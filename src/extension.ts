@@ -1,7 +1,7 @@
 'use strict'
 
 import * as vscode from 'vscode'
-import { registerBmxLsp } from './lsp/lsp'
+import { registerBmxLsp, deactivateLsp } from './lsp/lsp'
 import { registerBmxDebugger } from './debugger/debugger'
 
 export function activate( context: vscode.ExtensionContext ) {
@@ -11,5 +11,5 @@ export function activate( context: vscode.ExtensionContext ) {
 }
 
 export function deactivate() {
-	// nothing to do
+	deactivateLsp()
 }

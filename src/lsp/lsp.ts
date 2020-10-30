@@ -2,89 +2,120 @@
 
 import * as vscode from 'vscode'
 import * as lsp from 'vscode-languageclient'
-import * as url from 'url'
-import * as os from 'os'
+//import * as url from 'url'
+//import * as os from 'os'
 
-export function registerBmxLsp( context: vscode.ExtensionContext ) {
+let defaultClient: lsp.LanguageClient
+let clients: Map<string, lsp.LanguageClient> = new Map()
 
-	// Options to control the language client
-	const clientOptions: lsp.LanguageClientOptions = {
-		// Register the server for bmx documents
-		revealOutputChannelOn: 1,
-		outputChannel: vscode.window.createOutputChannel('BlitzMax Language Server'),
-		documentSelector: [
-			{ scheme: 'file', language: 'blitzmax' },
-			{ scheme: 'untitled', language: 'blitzmax' },
-		],
-		uriConverters: {
-			// VS Code by default %-encodes even the colon after the drive letter
-			// NodeJS handles it much better
-			code2Protocol: uri => url.format(url.parse(uri.toString(true))),
-			protocol2Code: str => vscode.Uri.parse(str)
-		},
-		synchronize: {
-			// Synchronize the setting section 'blitzmax' to the server
-			configurationSection: 'blitzmax.lsp',
-			// Notify the server about changes to BMX files in the workspace
-			fileEvents: vscode.workspace.createFileSystemWatcher('**/*.bmx')
+let _sortedWorkspaceFolders: string[] | undefined
+function sortedWorkspaceFolders(): string[] {
+	if (_sortedWorkspaceFolders === void 0) {
+		_sortedWorkspaceFolders = vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders.map(folder => {
+			let result = folder.uri.toString()
+			if (result.charAt(result.length - 1) !== '/') {
+				result = result + '/'
+			}
+			return result
+		}).sort(
+			(a, b) => {
+				return a.length - b.length
+			}
+		) : []
+	}
+	return _sortedWorkspaceFolders
+}
+vscode.workspace.onDidChangeWorkspaceFolders(() => _sortedWorkspaceFolders = undefined)
+
+function getOuterMostWorkspaceFolder(folder: vscode.WorkspaceFolder): vscode.WorkspaceFolder {
+	let sorted = sortedWorkspaceFolders()
+	for (let element of sorted) {
+		let uri = folder.uri.toString()
+		if (uri.charAt(uri.length - 1) !== '/') {
+			uri = uri + '/'
+		}
+		if (uri.startsWith(element)) {
+			return vscode.workspace.getWorkspaceFolder(vscode.Uri.parse(element))!
+		}
+	}
+	return folder
+}
+
+export function registerBmxLsp(context: vscode.ExtensionContext) {
+
+	let pathRoot = vscode.workspace.getConfiguration( 'blitzmax' ).get( 'path' )
+	let pathLsp = vscode.Uri.file(pathRoot+"\\bin\\lsp")
+	let outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel('BlitzMax Language Server')
+
+	function didOpenTextDocument(document: vscode.TextDocument): void {
+		if (document.languageId !== 'blitzmax' || (document.uri.scheme !== 'file' && document.uri.scheme !== 'untitled')) {
+			return
+		}
+
+		let uri = document.uri
+		// Untitled files go to a default client
+		if (uri.scheme === 'untitled' && !defaultClient) {
+			let clientOptions: lsp.LanguageClientOptions = {
+				documentSelector: [
+					{ scheme: 'untitled', language: 'blitzmax' }
+				],
+				diagnosticCollectionName: 'bmx-lsp',
+				outputChannel: outputChannel
+			}
+			defaultClient = new lsp.LanguageClient('BlitzMax Language Server',
+				{ command: pathLsp.fsPath, args: undefined, options: { env: undefined } },
+				clientOptions
+			)
+			defaultClient.start()
+			return
+		}
+		let folder = vscode.workspace.getWorkspaceFolder(uri)
+		// Files outside a folder can't be handled. This might depend on the language
+		// Single file languages like JSON might handle files outside the workspace folders
+		if (!folder) {
+			return
+		}
+		// If we have nested workspace folders we only start a server on the outer most workspace folder
+		folder = getOuterMostWorkspaceFolder(folder)
+
+		if (!clients.has(folder.uri.toString())) {
+			let clientOptions: lsp.LanguageClientOptions = {
+				documentSelector: [
+					{ scheme: 'file', language: 'blitzmax', pattern: `${folder.uri.fsPath}/**/*` }
+				],
+				diagnosticCollectionName: 'bmx-lsp',
+				workspaceFolder: folder,
+				outputChannel: outputChannel
+			}
+			let client = new lsp.LanguageClient('BlitzMax Language Server',
+				{ command: pathLsp.fsPath, args: undefined, options: { env: undefined } },
+				clientOptions
+			)
+			client.start()
+			clients.set(folder.uri.toString(), client)
 		}
 	}
 
-	let args: string[] = []
-	args.push("--lsp")
-	args.push("-loglevel"); args.push("0")
-	args.push("-mode"); args.push("stdio")
-	args.push("-bmx"); args.push("D:/Applications/BlitzMaxNG")
-	args.push("-cores"); args.push(os.cpus().length.toString())
+	vscode.workspace.onDidOpenTextDocument(didOpenTextDocument)
+	vscode.workspace.textDocuments.forEach(didOpenTextDocument)
+	vscode.workspace.onDidChangeWorkspaceFolders((event) => {
+		for (let folder  of event.removed) {
+			let client = clients.get(folder.uri.toString())
+			if (client) {
+				clients.delete(folder.uri.toString())
+				client.stop()
+			}
+		}
+	})
+}
 
-	var path: string | undefined = vscode.workspace.getConfiguration( 'blitzmax.lsp' ).get( 'path' )
-	if (path) {
-		console.log( 'Launching LSP ' + path )
-
-		let client: lsp.LanguageClient = new lsp.LanguageClient('BlitzMax Language Server',
-			{ command: path, args: args, options: { env: undefined } },
-			clientOptions
-		)
-		client.onReady().then(() => { // Test custom method
-			client.sendNotification('hezkore/isReallyCool',{really:'Is he though?'})
-
-			const progressTokens: any[] = []
-			client.onNotification("$/progress", (param) => {
-
-				const message = Object.getOwnPropertyNames(param['value'])[0]
-				const value = param['value'][message]
-
-				if (!progressTokens[param.token]) {
-
-					vscode.window.withProgress({
-						location: vscode.ProgressLocation.Window,
-						title: "BlitzMax",
-						cancellable: false
-					}, async (progress, token) => {
-
-						progressTokens[param.token] = progress
-
-						progress.report({message: message})
-
-						function waitForComplete() {
-							return new Promise(function (resolve, reject) {
-								(function doWait(){
-									if (!progressTokens[param.token]) return resolve()
-									setTimeout( doWait, 25 )
-								})()
-							})
-						}
-
-						await waitForComplete()
-					})
-				} else {
-
-					progressTokens[param.token].report({message: message, increment: value})
-					if (value >= 100) progressTokens[param.token] = undefined
-				}
-			})
-		})
-
-		context.subscriptions.push( client.start() )
-	} else console.log( 'No LSP path configured' )
+export function deactivateLsp(): Thenable<void> {
+	let promises: Thenable<void>[] = []
+	if (defaultClient) {
+		promises.push(defaultClient.stop())
+	}
+	for (let client of clients.values()) {
+		promises.push(client.stop())
+	}
+	return Promise.all(promises).then(() => undefined)
 }

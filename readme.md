@@ -12,10 +12,11 @@ You can also discuss this proof of concept on Discord: [![Discord Chat](https://
 ### ***The extension does *not* include a LSP!***
 ---
 This means you'll have to provide or write your own LSP.\
+Here's a very quick and dirty [Example LSP](https://gist.github.com/Hezkore/a48373bbc19815655ca7d5938325524e) written in [BlitzMax NG](https://blitzmax.org/) to get your started.\
 Use the [LSP inspector](https://microsoft.github.io/language-server-protocol/inspector/) and the sample.log to get a clearer picture on how this works.\
 More VS Code LSP information can be found
-[here](https://code.visualstudio.com/api/language-extensions/language-server-extension-guide).\
-And the LSP specifications are found [here](https://microsoft.github.io/language-server-protocol/specifications/specification-current/).
+[here](https://code.visualstudio.com/api/language-extensions/language-server-extension-guide), and the LSP specifications are found [here](https://microsoft.github.io/language-server-protocol/specifications/specification-current/).\
+One thing to note when developing the LSP is that multiple instances of the same LSP may be used a the same time if the user is working with a multi-root workspace.
 
 ### ***The extension does *not* feature a task provider yet!***
 ---
@@ -34,8 +35,9 @@ Any BlitzMax source files *(`.bmx`)* must be compiled outside of VS Code or usin
 The extension will start when a BlitzMax source file *(`.bmx`)* is opened.
 
 ## LSP information
-The LSP executable *(`lsp.exe` on Windows)* inside your `BlitzMaxNG\bin` folder automatically runs whenever the extension starts.\
-You can open the Command Palette *(`Ctrl+Shift+P`)* in VS Code and type `Reload Window` if the LSP executable has been updated or needs to be reloaded.
+A LSP executable *(`lsp.exe` on Windows)* placed inside your `BlitzMaxNG\bin` folder will automatically run whenever the extension starts.\
+Don't forget to set your BlitzMax path in settings first!\
+You can restart the LSP with the command `Reload Window` in VS Code via the Command Palette *(`Ctrl+Shift+P`)*.
 
 ## Debugger information
 The debugger currently only launches an existing already-built executable.

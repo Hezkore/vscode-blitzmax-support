@@ -10,9 +10,9 @@ We hang out in the #vscode-extension channel!
 ---
 This means you'll have to provide or write your own LSP.\
 Here's a very quick and dirty [Example LSP](https://gist.github.com/Hezkore/a48373bbc19815655ca7d5938325524e) written in [BlitzMax NG](https://blitzmax.org/) to get your started.\
+It also contains a few notes on what to think about when developing your LSP.\
 VS Code specific LSP information can be found
-[here](https://code.visualstudio.com/api/language-extensions/language-server-extension-guide), while the LSP specifications are found [here](https://microsoft.github.io/language-server-protocol/specifications/specification-current/).\
-One thing to note when developing the LSP is that multiple instances of the same LSP may be used a the same time if the user is working with a multi-root workspace.
+[here](https://code.visualstudio.com/api/language-extensions/language-server-extension-guide), while the LSP specifications are found [here](https://microsoft.github.io/language-server-protocol/specifications/specification-current/).
 
 ### ***The extension does *not* feature a task provider yet!***
 ---

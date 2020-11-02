@@ -9,9 +9,9 @@ We hang out in the #vscode-extension channel!
 ### ***The extension does *not* include a LSP!***
 ---
 This means you'll have to provide or write your own LSP.\
-Here's a very quick and dirty [Example LSP](https://gist.github.com/Hezkore/a48373bbc19815655ca7d5938325524e) written in [BlitzMax NG](https://blitzmax.org/) to get your started.\
+Here's a very quick and dirty [Example LSP](https://gist.github.com/Hezkore/a48373bbc19815655ca7d5938325524e) written in [BlitzMax NG](https://blitzmax.org/) to get you started.\
 It also contains a few notes on what to think about when developing your LSP.\
-VS Code specific LSP information can be found
+You'll find VS Code specific LSP information
 [here](https://code.visualstudio.com/api/language-extensions/language-server-extension-guide), while the LSP specifications are found [here](https://microsoft.github.io/language-server-protocol/specifications/specification-current/).
 
 ### ***The extension does *not* feature a task provider yet!***
@@ -40,7 +40,7 @@ The LSP starts along with the extension.
 ## Debugger information
 The debugger currently only launches an existing already-built executable.
 * In the new VS Code instance
-  * Open a folder or source file *(`.bmx`)* file
+  * Open a folder or source file *(`.bmx`)*
   * Make sure the opened source file *(`.bmx`)* has a `.debug` executable in the same folder\
   *(ie. `test.bmx` will need a `test.debug.exe` on Windows)*
   * Press `F5` and select `BlitzMax Debug` to start debugging the executable

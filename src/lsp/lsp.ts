@@ -54,13 +54,18 @@ export function registerBmxLsp(context: vscode.ExtensionContext) {
 		
 		let docUri = document.uri
 		let workspaceFolder = vscode.workspace.getWorkspaceFolder(docUri)
+		let bmxFolder: string | undefined
 		
-		// If we have nested workspace folders we only start a server on the outer most workspace folder
-		if (workspaceFolder) workspaceFolder = getOuterMostWorkspaceFolder(workspaceFolder)
+		if (workspaceFolder) {
+			// If we have nested workspace folders we only start a server on the outer most workspace folder
+			workspaceFolder = getOuterMostWorkspaceFolder(workspaceFolder)
+			bmxFolder = vscode.workspace.getConfiguration( 'blitzmax', workspaceFolder ).get( 'path' )
+		} else {
+			let globalBmxPath = vscode.workspace.getConfiguration( 'blitzmax' ).inspect( 'path' )?.globalValue
+			if (typeof(globalBmxPath)==='string') bmxFolder = globalBmxPath
+		}
 		
-		let bmxFolder = vscode.workspace.getConfiguration( 'blitzmax', workspaceFolder ).get( 'path' )
 		if (!bmxFolder) {
-			//console.log("BlitzMax path not set")
 			vscode.window.showWarningMessage( "BlitzMax path is not configured", "Set Path" ).then( setPath => {
 				if (setPath) vscode.commands.executeCommand("workbench.action.openSettings", "BlitzMax Path")
 			})
@@ -113,7 +118,7 @@ export function registerBmxLsp(context: vscode.ExtensionContext) {
 				if (wantsReload) vscode.commands.executeCommand("workbench.action.reloadWindow")
 			})
 		}
-	}) 
+	})
 	vscode.workspace.onDidChangeWorkspaceFolders((event) => {
 		for (let folder  of event.removed) {
 			let client = clients.get(folder.uri.toString())

@@ -5,6 +5,7 @@ import * as lsp from 'vscode-languageclient'
 //import * as url from 'url'
 //import * as os from 'os'
 
+let outputChannel: vscode.OutputChannel
 let defaultClient: lsp.LanguageClient
 let clients: Map<string, lsp.LanguageClient> = new Map()
 
@@ -42,19 +43,34 @@ function getOuterMostWorkspaceFolder(folder: vscode.WorkspaceFolder): vscode.Wor
 }
 
 export function registerBmxLsp(context: vscode.ExtensionContext) {
-
-	let pathRoot = vscode.workspace.getConfiguration( 'blitzmax' ).get( 'path' )
-	let pathLsp = vscode.Uri.file(pathRoot+"\\bin\\lsp")
-	let outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel('BlitzMax Language Server')
-
+	
+	outputChannel = vscode.window.createOutputChannel('BlitzMax Language Server')
+	
+	// When opening a text document
 	function didOpenTextDocument(document: vscode.TextDocument): void {
-		if (document.languageId !== 'blitzmax' || (document.uri.scheme !== 'file' && document.uri.scheme !== 'untitled')) {
+		// Make sure this is BlitzMax related
+		if (document.languageId !== 'blitzmax' || (document.uri.scheme !== 'file' && document.uri.scheme !== 'untitled'))
+			return
+		
+		let docUri = document.uri
+		let workspaceFolder = vscode.workspace.getWorkspaceFolder(docUri)
+		
+		// If we have nested workspace folders we only start a server on the outer most workspace folder
+		if (workspaceFolder) workspaceFolder = getOuterMostWorkspaceFolder(workspaceFolder)
+		
+		let bmxFolder = vscode.workspace.getConfiguration( 'blitzmax', workspaceFolder ).get( 'path' )
+		if (!bmxFolder) {
+			//console.log("BlitzMax path not set")
+			vscode.window.showWarningMessage( "BlitzMax path is not configured", "Set Path" ).then( setPath => {
+				if (setPath) vscode.commands.executeCommand("workbench.action.openSettings", "BlitzMax Path")
+			})
 			return
 		}
-
-		let uri = document.uri
+		
+		let lspPath = vscode.Uri.file( bmxFolder + "/bin/lsp" )
+		
 		// Untitled files go to a default client
-		if (uri.scheme === 'untitled' && !defaultClient) {
+		if (!workspaceFolder && !defaultClient) {
 			let clientOptions: lsp.LanguageClientOptions = {
 				documentSelector: [
 					{ scheme: 'untitled', language: 'blitzmax' }
@@ -63,41 +79,41 @@ export function registerBmxLsp(context: vscode.ExtensionContext) {
 				outputChannel: outputChannel
 			}
 			defaultClient = new lsp.LanguageClient('BlitzMax Language Server',
-				{ command: pathLsp.fsPath, args: undefined, options: { env: undefined } },
+				{ command: lspPath.fsPath, args: undefined, options: { env: undefined } },
 				clientOptions
 			)
 			defaultClient.start()
-			return
 		}
-		let folder = vscode.workspace.getWorkspaceFolder(uri)
-		// Files outside a folder can't be handled. This might depend on the language
-		// Single file languages like JSON might handle files outside the workspace folders
-		if (!folder) {
-			return
-		}
-		// If we have nested workspace folders we only start a server on the outer most workspace folder
-		folder = getOuterMostWorkspaceFolder(folder)
-
-		if (!clients.has(folder.uri.toString())) {
+		
+		if (!workspaceFolder) return
+		
+		if (!clients.has(workspaceFolder.uri.toString())) {
 			let clientOptions: lsp.LanguageClientOptions = {
 				documentSelector: [
-					{ scheme: 'file', language: 'blitzmax', pattern: `${folder.uri.fsPath}/**/*` }
+					{ scheme: 'file', language: 'blitzmax', pattern: `${workspaceFolder.uri.fsPath}/**/*` }
 				],
 				diagnosticCollectionName: 'bmx-lsp',
-				workspaceFolder: folder,
+				workspaceFolder: workspaceFolder,
 				outputChannel: outputChannel
 			}
 			let client = new lsp.LanguageClient('BlitzMax Language Server',
-				{ command: pathLsp.fsPath, args: undefined, options: { env: undefined } },
+				{ command: lspPath.fsPath, args: undefined, options: { env: undefined } },
 				clientOptions
 			)
 			client.start()
-			clients.set(folder.uri.toString(), client)
+			clients.set(workspaceFolder.uri.toString(), client)
 		}
 	}
-
+	
 	vscode.workspace.onDidOpenTextDocument(didOpenTextDocument)
 	vscode.workspace.textDocuments.forEach(didOpenTextDocument)
+	vscode.workspace.onDidChangeConfiguration((event) => {
+		if (event.affectsConfiguration( 'blitzmax.path' )) {
+			vscode.window.showWarningMessage( "Reload Required", "Reload" ).then( wantsReload => {
+				if (wantsReload) vscode.commands.executeCommand("workbench.action.reloadWindow")
+			})
+		}
+	}) 
 	vscode.workspace.onDidChangeWorkspaceFolders((event) => {
 		for (let folder  of event.removed) {
 			let client = clients.get(folder.uri.toString())
@@ -111,9 +127,7 @@ export function registerBmxLsp(context: vscode.ExtensionContext) {
 
 export function deactivateLsp(): Thenable<void> {
 	let promises: Thenable<void>[] = []
-	if (defaultClient) {
-		promises.push(defaultClient.stop())
-	}
+	if (defaultClient) promises.push(defaultClient.stop())
 	for (let client of clients.values()) {
 		promises.push(client.stop())
 	}

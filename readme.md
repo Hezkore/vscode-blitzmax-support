@@ -4,15 +4,16 @@ This is a proof of concept VS Code debug adapter extension with integrated LSP s
 The debug adapter and LSP support is incomplete and will not work as intended, nor does it represent the final product.
 
 You can discuss this proof of concept on Discord: [![Discord Chat](https://img.shields.io/discord/613699895139762176.svg?logo=discord&style=social)](https://discord.gg/DrrVwhz)\
-We hang out in the #vscode-extension channel!
+We hang out in the **#vscode-extension** channel!
 
 ### ***The extension does *not* include a LSP!***
 ---
 This means you'll have to provide or write your own LSP.\
-Here's a very quick and dirty [Example LSP](https://gist.github.com/Hezkore/a48373bbc19815655ca7d5938325524e) written in [BlitzMax NG](https://blitzmax.org/) to get you started.\
-It also contains a few notes on what to think about when developing your LSP.\
-You'll find VS Code specific LSP information
-[here](https://code.visualstudio.com/api/language-extensions/language-server-extension-guide), while the LSP specifications are found [here](https://microsoft.github.io/language-server-protocol/specifications/specification-current/).
+A WIP LSP can be found [here](https://github.com/GWRon/bmxng-languageserver).
+
+*Useful links:*\
+[VS Code specific information](https://code.visualstudio.com/api/language-extensions/language-server-extension-guide)\
+[Official LSP specifications](https://microsoft.github.io/language-server-protocol/specifications/specification-current/)
 
 ### ***The extension does *not* feature a task provider yet!***
 ---
@@ -45,4 +46,4 @@ The debugger currently only launches an existing already-built executable.
   *(ie. `test.bmx` will need a `test.debug.exe` on Windows)*
   * Press `F5` and select `BlitzMax Debug` to start debugging the executable
 
-Go [here](https://code.visualstudio.com/docs/editor/debugging#_run-view) to learn more about debugging in VS Code and how to *(not required)* setup a `launch.json` configuration.
+Go [here](https://code.visualstudio.com/docs/editor/debugging#_run-view) to learn more about debugging in VS Code and how to setup an *optional* `launch.json` configuration.

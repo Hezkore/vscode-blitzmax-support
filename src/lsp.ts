@@ -2,13 +2,12 @@
 
 import * as vscode from 'vscode'
 import * as lsp from 'vscode-languageclient'
-//import * as url from 'url'
-//import * as os from 'os'
 
 let outputChannel: vscode.OutputChannel
 let activeBmxLsp: BmxLsp | undefined
 let defaultBmxLsp: BmxLsp | undefined
 let runningBmxLsps: Map<string, BmxLsp> = new Map()
+let lspStatusBarItem: vscode.StatusBarItem
 
 let _sortedWorkspaceFolders: string[] | undefined
 function sortedWorkspaceFolders(): string[] {
@@ -46,7 +45,39 @@ function getOuterMostWorkspaceFolder(folder: vscode.WorkspaceFolder | undefined)
 
 export function registerBmxLsp(context: vscode.ExtensionContext) {
 	
+	// Create our output channel
 	outputChannel = vscode.window.createOutputChannel('BlitzMax Language Server')
+	
+	// Creatus status bar item
+	const statusBarCommandId = 'blitzmax.showLspOptions'
+	context.subscriptions.push(vscode.commands.registerCommand(statusBarCommandId, () => {
+		
+		if (!activeBmxLsp) return
+		
+		if (activeBmxLsp.status.error) {
+			// Show error
+			vscode.window.showErrorMessage(activeBmxLsp.status.error)
+		} else {
+			// Show options
+			vscode.window.showQuickPick([`Restart ${activeBmxLsp.name}`, 'Information']).then((pick) => {
+				if (!activeBmxLsp) return
+				
+				switch (pick?.split(' ')[0]) {
+					case 'Restart':
+						restartLsp(activeBmxLsp)
+						break
+					case 'Information':
+						vscode.window.showInformationMessage(`${activeBmxLsp.name}\r\n${activeBmxLsp.version}`)
+						break
+				}
+			})
+		}
+	}))
+	
+	
+	lspStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100)
+	lspStatusBarItem.command = statusBarCommandId
+	context.subscriptions.push(lspStatusBarItem)
 	
 	// Start LSP for each document with unique workspace
 	changeBmxDocument(vscode.window.activeTextEditor?.document)
@@ -86,6 +117,8 @@ function changeBmxDocument(document: vscode.TextDocument | undefined) {
 			vscode.workspace.getWorkspaceFolder(document.uri)
 		)
 	)
+	
+	updateStatusBarItem()
 	
 	if (activeBmxLsp) {
 		//console.log("Using LSP " + activeBmxLsp.workspace?.name)
@@ -153,25 +186,59 @@ function restartLsps() {
 	runningBmxLsps.clear()
 }
 
+function restartLsp(lsp: BmxLsp | undefined) {
+	if (!lsp) return
+	if (lsp.client) lsp.client.stop()
+	
+	if (activeBmxLsp === lsp) activeBmxLsp = undefined
+	
+	if (lsp === defaultBmxLsp) {
+		defaultBmxLsp = undefined
+	} else if (lsp.workspace) {
+		runningBmxLsps.delete(lsp.workspace.uri.toString())
+	}
+	
+	activateBmxLsp(lsp.workspace)
+}
+
+function updateStatusBarItem() {
+	if (activeBmxLsp) {
+		// Update the icon and text
+		lspStatusBarItem.text = activeBmxLsp.name ? `${activeBmxLsp.status.icon} ${activeBmxLsp.name}` : activeBmxLsp.status.icon
+		
+		// Update the color
+		lspStatusBarItem.color = activeBmxLsp.status.color ? new vscode.ThemeColor(activeBmxLsp.status.color) : undefined
+		
+		// Update tooltip
+		lspStatusBarItem.tooltip = activeBmxLsp.status.tooltip
+		
+		lspStatusBarItem.show()
+	} else {
+		lspStatusBarItem.hide()
+	}
+}
+
 class BmxLsp {
 	
-	name: string = "Unknown"
+	name: string | undefined
+	version: string | undefined
 	workspace: vscode.WorkspaceFolder | undefined
 	clientOptions: lsp.LanguageClientOptions
 	client: lsp.LanguageClient
+	status: {icon: string, color?: string, error?: string, tooltip?: string} = {icon: '$(sync~spin)', error: undefined}
 	
 	_started: boolean
 	
 	pause() {
 		if (this.client && this._started) {
-			this.client.sendNotification('$pause',{state:true})
+			this.client.sendNotification('$/pause',{state:true})
 			this._started = false
 		}
 	}
 	
 	resume() {
 		if (this.client && !this._started) {
-			this.client.sendNotification('$pause',{state:false})
+			this.client.sendNotification('$/pause',{state:false})
 			this._started = true
 		}
 	}
@@ -213,11 +280,57 @@ class BmxLsp {
 		
 		let lspPath = vscode.Uri.file( bmxFolder + "/bin/lsp" )
 		
-		// Start the LSP
+		// Setup LSP
 		this.client = new lsp.LanguageClient('BlitzMax Language Server',
 			{ command: lspPath.fsPath, args: undefined, options: { env: undefined } },
 			this.clientOptions
 		)
+		
+		// Track ready state and update statusbar
+		this.client.onReady().then(() => {
+			if (this.client.initializeResult && this.client.initializeResult.serverInfo) {
+				this.name = this.client.initializeResult.serverInfo.name
+				this.version = this.client.initializeResult.serverInfo.version
+			} else {
+				this.name = "Unknown Language Server"
+				this.version = "Unknown Version"
+			}
+			this.status.icon = '$(check-all)'
+			this.status.color = undefined
+			this.status.tooltip = 'Language server ready'
+			if (activeBmxLsp === this) updateStatusBarItem()
+		})
+		
+		// Track state change
+		this.client.onDidChangeState((event) => {
+			if (activeBmxLsp === this) {
+				switch (event.newState) {
+					case 3:
+						// Starting
+						this.status.icon = '$(sync~spin)'
+						this.status.color = undefined
+						this.status.tooltip = 'Language server is starting...'
+						break
+						
+					case 2:
+						// Running
+						this.status.icon = '$(check)'
+						this.status.color = undefined
+						this.status.tooltip = 'Language server started, waiting for initialization...'
+						break
+						
+					default:
+						// Stopped
+						this.status.icon = '$(circle-slash)'
+						this.status.color = 'errorForeground'
+						this.status.tooltip = 'Language server encountered an error'
+						break
+				}
+				updateStatusBarItem()
+			}
+		})
+		
+		// START!
 		this.client.start()
 		this._started = true
 	}

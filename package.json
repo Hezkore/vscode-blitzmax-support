@@ -16,9 +16,6 @@
 		"bmax",
 		"bmx"
 	],
-	"engines": {
-		"vscode": "^1.46.0"
-	},
 	"icon": "images/blitzmax-icon.png",
 	"categories": [
 		"Programming Languages",
@@ -44,21 +41,24 @@
 		"package": "vsce package",
 		"publish": "vsce publish"
 	},
+	"engines": {
+		"vscode": "^1.46.0"
+	},
 	"dependencies": {
 		"await-notify": "1.0.1",
-		"vscode-debugadapter": "1.41.1",
+		"vscode-debugadapter": "1.42.1",
 		"vscode-languageclient": "^6.1.3"
 	},
 	"devDependencies": {
-		"@types/vscode": "^1.50.0",
+		"@types/vscode": "^1.51.0",
 		"@types/glob": "^7.1.3",
-		"@types/mocha": "^8.0.3",
-		"@types/node": "^14.14.6",
-		"eslint": "^7.12.1",
-		"@typescript-eslint/parser": "^4.6.0",
-		"@typescript-eslint/eslint-plugin": "^4.6.0",
+		"@types/mocha": "^8.0.4",
+		"@types/node": "^14.14.7",
+		"eslint": "^7.13.0",
+		"@typescript-eslint/parser": "^4.7.0",
+		"@typescript-eslint/eslint-plugin": "^4.7.0",
 		"glob": "^7.1.6",
-		"mocha": "^8.2.0",
+		"mocha": "^8.2.1",
 		"typescript": "^4.0.5",
 		"vscode-test": "^1.4.1",
 		"vscode-debugadapter-testsupport": "1.42.0",
@@ -122,7 +122,7 @@
 			{
 				"type": "bmx",
 				"label": "BlitzMax Debug",
-				"program": "./out/debug/debug.js",
+				"program": "./out/debugger.js",
 				"configurationAttributes": {
 					"launch": {
 						"required": [
@@ -174,6 +174,32 @@
 					"scope": "resource"
 				}
 			}
-		}
+		},
+		"taskDefinitions": [
+			{
+				"type": "bmx",
+				"properties": {
+					"make": {
+						"type": "string",
+						"description": "What to build as.",
+						"default": "makeapp",
+						"enum": [
+							"makeapp",
+							"makemods",
+							"makelib"
+						]
+					},
+					"apptype": {
+						"type": "string",
+						"description": "Specifies the application type. (makeapp only)",
+						"default": "console",
+						"enum": [
+							"console",
+							"gui"
+						]
+					}
+				}
+			}
+		]
 	}
 }

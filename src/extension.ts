@@ -29,6 +29,7 @@ export function activate( context: vscode.ExtensionContext ) {
 			]
 		},
 		handleTerminalLink: (link: any) => {
+			// TODO: Make this use editor.action.goToLocations
 			let splits = link.data.split(';')
 			let file = vscode.Uri.file( splits[0] )
 			let range = new vscode.Range(

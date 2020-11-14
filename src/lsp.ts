@@ -267,18 +267,18 @@ class BmxLsp {
 		}
 		
 		// Figure out path to BlitzMax
-		let bmxFolder: string | undefined
+		let bmxPath: string | undefined
 		
 		if (this.workspace) {
 			// If this is part of a workspace, we use that path
-			bmxFolder = vscode.workspace.getConfiguration( 'blitzmax', this.workspace ).get( 'path' )
+			bmxPath = vscode.workspace.getConfiguration( 'blitzmax', this.workspace ).get( 'path' )
 		} else {
 			// If this is a separate unkown file, we use the default BlitzMax path
 			let globalBmxPath = vscode.workspace.getConfiguration( 'blitzmax' ).inspect( 'path' )?.globalValue
-			if (typeof(globalBmxPath)==='string') bmxFolder = globalBmxPath
+			if (typeof(globalBmxPath)==='string') bmxPath = globalBmxPath
 		}
 		
-		let lspPath = vscode.Uri.file( bmxFolder + "/bin/lsp" )
+		let lspPath = vscode.Uri.file( bmxPath + "/bin/lsp" )
 		
 		// Setup LSP
 		this.client = new lsp.LanguageClient('BlitzMax Language Server',

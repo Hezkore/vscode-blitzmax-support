@@ -1,6 +1,6 @@
 {
 	"name": "blitzmax",
-	"version": "0.0.1",
+	"version": "2.0.0",
 	"publisher": "Hezkore",
 	"displayName": "BlitzMax",
 	"description": "BlitzMax for Visual Studio Code.",
@@ -33,17 +33,14 @@
 		"url": "https://github.com/Hezkore/vscode-blitzmax-support/issues"
 	},
 	"scripts": {
-		"vscode:prepublish": "yarn run compile",
 		"compile": "tsc -p ./src",
 		"lint": "eslint src --ext ts",
 		"watch": "tsc -watch -p ./src",
-		"pretest": "yarn run compile && yarn run lint",
-		"test": "node ./out/test/runTest.js",
 		"package": "vsce package",
 		"publish": "vsce publish"
 	},
 	"engines": {
-		"vscode": "^1.46.0"
+		"vscode": "^1.51.0"
 	},
 	"dependencies": {
 		"await-notify": "1.0.1",

@@ -292,7 +292,7 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 					if (bmkProcess) {
 						bmkProcess.kill('SIGINT')
 						this.writeEmitter.fire(`\r\n== ABORTED ==\r\n\r\n`)
-						this.closeEmitter.fire(0)
+						this.closeEmitter.fire(-1)
 						this.busy.notify()
 						resolve()
 					}

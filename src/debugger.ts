@@ -81,9 +81,13 @@ export class BmxDebugSession extends LoggingDebugSession {
 	
 	private _buildDone = new awaitNotify.Subject()
 	
+	private _buildTaskExecution: vscode.TaskExecution | undefined
+	
 	private _buildError: boolean
 	
 	private _bmxProcess: process.ChildProcessWithoutNullStreams
+	
+	private _ignoreNextTerminate: boolean
 	
 	private _bmxProcessPath: string | undefined
 	
@@ -137,6 +141,13 @@ export class BmxDebugSession extends LoggingDebugSession {
 			}
 		}))
 		
+		// Store the task execution
+		vscode.tasks.onDidStartTaskProcess(((e) => {
+			// Make sure it's our debugger task
+			if (e.execution.task === debuggerTask)
+				this._buildTaskExecution = e.execution
+		}))
+		
 		// Execute the task!
 		await vscode.tasks.executeTask(debuggerTask)
 		
@@ -144,13 +155,15 @@ export class BmxDebugSession extends LoggingDebugSession {
 		await this._buildDone.wait()
 		
 		// Went as expected?
-		if (this._buildError) {
+		if (this._buildError || !this._buildTaskExecution) {
 			//console.log('Error during build task')
 			this.sendEvent( new TerminatedEvent() )
 			return undefined
 		} else {
 			//console.log('Starting debug session')
 		}
+		
+		this._buildTaskExecution = undefined
 		
 		// Figure out output path
 		this._bmxProcessPath = args.output
@@ -160,11 +173,10 @@ export class BmxDebugSession extends LoggingDebugSession {
 		}
 		
 		// Launch!
-		console.log("LAUNCHING: " + this._bmxProcessPath)
-		
+		//console.log("LAUNCHING: " + this._bmxProcessPath)
 		this.startRuntime()
 		
-		console.log( 'started ' + this._bmxProcessPath )
+		//console.log( 'started ' + this._bmxProcessPath )
 		this.sendResponse(response)
 	}
 	
@@ -262,21 +274,36 @@ export class BmxDebugSession extends LoggingDebugSession {
 		})
 		
 		this._bmxProcess.on('close', (code) => {
-			console.log(`Application exited with code ${code.toString()}`)
-			this.sendEvent( new TerminatedEvent() )
+			//console.log(`Application exited with code ${code.toString()}`)
+			if (!this._ignoreNextTerminate)
+				this.sendEvent( new TerminatedEvent() )
+			this._ignoreNextTerminate = false
 		})
 	}
 	
 	protected terminateRequest(response: DebugProtocol.TerminateResponse, args: DebugProtocol.TerminateArguments, request?: DebugProtocol.Request) {
-		console.log('TERMINATE!')
+		// Are we running the build task?
+		if (this._buildTaskExecution) {
+			this._buildTaskExecution.terminate()
+			this._buildTaskExecution = undefined
+		}
+		
+		// Are we running the process?
 		if (this._bmxProcess) this._bmxProcess.kill('SIGINT')
-		this.sendEvent( new TerminatedEvent() )
+		
 		this.sendResponse(response)
 	}
 	
-	protected restartRequest(){
-		console.log('RESTART!')
+	protected pauseRequest(response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments, request?: DebugProtocol.Request){
+		response.message = 'Pause is not support'
+		response.success = false
+		this.sendResponse(response)
+	}
+	
+	protected restartRequest(response: DebugProtocol.RestartResponse, args: DebugProtocol.RestartArguments, request?: DebugProtocol.Request){
+		this._ignoreNextTerminate = true
 		this.startRuntime()
+		this.sendResponse(response)
 	}
 	
 	protected processStack( trace: string[] ) {
@@ -472,16 +499,16 @@ export class BmxDebugSession extends LoggingDebugSession {
 		console.log( 'Wants breakpoints apparently?' )
 	}
 
-	protected threadsRequest(response: DebugProtocol.ThreadsResponse): void {
-		console.log( 'Wants threads apparently?' )
-
+	protected threadsRequest(response: DebugProtocol.ThreadsResponse) {
+		//console.log( 'Wants threads apparently?' )
+		
 		// No threads! Just return a default thread
 		response.body = {
 			threads: [
 				new Thread( BmxDebugSession.THREAD_ID, "thread 1" )
 			]
 		}
-
+		
 		this.sendResponse(response)
 	}
 	

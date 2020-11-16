@@ -15,11 +15,6 @@ A WIP LSP can be found [here](https://github.com/GWRon/bmxng-languageserver).
 [VS Code specific information](https://code.visualstudio.com/api/language-extensions/language-server-extension-guide)\
 [Official LSP specifications](https://microsoft.github.io/language-server-protocol/specifications/specification-current/)
 
-### ***The extension does *not* feature a task provider yet!***
----
-This means it cannot build any BlitzMax source files *(`.bmx`)* or projects.\
-Any BlitzMax source files *(`.bmx`)* must be compiled outside of VS Code or using a separate extension.
-
 # Instructions
 ## Build and Run
 * Make sure any previous BlitzMax VS Code extensions are disabled or uninstalled
@@ -29,7 +24,7 @@ Any BlitzMax source files *(`.bmx`)* must be compiled outside of VS Code or usin
 * Type `npm install` in the terminal
 * Press `F5` to build and launch in a new VS Code instance
 
-The extension will start when a BlitzMax source file *(`.bmx`)* is opened.
+The extension will start when a BlitzMax source file *(`.bmx`)* is opened, or when a debug session is started.
 
 ## LSP information
 The LSP starts along with the extension.
@@ -37,13 +32,3 @@ The LSP starts along with the extension.
 * In the new VS Code instance
 	* Set your BlitzMax root path in Settings
 	* Reload the VS Code window with the command `Reload Window` via the Command Palette *(`Ctrl+Shift+P`)*
-
-## Debugger information
-The debugger currently only launches an existing already-built executable.
-* In the new VS Code instance
-  * Open a folder or source file *(`.bmx`)*
-  * Make sure the opened source file *(`.bmx`)* has a `.debug` executable in the same folder\
-  *(ie. `test.bmx` will need a `test.debug.exe` on Windows)*
-  * Press `F5` and select `BlitzMax Debug` to start debugging the executable
-
-Go [here](https://code.visualstudio.com/docs/editor/debugging#_run-view) to learn more about debugging in VS Code and how to setup an *optional* `launch.json` configuration.

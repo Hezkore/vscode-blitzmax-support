@@ -27,10 +27,10 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/Hezkore/vscode-blitzmax-concept"
+		"url": "https://github.com/Hezkore/vscode-blitzmax-support"
 	},
 	"bugs": {
-		"url": "https://github.com/Hezkore/vscode-blitzmax-concept/issues"
+		"url": "https://github.com/Hezkore/vscode-blitzmax-support/issues"
 	},
 	"scripts": {
 		"vscode:prepublish": "yarn run compile",
@@ -155,7 +155,7 @@
 								"default": false,
 								"markdownDescription": "[Compile sources only, no building of the application](https://blitzmax.org/docs/en/tools/bmk/#compile)"
 							},
-							"source":{
+							"source": {
 								"type": "string",
 								"default": "${file}",
 								"markdownDescription": "Root source file"
@@ -318,11 +318,11 @@
 								"type": "boolean",
 								"markdownDescription": "[Compress the created binary with UPX](https://blitzmax.org/docs/en/tools/bmk/#-upx)"
 							},
-							"conditionals":{
+							"conditionals": {
 								"type": "array",
 								"markdownDescription": "[User defined conditionals, usable via `?myconditional`](https://blitzmax.org/docs/en/tools/bcc/#-ud-user-defined-conditionals)"
 							},
-							"args":{
+							"args": {
 								"type": "array",
 								"description": "User defined arguments"
 							}
@@ -396,7 +396,7 @@
 						"default": false,
 						"markdownDescription": "[Compile sources only, no building of the application](https://blitzmax.org/docs/en/tools/bmk/#compile)"
 					},
-					"source":{
+					"source": {
 						"type": "string",
 						"default": "${file}",
 						"markdownDescription": "Root source file"
@@ -559,11 +559,11 @@
 						"type": "boolean",
 						"markdownDescription": "[Compress the created binary with UPX](https://blitzmax.org/docs/en/tools/bmk/#-upx)"
 					},
-					"conditionals":{
+					"conditionals": {
 						"type": "array",
 						"markdownDescription": "[User defined conditionals, usable via `?myconditional`](https://blitzmax.org/docs/en/tools/bcc/#-ud-user-defined-conditionals)"
 					},
-					"args":{
+					"args": {
 						"type": "array",
 						"description": "User defined arguments"
 					}

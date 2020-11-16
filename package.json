@@ -1,9 +1,9 @@
 {
 	"name": "blitzmax",
-	"displayName": "BlitzMax",
 	"version": "0.0.1",
 	"publisher": "Hezkore",
-	"description": "BlitzMax IntelliSense, debugging, and code browsing.",
+	"displayName": "BlitzMax",
+	"description": "BlitzMax for Visual Studio Code.",
 	"author": {
 		"name": "Hezkore",
 		"email": "Hezkore@GMail.com"
@@ -16,12 +16,13 @@
 		"bmax",
 		"bmx"
 	],
-	"icon": "images/blitzmax-icon.png",
+	"icon": "media/icon.png",
 	"categories": [
 		"Programming Languages",
 		"Formatters",
 		"Debuggers",
 		"Snippets",
+		"Linters",
 		"Other"
 	],
 	"repository": {

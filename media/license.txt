@@ -1,0 +1,7 @@
+Files:
+- build_run
+- build
+- icon
+
+Licence: CC BY 2.0
+Author: Ronny Otto - https://github.com/GWRon

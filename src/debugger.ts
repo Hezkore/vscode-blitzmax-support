@@ -112,6 +112,12 @@ export class BmxDebugSession extends LoggingDebugSession {
 		response.body.supportsReadMemoryRequest = true
 		response.body.supportsTerminateRequest = true
 		response.body.supportsRestartRequest = true
+		response.body.supportsConditionalBreakpoints = false
+		response.body.supportsFunctionBreakpoints = false
+		response.body.supportsHitConditionalBreakpoints = false
+		response.body.supportsInstructionBreakpoints = false
+		response.body.supportsBreakpointLocationsRequest = false
+		response.body.supportsDataBreakpoints = false
 		
 		this.sendResponse(response)
 		
@@ -491,8 +497,15 @@ export class BmxDebugSession extends LoggingDebugSession {
 		})
 	}
 
-	protected setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments): void {
+	protected setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments, request?: DebugProtocol.Request) {
+		/*
 		console.log( 'setBreakPointsRequest' )
+		
+		if (!args.breakpoints) return
+		console.log(args.source)
+		args.breakpoints.forEach(breakpoint => {
+			console.log(breakpoint)
+		})*/
 	}
 
 	protected breakpointLocationsRequest(response: DebugProtocol.BreakpointLocationsResponse, args: DebugProtocol.BreakpointLocationsArguments, request?: DebugProtocol.Request): void {

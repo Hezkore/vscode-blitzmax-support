@@ -1,3 +1,5 @@
+'use strict'
+
 import * as vscode from 'vscode'
 import * as awaitNotify from 'await-notify'
 import * as cp from 'child_process'
@@ -53,6 +55,12 @@ export interface BmxBuildOptions {
 
 export interface BmxBuildTaskDefinition extends BmxBuildOptions, vscode.TaskDefinition {
 	
+}
+
+export function registerTaskProvider(context) {
+	context.subscriptions.push(
+		vscode.tasks.registerTaskProvider('bmx', new BmxBuildTaskProvider)
+	)
 }
 
 export function getBuildDefinitionFromWorkspace(workspace: vscode.WorkspaceFolder | undefined = undefined): BmxBuildTaskDefinition | undefined {

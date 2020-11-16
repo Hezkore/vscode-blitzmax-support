@@ -1,7 +1,6 @@
 'use strict'
 
 import {
-	Logger, logger,
 	LoggingDebugSession,
 	InitializedEvent, StoppedEvent,
 	Thread, Handles, TerminatedEvent, ContinuedEvent
@@ -11,6 +10,11 @@ import * as process from 'child_process'
 import * as path from 'path'
 import * as awaitNotify from 'await-notify'
 import * as vscode from 'vscode'
+import { makeTask, getBuildDefinitionFromWorkspace, BmxBuildTaskDefinition, BmxBuildOptions } from './taskprovider'
+
+interface BmxLaunchRequestArguments extends BmxBuildOptions, DebugProtocol.LaunchRequestArguments {
+	noDebug?: boolean
+}
 
 // A bunch of initial setup stuff and providers
 //
@@ -19,7 +23,7 @@ export function registerBmxDebugger( context: vscode.ExtensionContext ) {
 	// register a configuration provider for 'bmx' debug type
 	const provider = new BmxDebugConfigurationProvider()
 	context.subscriptions.push( vscode.debug.registerDebugConfigurationProvider( 'bmx', provider ) )
-
+	
 	// debug adapters can be run in different ways by using a vscode.DebugAdapterDescriptorFactory:
 	let factory: vscode.DebugAdapterDescriptorFactory = new BmxInlineDebugAdapterFactory()
 	context.subscriptions.push( vscode.debug.registerDebugAdapterDescriptorFactory( 'bmx', factory) )
@@ -27,31 +31,36 @@ export function registerBmxDebugger( context: vscode.ExtensionContext ) {
 }
 
 export class BmxDebugConfigurationProvider implements vscode.DebugConfigurationProvider {
-
-	/**
-	 * Massage a debug configuration just before a debug session is being launched,
-	 * e.g. add all missing attributes to the debug configuration.
-	 */
-	resolveDebugConfiguration(folder: vscode.WorkspaceFolder | undefined, config: vscode.DebugConfiguration, token?: vscode.CancellationToken): vscode.ProviderResult<vscode.DebugConfiguration> {
-
-		// if launch.json is missing or empty
-		if (!config.type && !config.request && !config.name) {
-			const editor = vscode.window.activeTextEditor
-			if (editor && editor.document.languageId === 'blitzmax') {
-				config.type = 'bmx'
-				config.name = 'Default BlitzMax debug'
-				config.source = '${file}'
-			}
+	
+	resolveDebugConfigurationWithSubstitutedVariables(workspace: vscode.WorkspaceFolder | undefined, config: vscode.DebugConfiguration, token?:  vscode.CancellationToken): vscode.ProviderResult<vscode.DebugConfiguration> {
+		return config
+	}
+	
+	resolveDebugConfiguration(workspace: vscode.WorkspaceFolder | undefined, config: vscode.DebugConfiguration, token?: vscode.CancellationToken): vscode.ProviderResult<vscode.DebugConfiguration> {
+		
+		const doc = vscode.window.activeTextEditor?.document
+		if (doc) workspace = vscode.workspace.getWorkspaceFolder(doc.uri)
+		
+		// Are we part of any workspace?
+		if (!workspace) {
+			config.type = ''
+			config.request = ''
+			config.name = ''
 		}
-
-		if (!config.request) config.request = 'launch'
-
+		
+		// If launch.json is missing or empty, we create a new one based on the current task
+		if (!config.type && !config.request && !config.name) {
+			const definition = getBuildDefinitionFromWorkspace(workspace)
+			if (definition)
+				config = Object.assign({name: definition.label, request: 'launch'}, definition)
+		}
+		
 		if (!config.source) {
 			return vscode.window.showInformationMessage( 'Cannot find a source file to debug' ).then(_ => {
 				return undefined	// abort launch
 			})
 		}
-
+		
 		return config
 	}
 }
@@ -62,111 +71,120 @@ export class BmxInlineDebugAdapterFactory implements vscode.DebugAdapterDescript
 	}
 }
 
-interface BmxLaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
-	/** An absolute path to the "program" to debug. */
-	source: string
-	/** enable logging the Debug Adapter Protocol */
-	trace?: boolean
-	/** run without debugging */
-	noDebug?: boolean
-}
-
-// Internally used interface
-//
-interface BmxStackStep {
-	id: string
-	name: string // Visible name in the list
-	path: string // From BMX file
-	variableName: string // Name of the variable
-	type?: string // TType
-	value?: string
-	define?: string // Local, Global, Field etc.
-	needsDump?: string // Needs dumped data to be explored
-	children?: BmxStackStep[]
-	parent?: BmxStackStep
-}
-
 // Debugger starts here!
 export class BmxDebugSession extends LoggingDebugSession {
-
+	
 	// We don't support multiple threads!
 	private static THREAD_ID = 1
 
 	private _variableHandles = new Handles<string>()
-
-	private _configurationDone = new awaitNotify.Subject()
-
+	
+	private _buildDone = new awaitNotify.Subject()
+	
+	private _buildError: boolean
+	
 	private _bmxProcess: process.ChildProcessWithoutNullStreams
-
+	
+	private _bmxProcessPath: string | undefined
+	
 	private _stackFrames: DebugProtocol.StackFrame[] = []
-
+	
 	private _stackSteps: BmxStackStep[] = []
-
+	
 	private _stackStepId: number = 0
-
+	
 	public constructor() {
 		super( "bmx-debug.txt" )
-
+		
 		this.setDebuggerLinesStartAt1( false )
 		this.setDebuggerColumnsStartAt1( false )
 	}
-
+	
 	protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
-		console.log( 'initializeRequest' )
-		if (args.supportsProgressReporting) {
-		}
-
+		
 		// Build and return capabilities
 		response.body = response.body || {}
 		response.body.supportsStepInTargetsRequest = true
 		response.body.supportsReadMemoryRequest = true
-
+		response.body.supportsTerminateRequest = true
+		response.body.supportsRestartRequest = true
+		
 		this.sendResponse(response)
-
+		
 		this.sendEvent(new InitializedEvent())
 	}
-
-	/**
-	 * Called at the end of the configuration sequence.
-	 * Indicates that all breakpoints etc. have been sent to the DA and that the 'launch' can start.
-	 */
-	protected configurationDoneRequest(response: DebugProtocol.ConfigurationDoneResponse, args: DebugProtocol.ConfigurationDoneArguments): void {
-		console.log( 'configurationDoneRequest' )
-		super.configurationDoneRequest(response, args)
-
-		// notify the launchRequest that configuration has finished
-		this._configurationDone.notify()
-	}
-
+	
 	protected async launchRequest( response: DebugProtocol.LaunchResponse, args: BmxLaunchRequestArguments ) {
-		console.log( 'launchRequest' )
-		// Make sure to 'Stop' the buffered logging if 'trace' is not set
-		logger.setup( args.trace ? Logger.LogLevel.Verbose : Logger.LogLevel.Stop, false )
-
-		// Wait until configuration has finished (and configurationDoneRequest has been called)
-		await this._configurationDone.wait( 1000 )
-
-		// Start the program
-		console.log( 'SOURCE IS ' + args.source )
-
-		// First we assume that the source is an executable
-		let exePath:string = args.source
-
-		// Check if it is infact a bmx file
-		if (args.source.toLowerCase().endsWith('.bmx')) {
-			exePath = args.source.slice( 0, -4 ) + '.debug'
+		
+		// Setup a build task definition based on our launch arguments
+		let debuggerTaskDefinition: BmxBuildTaskDefinition = <BmxBuildTaskDefinition>(args)
+		
+		// Set debugging based on button pressed
+		debuggerTaskDefinition.debug = !args.noDebug
+		
+		if (debuggerTaskDefinition.debug)
+			debuggerTaskDefinition.release = false
+		
+		// Create a build task from our definition
+		let debuggerTask = makeTask(debuggerTaskDefinition)
+		
+		// Prepare what happens once the task is done
+		vscode.tasks.onDidEndTaskProcess(((e) => {
+			// Make sure it's our debugger task
+			if (e.execution.task === debuggerTask) {
+				this._buildError = e.exitCode ? true : false
+				this._buildDone.notify()
+			}
+		}))
+		
+		// Execute the task!
+		await vscode.tasks.executeTask(debuggerTask)
+		
+		// Wait until task is complete
+		await this._buildDone.wait()
+		
+		// Went as expected?
+		if (this._buildError) {
+			//console.log('Error during build task')
+			this.sendEvent( new TerminatedEvent() )
+			return undefined
+		} else {
+			//console.log('Starting debug session')
 		}
-
-		this._bmxProcess = process.spawn( exePath, [])
-
+		
+		// Figure out output path
+		this._bmxProcessPath = args.output
+		if (!this._bmxProcessPath) {
+			const outPath = path.parse(args.source)
+			this._bmxProcessPath = vscode.Uri.file( outPath.dir + '/' + outPath.name ).fsPath
+		}
+		
+		// Launch!
+		console.log("LAUNCHING: " + this._bmxProcessPath)
+		
+		this.startRuntime()
+		
+		console.log( 'started ' + this._bmxProcessPath )
+		this.sendResponse(response)
+	}
+	
+	startRuntime(){
+		// Make sure we have a path
+		if (!this._bmxProcessPath) return
+		
+		// Kill if already running
+		if (this._bmxProcess) this._bmxProcess.kill('SIGINT')
+		
+		this._bmxProcess = process.spawn( this._bmxProcessPath, [])
+		
 		this._bmxProcess.on('error', function(err) {
 			console.error( `Application ${err}`)
 		})
-
+		
 		this._bmxProcess.stdout.on('data', (data) => {
 			console.log(`stdout: ${data.toString()}`)
 		})
-
+		
 		this._bmxProcess.stderr.on('data', (data) => {
 			console.error(`stderr: ${data.toString()}`)
 
@@ -242,17 +260,25 @@ export class BmxDebugSession extends LoggingDebugSession {
 				}
 			}
 		})
-
+		
 		this._bmxProcess.on('close', (code) => {
 			console.log(`Application exited with code ${code.toString()}`)
 			this.sendEvent( new TerminatedEvent() )
 		})
-
-		console.log( 'started ' + exePath )
-
+	}
+	
+	protected terminateRequest(response: DebugProtocol.TerminateResponse, args: DebugProtocol.TerminateArguments, request?: DebugProtocol.Request) {
+		console.log('TERMINATE!')
+		if (this._bmxProcess) this._bmxProcess.kill('SIGINT')
+		this.sendEvent( new TerminatedEvent() )
 		this.sendResponse(response)
 	}
-
+	
+	protected restartRequest(){
+		console.log('RESTART!')
+		this.startRuntime()
+	}
+	
 	protected processStack( trace: string[] ) {
 
 		this._stackFrames = []
@@ -458,10 +484,10 @@ export class BmxDebugSession extends LoggingDebugSession {
 
 		this.sendResponse(response)
 	}
-
+	
 	protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
 		console.log( 'Wants stack apparently?' )
-
+		
 		response.body = {
 			stackFrames: this._stackFrames,
 			totalFrames: this._stackFrames.length
@@ -469,19 +495,19 @@ export class BmxDebugSession extends LoggingDebugSession {
 
 		this.sendResponse(response)
 	}
-
+	
 	protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
 		console.log( 'Wants scopes apparently?' )
-
+		
 		// These are only the root items in the tree list!
-
+		
 		this.logStackSteps()
-
+		
 		const scopes: DebugProtocol.Scope[] = []
-
+		
 		for (let i = 0; i < this._stackSteps.length; i++) {
 			const step = this._stackSteps[i]
-
+			
 			if (step.children || step.needsDump) {
 				const newScope: DebugProtocol.Scope = {
 					name: step.name,
@@ -500,28 +526,28 @@ export class BmxDebugSession extends LoggingDebugSession {
 		response.body = { scopes: scopes }
 		this.sendResponse(response)
 	}
-
+	
 	protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments, request?: DebugProtocol.Request) {
 		console.log( 'Wants variables apparently?' )
-
+		
 		const variables: DebugProtocol.Variable[] = []
 		const id = this._variableHandles.get( args.variablesReference )
 		if (!id) {
 			console.log( 'No ID for variables request?!' )
 			return
 		}
-
+		
 		const rootStep = this.findStepWithId( id )
 		if (!rootStep) {
 			console.log( 'No root step found for ID ' + id  )
 			return
 		}
-
+		
 		// No children, do we need to create them?
 		if (!rootStep.children) {
-
+			
 			if (rootStep.needsDump) {
-
+				
 				function ensureDumpIsComplete( step: BmxStackStep ) {
 					return new Promise(function (resolve, reject) {
 						(function waitFordump(){
@@ -534,13 +560,13 @@ export class BmxDebugSession extends LoggingDebugSession {
 				this.dumpStackStep( rootStep )
 				await ensureDumpIsComplete(rootStep)
 			}
-
+			
 			if (!rootStep.children) {
 				console.log( 'Root step has no children for ID ' + id  )
 				return
 			}
 		}
-
+		
 		for (let i = 0; i < rootStep.children.length; i++) {
 			const step = rootStep.children[i]
 
@@ -556,65 +582,80 @@ export class BmxDebugSession extends LoggingDebugSession {
 				}
 			})
 		}
-
+		
 		response.body = { variables: variables }
 		this.sendResponse( response )
 	}
-
+	
 	protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void {
 		console.log('continueRequest')
 		this.sendEvent( new ContinuedEvent( BmxDebugSession.THREAD_ID ) )
 		this._bmxProcess.stdin.write( 'r\n' )
 	}
-
+	
 	protected reverseContinueRequest(response: DebugProtocol.ReverseContinueResponse, args: DebugProtocol.ReverseContinueArguments) : void {
 		console.log('reverseContinueRequest')
  	}
-
+	 
 	protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
 		console.log('nextRequest')
 		this.sendEvent( new ContinuedEvent( BmxDebugSession.THREAD_ID ) )
 		this._bmxProcess.stdin.write( 's\n' )
 	}
-
+	
 	protected stepBackRequest(response: DebugProtocol.StepBackResponse, args: DebugProtocol.StepBackArguments): void {
 		console.log('stepBackRequest')
 		this.sendResponse(response)
 	}
-
+	
 	protected stepInTargetsRequest(response: DebugProtocol.StepInTargetsResponse, args: DebugProtocol.StepInTargetsArguments) {
 		console.log('stepInTargetsRequest')
 	}
-
+	
 	protected stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments): void {
 		console.log('stepInRequest')
 		this.sendEvent( new ContinuedEvent( BmxDebugSession.THREAD_ID ) )
 		this._bmxProcess.stdin.write( 'e\n' )
 	}
-
+	
 	protected stepOutRequest(response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments): void {
 		console.log('stepOutRequest')
 		this.sendEvent( new ContinuedEvent( BmxDebugSession.THREAD_ID ) )
 		this._bmxProcess.stdin.write( 'l\n' )
 	}
-
+	
 	protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): void {
 		console.log('evaluateRequest')
 	}
-
+	
 	protected dataBreakpointInfoRequest(response: DebugProtocol.DataBreakpointInfoResponse, args: DebugProtocol.DataBreakpointInfoArguments): void {
 		console.log('dataBreakpointInfoRequest')
 	}
-
+	
 	protected setDataBreakpointsRequest(response: DebugProtocol.SetDataBreakpointsResponse, args: DebugProtocol.SetDataBreakpointsArguments): void {
 		console.log('setDataBreakpointsRequest')
 	}
-
+	
 	protected completionsRequest(response: DebugProtocol.CompletionsResponse, args: DebugProtocol.CompletionsArguments): void {
 		console.log('completionsRequest')
 	}
-
+	
 	protected cancelRequest(response: DebugProtocol.CancelResponse, args: DebugProtocol.CancelArguments) {
 		console.log('cancelRequest')
 	}
+}
+
+// Internally used interface
+//
+interface BmxStackStep {
+	id: string
+	name: string // Visible name in the list
+	path: string // From BMX file
+	variableName: string // Name of the variable
+	type?: string // TType
+	value?: string
+	define?: string // Local, Global, Field etc.
+	needsDump?: string // Needs dumped data to be explored
+	children?: BmxStackStep[]
+	parent?: BmxStackStep
 }

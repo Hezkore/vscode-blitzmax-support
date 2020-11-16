@@ -66,7 +66,6 @@
 	},
 	"main": "./out/extension",
 	"activationEvents": [
-		"onDebug",
 		"onDebugDynamicConfigurations:bmx",
 		"onLanguage:blitzmax"
 	],
@@ -129,15 +128,202 @@
 							"source"
 						],
 						"properties": {
-							"source": {
+							"bmk": {
 								"type": "string",
-								"description": "Absolute path to a BlitzMax .bmx file or executable.",
-								"default": "${file}"
+								"markdownDescription": "Used defined bmk path `i.e. C:/BlitzMaxNG/bin/bmk`"
 							},
-							"trace": {
+							"make": {
+								"type": "string",
+								"markdownDescription": "[Type of project](https://blitzmax.org/docs/en/tools/bmk/#makeapp)",
+								"default": "application",
+								"enum": [
+									"application",
+									"module",
+									"library",
+									"bootstrap"
+								],
+								"markdownEnumDescriptions": [
+									"[Builds an application from a single root source file](https://blitzmax.org/docs/en/tools/bmk/#makeapp)",
+									"[Builds a set of modules](https://blitzmax.org/docs/en/tools/bmk/#makemods)",
+									"[On Win32, builds a dynamic linked library (DLL) from the source file](https://blitzmax.org/docs/en/tools/bmk/#makelib)",
+									"[Build a bootstrap package](https://blitzmax.org/docs/en/tools/bmk/#makebootstrap)"
+								]
+							},
+							"onlycompile": {
 								"type": "boolean",
-								"description": "Enable logging.",
-								"default": false
+								"default": false,
+								"markdownDescription": "[Compile sources only, no building of the application](https://blitzmax.org/docs/en/tools/bmk/#compile)"
+							},
+							"source":{
+								"type": "string",
+								"default": "${file}",
+								"markdownDescription": "Root source file"
+							},
+							"fullcompile": {
+								"type": "boolean",
+								"default": false,
+								"markdownDescription": "[Recompiles all source/modules regardless of timestamp](https://blitzmax.org/docs/en/tools/bmk/#-a)"
+							},
+							"appstub": {
+								"type": "string",
+								"markdownDescription": "[Builds an app using a custom appstub](https://blitzmax.org/docs/en/tools/bmk/#-b-custom-appstub-module)"
+							},
+							"debug": {
+								"type": "boolean",
+								"default": false,
+								"markdownDescription": "[Builds a debug version](https://blitzmax.org/docs/en/tools/bmk/#-d)"
+							},
+							"architecture": {
+								"type": "string",
+								"enum": [
+									"armeabiv7a",
+									"arm64v8a",
+									"armeabi",
+									"arm64",
+									"arm",
+									"x86",
+									"x64"
+								],
+								"markdownDescription": "[Compiles to the specified architecture](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)"
+							},
+							"gdb": {
+								"type": "boolean",
+								"default": false,
+								"markdownDescription": "[Generates line mappings suitable for GDB debugging](https://blitzmax.org/docs/en/tools/bmk/#-gdb)"
+							},
+							"threaded": {
+								"type": "boolean",
+								"markdownDescription": "[Builds multithreaded version](https://blitzmax.org/docs/en/tools/bmk/#-h)"
+							},
+							"universal": {
+								"type": "boolean",
+								"default": false,
+								"markdownDescription": "[Creates a Universal build for supported platforms](https://blitzmax.org/docs/en/tools/bmk/#-i)"
+							},
+							"crosscompile": {
+								"type": "string",
+								"enum": [
+									"win32",
+									"linux",
+									"macos",
+									"ios",
+									"android",
+									"raspberrypi",
+									"nx"
+								],
+								"markdownDescription": "[Cross-compiles to the specific target platform](https://blitzmax.org/docs/en/tools/bmk/#-l-target-platform)"
+							},
+							"musl": {
+								"type": "boolean",
+								"markdownDescription": "[Enables musl libc compatibility](https://blitzmax.org/docs/en/tools/bmk/#-musl)"
+							},
+							"nostrictupgrade": {
+								"type": "boolean",
+								"markdownDescription": "[Don't upgrade strict method void return types, if required](https://blitzmax.org/docs/en/tools/bmk/#-nostrictupgrade)"
+							},
+							"output": {
+								"type": "string",
+								"markdownDescription": "[Specifies the output file](https://blitzmax.org/docs/en/tools/bmk/#-o-output-file)"
+							},
+							"quiet": {
+								"type": "boolean",
+								"markdownDescription": "[Quiet build](https://blitzmax.org/docs/en/tools/bmk/#-q)"
+							},
+							"quick": {
+								"type": "boolean",
+								"markdownDescription": "[Do not scan modules for changes](https://blitzmax.org/docs/en/tools/bmk/#-quick)"
+							},
+							"release": {
+								"type": "boolean",
+								"markdownDescription": "[Builds a release version](https://blitzmax.org/docs/en/tools/bmk/#-r)"
+							},
+							"standalone": {
+								"type": "boolean",
+								"markdownDescription": "[Generate but do not compile into binary form](https://blitzmax.org/docs/en/tools/bmk/#-standalone)"
+							},
+							"static": {
+								"type": "boolean",
+								"markdownDescription": "[Statically link binary](https://blitzmax.org/docs/en/tools/bmk/#-static)"
+							},
+							"apptype": {
+								"type": "string",
+								"markdownDescription": "[Specifies the application type](https://blitzmax.org/docs/en/tools/bmk/#-t-app-type)",
+								"enum": [
+									"console",
+									"gui"
+								]
+							},
+							"platform": {
+								"type": "string",
+								"enum": [
+									"win32",
+									"macos",
+									"linux",
+									"android",
+									"raspberrypi",
+									"emscripten"
+								],
+								"markdownDescription": "[Select platform to create code for](https://blitzmax.org/docs/en/tools/bcc/#-p-platform)"
+							},
+							"verbose": {
+								"type": "boolean",
+								"markdownDescription": "[Verbose (noisy) build](https://blitzmax.org/docs/en/tools/bmk/#-v)"
+							},
+							"funcargcasting": {
+								"type": "string",
+								"enum": [
+									"error",
+									"warning"
+								],
+								"markdownEnumDescriptions": [
+									"Shows error",
+									"Shows warning"
+								],
+								"markdownDescription": "[How to handle function argument casting issues](https://blitzmax.org/docs/en/tools/bmk/#-w)"
+							},
+							"framework": {
+								"type": "string",
+								"markdownDescription": "[Defines to use a specific module as framework](https://blitzmax.org/docs/en/tools/bmk/#-f-framework)"
+							},
+							"nomanifest": {
+								"type": "boolean",
+								"markdownDescription": "[Do not generate a manifest file for the built application](https://blitzmax.org/docs/en/tools/bmk/#-nomanifest)"
+							},
+							"single": {
+								"type": "boolean",
+								"markdownDescription": "[Disabled multi threaded processing in a bmk built with thread support](https://blitzmax.org/docs/en/tools/bmk/#-single)"
+							},
+							"nodef": {
+								"type": "boolean",
+								"markdownDescription": "[Defines to not generate .def files useable by created DLLs/shared libraries](https://blitzmax.org/docs/en/tools/bmk/#-nodef)"
+							},
+							"nohead": {
+								"type": "boolean",
+								"markdownDescription": "[Defines to not generate header files useable by created DLLs/shared libraries](https://blitzmax.org/docs/en/tools/bmk/#-nohead)"
+							},
+							"override": {
+								"type": "boolean",
+								"markdownDescription": "[Sets requirement for overriding methods and functions to append override to their definitions](https://blitzmax.org/docs/en/tools/bmk/#-override)"
+							},
+							"overerr": {
+								"type": "boolean",
+								"markdownDescription": "[Defines missing override keywords in overridden methods and functions to be handled as error instead of warning](https://blitzmax.org/docs/en/tools/bmk/#-overerr)"
+							},
+							"nopie": {
+								"type": "boolean",
+								"markdownDescription": "[Do not generate PIE binaries](https://blitzmax.org/docs/en/tools/bmk/#-no-pie)"
+							},
+							"upx": {
+								"type": "boolean",
+								"markdownDescription": "[Compress the created binary with UPX](https://blitzmax.org/docs/en/tools/bmk/#-upx)"
+							},
+							"conditionals":{
+								"type": "array",
+								"markdownDescription": "[User defined conditionals, usable via `?myconditional`](https://blitzmax.org/docs/en/tools/bcc/#-ud-user-defined-conditionals)"
+							},
+							"args":{
+								"type": "array",
+								"description": "User defined arguments"
 							}
 						}
 					}
@@ -178,6 +364,10 @@
 		"taskDefinitions": [
 			{
 				"type": "bmx",
+				"required": [
+					"make",
+					"source"
+				],
 				"properties": {
 					"bmk": {
 						"type": "string",
@@ -331,10 +521,6 @@
 							"Shows warning"
 						],
 						"markdownDescription": "[How to handle function argument casting issues](https://blitzmax.org/docs/en/tools/bmk/#-w)"
-					},
-					"execute": {
-						"type": "boolean",
-						"markdownDescription": "[Executes built application](https://blitzmax.org/docs/en/tools/bmk/#-x)"
 					},
 					"framework": {
 						"type": "string",

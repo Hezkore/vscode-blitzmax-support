@@ -1,45 +1,87 @@
 import * as vscode from 'vscode'
-import * as path from 'path'
+import * as awaitNotify from 'await-notify'
 import * as cp from 'child_process'
+import * as path from 'path'
 
 let terminal: BmxBuildTaskTerminal | undefined
+let defaultBuildDefinition: BmxBuildTaskDefinition = {
+	type: 'bmx',
+	make: 'application',
+	source: '${file}',
+	debug: false,
+	release: true,
+	funcargcasting: 'warning'
+}
 
-export interface BmxBuildTaskDefinition extends vscode.TaskDefinition {
+export interface BmxBuildOptions {
 	make: string
 	onlycompile?: string
 	source: string
-	fullcompile?: string
+	fullcompile?: boolean
 	appstub?: string | undefined
-	debug?: string
+	debug?: boolean
 	architecture?: string
-	gdb?: string
-	threaded?: string
-	universal?: string
+	gdb?: boolean
+	threaded?: boolean
+	universal?: boolean
 	crosscompile?: string
-	musl?: string
-	nostrictupgrade?: string
+	musl?: boolean
+	nostrictupgrade?: boolean
 	output?: string
-	quiet?: string
-	quick?: string
-	release?: string
+	quiet?: boolean
+	quick?: boolean
+	release?: boolean
 	standalone?: string
-	static?: string
+	static?: boolean
 	apptype?: string
 	platform?: string
-	verbose?: string
+	verbose?: boolean
 	funcargcasting?: string
-	execute?: string
 	framework?: string
-	nomanifest?: string
-	single?: string
-	nodef?: string
-	nohead?: string
-	override?: string
-	overerr?: string
-	nopie?: string
-	upx?: string
+	nomanifest?: boolean
+	single?: boolean
+	nodef?: boolean
+	nohead?: boolean
+	override?: boolean
+	overerr?: boolean
+	nopie?: boolean
+	upx?: boolean
 	conditionals?: string[]
 	args?: string[]
+}
+
+export interface BmxBuildTaskDefinition extends BmxBuildOptions, vscode.TaskDefinition {
+	
+}
+
+export function getBuildDefinitionFromWorkspace(workspace: vscode.WorkspaceFolder | undefined = undefined): BmxBuildTaskDefinition | undefined {
+	
+	if (!workspace) {
+		const doc = vscode.window.activeTextEditor?.document
+		if (doc) workspace = vscode.workspace.getWorkspaceFolder(doc.uri)
+	}
+	
+	// If there's no workspace, we just return the default build definition
+	if (!workspace) return defaultBuildDefinition
+	
+	// Figure out the default task and get the definition
+	const config = vscode.workspace.getConfiguration( 'tasks', workspace )
+	if (config) {
+		
+		const tasks: vscode.WorkspaceConfiguration | undefined = config.get( 'tasks' )
+		if (tasks) {
+			
+			for (let i = 0; i < tasks.length; i++) {
+				const def: BmxBuildTaskDefinition = tasks[i]
+				if (!def) continue
+				
+				if (def.group.isDefault) return def
+			}
+		}
+	}
+	
+	// Something went wrong, return default
+	return defaultBuildDefinition
 }
 
 export class BmxBuildTaskProvider implements vscode.TaskProvider {
@@ -66,14 +108,7 @@ export class BmxBuildTaskProvider implements vscode.TaskProvider {
 }
 
 export function makeSimpleTask(label: string, detail: string, make: string, apptype: string | undefined = undefined): vscode.Task {
-	let definition = {
-			type: 'bmx',
-			detail: detail,
-			source: '${file}',
-			label: label,
-			make: make,
-			apptype: apptype
-		}
+	let definition = Object.assign({label, detail, make, apptype}, defaultBuildDefinition)
 	return makeTask(definition)
 }
 
@@ -84,11 +119,11 @@ export function makeTask(definition: BmxBuildTaskDefinition): vscode.Task {
 		
 		let bmkPath: vscode.Uri | undefined
 		let args: string[] = []
+		let workspace = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(resolvedDefinition.source))
 		
 		if (resolvedDefinition.bmk) {
 			bmkPath = vscode.Uri.file(resolvedDefinition.bmk)
 		} else {
-			let workspace = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(resolvedDefinition.source))
 			let bmxPath: string | undefined
 			
 			if (workspace) {
@@ -159,8 +194,6 @@ export function makeTask(definition: BmxBuildTaskDefinition): vscode.Task {
 		
 		if (resolvedDefinition.funcargcasting == 'warning') args.push('-w')
 		
-		if (resolvedDefinition.execute) args.push('-e')
-		
 		if (resolvedDefinition.framework) args.push('-f', resolvedDefinition.framework)
 		
 		if (resolvedDefinition.nomanifest) args.push('-nomanifest')
@@ -187,27 +220,29 @@ export function makeTask(definition: BmxBuildTaskDefinition): vscode.Task {
 		
 		if (resolvedDefinition.args) args = args.concat(resolvedDefinition.args)
 		
-		if (resolvedDefinition.output) {
-			args.push('-o', resolvedDefinition.output)
-		} else {
-			// Always force output!
-			let outPath = path.parse(vscode.Uri.file( resolvedDefinition.source ).fsPath)
-			args.push('-o', vscode.Uri.file(outPath.dir + '/' + outPath.name).fsPath)
-		}
+		if (resolvedDefinition.output) args.push('-o', resolvedDefinition.output)
 		
 		args.push(resolvedDefinition.source)
 		
 		// Terminal setup
 		if (!terminal) terminal = new BmxBuildTaskTerminal
-		terminal.prepare(bmkPath.fsPath, args)
+		terminal.prepare(bmkPath.fsPath, args, workspace?.uri.fsPath)
 		return terminal
 	})
 	
 	// Make sure label exists!
-	if (!definition.label) definition.label = 'Custom'
+	if (!definition.label) definition.label = 'build'
 	
 	// Create the task
 	let task = new vscode.Task( definition, vscode.TaskScope.Workspace, definition.label, 'BlitzMax', exec, '$blitzmax' )
+	
+	// Setup task MaxIDE like
+	task.presentationOptions.echo = true
+	task.presentationOptions.focus = false
+	task.presentationOptions.panel = vscode.TaskPanelKind.Shared
+	task.presentationOptions.reveal = vscode.TaskRevealKind.Silent
+	task.presentationOptions.showReuseMessage = false
+	task.presentationOptions.clear = true
 	
 	return task
 }
@@ -215,15 +250,18 @@ export function makeTask(definition: BmxBuildTaskDefinition): vscode.Task {
 class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 	private writeEmitter = new vscode.EventEmitter<string>()
 	onDidWrite: vscode.Event<string> = this.writeEmitter.event
-	private closeEmitter = new vscode.EventEmitter<void>()
-	onDidClose?: vscode.Event<void> = this.closeEmitter.event
+	private closeEmitter = new vscode.EventEmitter<number>()
+	onDidClose?: vscode.Event<number> = this.closeEmitter.event
 	
 	cmd: string
 	args: string[] | undefined
+	cwd: string | undefined
+	busy = new awaitNotify.Subject()
 	
-	prepare(cmd: string, args: string[] | undefined) {
+	prepare(cmd: string, args: string[] | undefined, cwd: string | undefined) {
 		this.cmd = cmd
 		this.args = args
+		this.cwd = cwd
 	}
 	
 	open(initialDimensions: vscode.TerminalDimensions | undefined): void {
@@ -237,41 +275,74 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 		return new Promise<void>((resolve) => {
 			// We have a defininition, right?
 			if (!this.cmd || !this.args) {
-				this.closeEmitter.fire()
+				this.closeEmitter.fire(-1)
 				return resolve()
 			}
 			
 			this.writeEmitter.fire('== BUILDING ==\r\n\r\n')
+			this.writeEmitter.fire(this.cwd+'\r\n\r\n')
 			this.writeEmitter.fire(`${this.cmd} ${this.args.join(' ')}\r\n`)
 			
-			let bmkProcess = cp.spawn(this.cmd, this.args)
-			
-			bmkProcess.stdout.on('data', (data) => {
-				this.writeEmitter.fire(`${data}`)
-			})
-			
-			bmkProcess.stderr.on('data', (data) => {
-				this.writeEmitter.fire(`${data}\r\n`)
-			})
-			
-			bmkProcess.on('error', (error) => {
-				this.writeEmitter.fire(`error: ${error.message}\r\n`)
-			})
-			
-			bmkProcess.on('close', (code) => {
-				if (code) {
-					this.writeEmitter.fire(`\r\n== ERROR ==\r\n\r\n`)
-					
-					// Is this too hacky?
-					setTimeout(() => {
-						vscode.commands.executeCommand('editor.action.marker.nextInFiles')
-					}, 500)
-				} else {
-					this.writeEmitter.fire(`\r\n== DONE ==\r\n\r\n`)
-				}
+			vscode.window.withProgress({
+				location: vscode.ProgressLocation.Notification,
+				title: 'Building ' + path.parse(this.args[this.args.length-1]).base,
+				cancellable: true
+			}, async (progress, token) => {
+				token.onCancellationRequested(() => {
+					if (bmkProcess) {
+						bmkProcess.kill('SIGINT')
+						this.writeEmitter.fire(`\r\n== ABORTED ==\r\n\r\n`)
+						this.closeEmitter.fire(0)
+						this.busy.notify()
+						resolve()
+					}
+				})
 				
-				this.closeEmitter.fire()
-				resolve()
+				let bmkProcess = cp.spawn(this.cmd, this.args, {cwd: this.cwd})
+				let lastPercent: number
+				let percent: number
+				
+				bmkProcess.stdout.on('data', (data) => {
+					this.writeEmitter.fire(`${data}`)
+					
+					const str = data.toString()
+					//progress.report({ message: str.substring(0,5) })
+					
+					if (str.startsWith('[') && str[5] == ']') {
+						percent = Number( str.split('%')[0].slice(1) )
+						progress.report({ message: ` ${percent}%`, increment: percent - lastPercent })
+						lastPercent = percent
+					}
+				})
+				
+				bmkProcess.stderr.on('data', (data) => {
+					this.writeEmitter.fire(`${data}\r\n`)
+				})
+				
+				bmkProcess.on('error', (error) => {
+					this.writeEmitter.fire(`error: ${error.message}\r\n`)
+				})
+				
+				bmkProcess.on('close', (code) => {
+					if (code) {
+						this.writeEmitter.fire(`\r\n== ERROR ==\r\n\r\n`)
+						
+						// Is this too hacky?
+						setTimeout(() => {
+							vscode.commands.executeCommand('editor.action.marker.nextInFiles')
+							vscode.commands.executeCommand('workbench.actions.view.problems')
+						}, 500)
+					} else {
+						this.writeEmitter.fire(`\r\n== DONE ==\r\n\r\n`)
+					}
+					
+					this.closeEmitter.fire(code)
+					this.busy.notify()
+					resolve()
+				})
+				
+				await this.busy.wait()
+				return resolve()
 			})
 		})
 	}

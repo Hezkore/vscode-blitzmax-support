@@ -10,11 +10,10 @@
 	},
 	"license": "MIT",
 	"keywords": [
-		"multi-root ready",
 		"BlitzMax",
 		"BlitzMax NG",
-		"bmax",
-		"bmx"
+		"bmx",
+		"multi-root ready"
 	],
 	"icon": "media/icon.png",
 	"categories": [

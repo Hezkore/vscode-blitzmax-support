@@ -1,4 +1,6 @@
 # BlitzMax for Visual Studio Code
+[![Version](https://vsmarketplacebadge.apphb.com/version/hezkore.BlitzMax.svg)](https://marketplace.visualstudio.com/items?itemName=hezkore.Blitzmax)
+[![Installs](https://vsmarketplacebadge.apphb.com/installs-short/hezkore.BlitzMax.svg)](https://marketplace.visualstudio.com/items?itemName=hezkore.BlitzMax)
 
 Welcome to the BlitzMax extension for Visual Studio Code!\
 This extension provides the following features inside VS Code for BlitzMax source files:
@@ -20,7 +22,7 @@ We hang out in the **#vscode-extension** channel!
 
 ### **Changelog**
 ---
-Read [CHANGELOG]().
+Read [CHANGELOG](https://marketplace.visualstudio.com/items/Hezkore.blitzmax/changelog).
 
 ### ***Note about using the Language Server Protocol***
 ---

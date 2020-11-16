@@ -2,7 +2,7 @@
 
 import {
 	LoggingDebugSession,
-	InitializedEvent, StoppedEvent,
+	InitializedEvent, StoppedEvent, OutputEvent,
 	Thread, Handles, TerminatedEvent, ContinuedEvent
 } from 'vscode-debugadapter'
 import { DebugProtocol } from 'vscode-debugprotocol'
@@ -87,7 +87,7 @@ export class BmxDebugSession extends LoggingDebugSession {
 	
 	private _bmxProcess: process.ChildProcessWithoutNullStreams
 	
-	private _ignoreNextTerminate: boolean
+	private _isRestart: boolean
 	
 	private _bmxProcessPath: string | undefined
 	
@@ -118,7 +118,7 @@ export class BmxDebugSession extends LoggingDebugSession {
 		this.sendEvent(new InitializedEvent())
 	}
 	
-	protected async launchRequest( response: DebugProtocol.LaunchResponse, args: BmxLaunchRequestArguments ) {
+	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: BmxLaunchRequestArguments) {
 		
 		// Setup a build task definition based on our launch arguments
 		let debuggerTaskDefinition: BmxBuildTaskDefinition = <BmxBuildTaskDefinition>(args)
@@ -189,16 +189,16 @@ export class BmxDebugSession extends LoggingDebugSession {
 		
 		this._bmxProcess = process.spawn( this._bmxProcessPath, [])
 		
-		this._bmxProcess.on('error', function(err) {
-			console.error( `Application ${err}`)
+		this._bmxProcess.on('error', (err) => {
+			this.sendEvent(new OutputEvent(err.message.toString(), 'stderr'))
 		})
 		
 		this._bmxProcess.stdout.on('data', (data) => {
-			console.log(`stdout: ${data.toString()}`)
+			this.sendEvent(new OutputEvent(data.toString(), 'stdout'))
 		})
 		
 		this._bmxProcess.stderr.on('data', (data) => {
-			console.error(`stderr: ${data.toString()}`)
+			this.sendEvent(new OutputEvent(data.toString(), 'stderr'))
 
 			let insideBlock: number = 0
 			let blockType: string | undefined
@@ -275,9 +275,9 @@ export class BmxDebugSession extends LoggingDebugSession {
 		
 		this._bmxProcess.on('close', (code) => {
 			//console.log(`Application exited with code ${code.toString()}`)
-			if (!this._ignoreNextTerminate)
+			if (!this._isRestart)
 				this.sendEvent( new TerminatedEvent() )
-			this._ignoreNextTerminate = false
+			this._isRestart = false
 		})
 	}
 	
@@ -301,19 +301,19 @@ export class BmxDebugSession extends LoggingDebugSession {
 	}
 	
 	protected restartRequest(response: DebugProtocol.RestartResponse, args: DebugProtocol.RestartArguments, request?: DebugProtocol.Request){
-		this._ignoreNextTerminate = true
+		this._isRestart = true
 		this.startRuntime()
 		this.sendResponse(response)
 	}
 	
 	protected processStack( trace: string[] ) {
-
+		
 		this._stackFrames = []
 		this._stackSteps = []
-
+		
 		let file: string = ''
 		let lastStep: BmxStackStep | undefined
-
+		
 		//console.log( 'TRACE THIS: ' + trace )
 		trace.forEach( line => {
 

@@ -6,11 +6,12 @@ import * as path from 'path'
 let terminal: BmxBuildTaskTerminal | undefined
 let defaultBuildDefinition: BmxBuildTaskDefinition = {
 	type: 'bmx',
+	funcargcasting: 'warning',
 	make: 'application',
+	apptype: 'console',
 	source: '${file}',
-	debug: false,
 	release: true,
-	funcargcasting: 'warning'
+	debug: false
 }
 
 export interface BmxBuildOptions {

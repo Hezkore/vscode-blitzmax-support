@@ -2,6 +2,8 @@
 
 import * as vscode from 'vscode'
 import * as lsp from 'vscode-languageclient'
+import * as os from 'os'
+import { existsSync } from './common'
 
 let outputChannel: vscode.OutputChannel
 let activeBmxLsp: BmxLsp | undefined
@@ -87,7 +89,10 @@ export function registerBmxLsp(context: vscode.ExtensionContext) {
 	
 	// Reset LSPs when settings change
 	vscode.workspace.onDidChangeConfiguration((event) => {
-		if (event.affectsConfiguration( 'blitzmax.path' )) restartLsps()
+		if (event.affectsConfiguration( 'blitzmax.path' )) {
+			restartLsps()
+			updateStatusBarItem()
+		}
 	})
 	
 	// Remove LSPs for removed folders
@@ -202,7 +207,7 @@ function restartLsp(lsp: BmxLsp | undefined) {
 }
 
 function updateStatusBarItem() {
-	if (activeBmxLsp) {
+	if (activeBmxLsp && activeBmxLsp.client) {
 		// Update the icon and text
 		lspStatusBarItem.text = activeBmxLsp.name ? `${activeBmxLsp.status.icon} ${activeBmxLsp.name}` : activeBmxLsp.status.icon
 		
@@ -278,7 +283,16 @@ class BmxLsp {
 			if (typeof(globalBmxPath)==='string') bmxPath = globalBmxPath
 		}
 		
-		let lspPath = vscode.Uri.file( bmxPath + "/bin/lsp" )
+		// Detect LSP path based on OS
+		let lspPath: vscode.Uri
+		if (os.platform() == 'win32') {
+			lspPath= vscode.Uri.file( bmxPath + "/bin/lsp.exe" )
+		} else {
+			lspPath= vscode.Uri.file( bmxPath + "/bin/lsp" )
+		}
+		
+		// Does it exist?
+		if (!existsSync(lspPath.fsPath)) return
 		
 		// Setup LSP
 		this.client = new lsp.LanguageClient('BlitzMax Language Server',

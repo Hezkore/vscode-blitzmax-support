@@ -1,16 +1,32 @@
 'use strict'
 
+import * as vscode from 'vscode'
+import * as os from 'os'
 import * as fs from 'fs'
+import * as path from 'path'
 
-export function existsSync(path: string): boolean {
+export function existsSync(file: string): string | undefined {
+	
+	if (os.platform() == 'win32') file = file.toUpperCase()
+	const filePath = path.parse(vscode.Uri.file(file).fsPath)
+	let found: string | undefined
+	
 	try {
-		fs.accessSync(path, fs.constants.F_OK)
-		return true
-	} catch (err) {
-		if (err.code === 'ENOENT' || err.code === 'ENOTDIR') {
-			return false
-		} else {
-			throw Error(err.code)
-		}
+		fs.readdirSync(filePath.dir).forEach(f => {
+			if (os.platform() == 'win32') {
+				f = f.toUpperCase()
+				if (f.endsWith('.EXE') && f.slice(0,-4) == filePath.name) {
+					found = f
+					return
+				}
+			}
+			if (f == filePath.name) {
+				found = f
+				return
+			}
+		})
+		return found
+	} catch (error) {
+		return undefined
 	}
 }

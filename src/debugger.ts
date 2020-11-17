@@ -98,7 +98,7 @@ export class BmxDebugSession extends LoggingDebugSession {
 	private _stackStepId: number = 0
 	
 	public constructor() {
-		super( "bmx-debug.txt" )
+		super('bmx-debug.txt')
 		
 		this.setDebuggerLinesStartAt1( false )
 		this.setDebuggerColumnsStartAt1( false )

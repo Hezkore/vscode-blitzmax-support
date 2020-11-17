@@ -137,10 +137,10 @@ export function makeTask(definition: BmxBuildTaskDefinition): vscode.Task {
 			
 			if (workspace) {
 				// If this is part of a workspace, we use that path
-				bmxPath = vscode.workspace.getConfiguration( 'blitzmax', workspace ).get( 'path' )
+				bmxPath = vscode.workspace.getConfiguration( 'blitzmax', workspace ).get( 'base.path' )
 			} else {
 				// If this is a separate unkown file, we use the default BlitzMax path
-				let globalBmxPath = vscode.workspace.getConfiguration( 'blitzmax' ).inspect( 'path' )?.globalValue
+				let globalBmxPath = vscode.workspace.getConfiguration( 'blitzmax' ).inspect( 'base.path' )?.globalValue
 				if (typeof(globalBmxPath)==='string') bmxPath = globalBmxPath
 			}
 			
@@ -240,13 +240,13 @@ export function makeTask(definition: BmxBuildTaskDefinition): vscode.Task {
 	})
 	
 	// Make sure label exists!
-	if (!definition.label) definition.label = 'build'
+	if (!definition.label) definition.label = 'blitzmax'
 	
 	// Create the task
 	let task = new vscode.Task( definition, vscode.TaskScope.Workspace, definition.label, 'BlitzMax', exec, '$blitzmax' )
 	
 	// Setup task MaxIDE like
-	task.presentationOptions.echo = true
+	task.presentationOptions.echo = false
 	task.presentationOptions.focus = false
 	task.presentationOptions.panel = vscode.TaskPanelKind.Shared
 	task.presentationOptions.reveal = vscode.TaskRevealKind.Silent
@@ -267,6 +267,11 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 	cwd: string | undefined
 	busy = new awaitNotify.Subject()
 	
+	lastPercent: number
+	percent: number
+	colorReset: boolean
+	progress: any
+	
 	prepare(cmd: string, args: string[] | undefined, cwd: string | undefined) {
 		this.cmd = cmd
 		this.args = args
@@ -280,6 +285,36 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 	close() {
 	}
 	
+	processBmkOutput(data){
+		data.toString().split('\r\n').forEach((str: string) => {
+			// Try to colour some of the lines
+			// Links
+			if (str.startsWith('[') && str.endsWith(']')) {
+				this.writeEmitter.fire('\u001b[36m')
+				this.colorReset = true
+			} else {
+				// Errors
+				if (str.startsWith('Compile Error: ') || str.startsWith('Build Error: ')) {
+					this.writeEmitter.fire('\u001b[31m')
+					this.colorReset = true
+				} else {
+					// Warnings
+					if (str.startsWith('Compile Warning: ')) {
+						this.writeEmitter.fire('\u001b[33m')
+						this.colorReset = true
+					}
+				}
+			}
+			
+			this.writeEmitter.fire(str + '\r\n')
+			
+			if (this.colorReset) {
+				this.writeEmitter.fire('\u001b[0m')
+				this.colorReset = false
+			}
+		})
+	}
+	
 	private async doBuild(): Promise<void> {
 		return new Promise<void>((resolve) => {
 			// We have a defininition, right?
@@ -288,12 +323,16 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 				return resolve()
 			}
 			
+			this.writeEmitter.fire(`${this.cmd} ${this.args.join(' ')}\r\n\r\n`)
 			this.writeEmitter.fire('== BUILDING ==\r\n\r\n')
-			this.writeEmitter.fire(this.cwd+'\r\n\r\n')
-			this.writeEmitter.fire(`${this.cmd} ${this.args.join(' ')}\r\n`)
 			
-			vscode.window.withProgress({
-				location: vscode.ProgressLocation.Notification,
+			const bmkColors = vscode.workspace.getConfiguration( 'blitzmax' ).get( 'pref.showBuildColors' )
+			let loc = vscode.ProgressLocation.Window
+			if (vscode.workspace.getConfiguration( 'blitzmax' ).get( 'pref.showBuildProgress' ))
+				loc = vscode.ProgressLocation.Notification
+			
+			this.progress = vscode.window.withProgress({
+				location: loc,
 				title: 'Building ' + path.parse(this.args[this.args.length-1]).base,
 				cancellable: true
 			}, async (progress, token) => {
@@ -307,29 +346,38 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 					}
 				})
 				
+				const procStart = process.hrtime()
 				let bmkProcess = cp.spawn(this.cmd, this.args, {cwd: this.cwd})
-				let lastPercent: number
-				let percent: number
 				
 				bmkProcess.stdout.on('data', (data) => {
-					this.writeEmitter.fire(`${data}`)
-					
 					const str = data.toString()
-					//progress.report({ message: str.substring(0,5) })
 					
+					// Always update progress
 					if (str.startsWith('[') && str[5] == ']') {
-						percent = Number( str.split('%')[0].slice(1) )
-						progress.report({ message: ` ${percent}%`, increment: percent - lastPercent })
-						lastPercent = percent
+						this.percent = Number( str.split('%')[0].slice(1) )
+						this.progress.report({ message: ` ${this.percent}%`, increment: this.percent - this.lastPercent })
+						this.lastPercent = this.percent
+					}
+					
+					// Add colors
+					if (bmkColors) {
+						this.processBmkOutput(str)
+					} else {
+						this.writeEmitter.fire(data.toString())
 					}
 				})
 				
 				bmkProcess.stderr.on('data', (data) => {
-					this.writeEmitter.fire(`${data}\r\n`)
+					// Add colors
+					if (bmkColors) {
+						this.processBmkOutput(data)
+					} else {
+						this.writeEmitter.fire(data.toString())
+					}
 				})
 				
 				bmkProcess.on('error', (error) => {
-					this.writeEmitter.fire(`error: ${error.message}\r\n`)
+					this.processBmkOutput(error.message)
 				})
 				
 				bmkProcess.on('close', (code) => {
@@ -338,12 +386,19 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 						
 						// Is this too hacky?
 						setTimeout(() => {
-							vscode.commands.executeCommand('editor.action.marker.nextInFiles')
-							vscode.commands.executeCommand('workbench.actions.view.problems')
+							if (vscode.workspace.getConfiguration( 'blitzmax' ).get( 'pref.jumpToProblemOnBuildError' ))
+								vscode.commands.executeCommand('editor.action.marker.nextInFiles')
+							
+							if (vscode.workspace.getConfiguration( 'blitzmax' ).get( 'pref.showProblemsOnBuildError' ))
+								vscode.commands.executeCommand('workbench.actions.view.problems')
 						}, 500)
 					} else {
-						this.writeEmitter.fire(`\r\n== DONE ==\r\n\r\n`)
+						this.writeEmitter.fire(`\r\n== COMPLETE  ==\r\n\r\n`)
 					}
+					
+					const procEnd = process.hrtime(procStart)
+					
+					this.writeEmitter.fire(`Execution time: ${procEnd[0]}s ${procEnd[1]/1000000}ms\r\n\r\n`)
 					
 					this.closeEmitter.fire(code)
 					this.busy.notify()

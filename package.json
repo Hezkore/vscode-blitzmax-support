@@ -67,6 +67,45 @@
 		"onLanguage:blitzmax"
 	],
 	"contributes": {
+		"configuration": {
+			"type": "object",
+			"title": "BlitzMax",
+			"properties": {
+				"blitzmax.base.path": {
+					"type": "string",
+					"format": "uri",
+					"description": "Absolute path to BlitzMax root.",
+					"scope": "machine-overridable"
+				},
+				"blitzmax.pref.showProblemsOnBuildError": {
+					"type": "boolean",
+					"default": true,
+					"description": "Display the problems view on build task errors."
+				},
+				"blitzmax.pref.jumpToProblemOnBuildError": {
+					"type": "boolean",
+					"default": true,
+					"description": "Jump to the first problem on build task errors."
+				},
+				"blitzmax.pref.showBuildProgress": {
+					"type": "boolean",
+					"default": true,
+					"description": "Show build progress notification for build tasks."
+				},
+				"blitzmax.pref.showBuildColors": {
+					"type": "boolean",
+					"default": true,
+					"description": "Color output from build tasks."
+				}
+			}
+		},
+		"commands": [
+			{
+				"command": "blitzmax.pickBlitzMaxPath",
+				"title": "Pick your BlitzMax path",
+				"category": "BlitzMax"
+			}
+		],
 		"languages": [
 			{
 				"id": "blitzmax",
@@ -154,7 +193,7 @@
 							"source": {
 								"type": "string",
 								"default": "${file}",
-								"markdownDescription": "Root source file"
+								"markdownDescription": "Absolute path to root source file"
 							},
 							"fullcompile": {
 								"type": "boolean",
@@ -347,17 +386,6 @@
 				]
 			}
 		],
-		"configuration": {
-			"type": "object",
-			"title": "BlitzMax",
-			"properties": {
-				"blitzmax.path": {
-					"type": "string",
-					"description": "Absolute path to BlitzMax root.",
-					"scope": "resource"
-				}
-			}
-		},
 		"taskDefinitions": [
 			{
 				"type": "bmx",
@@ -395,7 +423,7 @@
 					"source": {
 						"type": "string",
 						"default": "${file}",
-						"markdownDescription": "Root source file"
+						"markdownDescription": "Absolute path to root source file"
 					},
 					"fullcompile": {
 						"type": "boolean",

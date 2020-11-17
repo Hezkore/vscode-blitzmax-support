@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode'
 
-export function registerTerminalLinkProvider(context) {
+export function registerTerminalLinkProvider(context: vscode.ExtensionContext) {
 	
 	vscode.window.registerTerminalLinkProvider({
 		provideTerminalLinks: (context: any, token: vscode.CancellationToken) => {

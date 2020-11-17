@@ -2,7 +2,6 @@
 
 import * as vscode from 'vscode'
 import * as lsp from 'vscode-languageclient'
-import * as os from 'os'
 import { existsSync } from './common'
 
 let outputChannel: vscode.OutputChannel
@@ -185,15 +184,14 @@ function restartLsps() {
 		defaultBmxLsp = undefined
 	}
 	
-	runningBmxLsps.forEach(bmxLsp => {
-		if (bmxLsp.client) bmxLsp.client.stop()
+	runningBmxLsps.forEach(async bmxLsp => {
+		if (bmxLsp.client) await bmxLsp.client.stop()
 	})
 	runningBmxLsps.clear()
 }
 
-function restartLsp(lsp: BmxLsp | undefined) {
+async function restartLsp(lsp: BmxLsp | undefined) {
 	if (!lsp) return
-	if (lsp.client) lsp.client.stop()
 	
 	if (activeBmxLsp === lsp) activeBmxLsp = undefined
 	
@@ -202,6 +200,8 @@ function restartLsp(lsp: BmxLsp | undefined) {
 	} else if (lsp.workspace) {
 		runningBmxLsps.delete(lsp.workspace.uri.toString())
 	}
+	
+	if (lsp.client) await lsp.client.stop()
 	
 	activateBmxLsp(lsp.workspace)
 }
@@ -276,20 +276,15 @@ class BmxLsp {
 		
 		if (this.workspace) {
 			// If this is part of a workspace, we use that path
-			bmxPath = vscode.workspace.getConfiguration( 'blitzmax', this.workspace ).get( 'path' )
+			bmxPath = vscode.workspace.getConfiguration( 'blitzmax', this.workspace ).get( 'base.path' )
 		} else {
 			// If this is a separate unkown file, we use the default BlitzMax path
-			let globalBmxPath = vscode.workspace.getConfiguration( 'blitzmax' ).inspect( 'path' )?.globalValue
+			let globalBmxPath = vscode.workspace.getConfiguration( 'blitzmax' ).inspect( 'base.path' )?.globalValue
 			if (typeof(globalBmxPath)==='string') bmxPath = globalBmxPath
 		}
 		
-		// Detect LSP path based on OS
-		let lspPath: vscode.Uri
-		if (os.platform() == 'win32') {
-			lspPath= vscode.Uri.file( bmxPath + "/bin/lsp.exe" )
-		} else {
-			lspPath= vscode.Uri.file( bmxPath + "/bin/lsp" )
-		}
+		// Detect LSP path
+		const lspPath = vscode.Uri.file( bmxPath + "/bin/lsp" )
 		
 		// Does it exist?
 		if (!existsSync(lspPath.fsPath)) return

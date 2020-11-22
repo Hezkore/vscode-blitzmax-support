@@ -1,4 +1,5 @@
 Files:
+- build_debug
 - build_run
 - build
 - icon

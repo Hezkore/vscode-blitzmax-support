@@ -19,15 +19,26 @@ interface BmxLaunchRequestArguments extends BmxBuildOptions, DebugProtocol.Launc
 // A bunch of initial setup stuff and providers
 //
 export function registerBmxDebugger( context: vscode.ExtensionContext ) {
-
-	// register a configuration provider for 'bmx' debug type
+		
+	// Register a configuration provider for 'bmx' debug type
 	const provider = new BmxDebugConfigurationProvider()
 	context.subscriptions.push( vscode.debug.registerDebugConfigurationProvider( 'bmx', provider ) )
 	
-	// debug adapters can be run in different ways by using a vscode.DebugAdapterDescriptorFactory:
 	let factory: vscode.DebugAdapterDescriptorFactory = new BmxInlineDebugAdapterFactory()
 	context.subscriptions.push( vscode.debug.registerDebugAdapterDescriptorFactory( 'bmx', factory) )
 	if ('dispose' in factory) context.subscriptions.push( factory )
+	
+	// Related commands
+	context.subscriptions.push(vscode.commands.registerCommand('blitzmax.buildAndDebug', () => {
+		vscode.debug.startDebugging(undefined,
+			<vscode.DebugConfiguration>(provider.resolveDebugConfiguration(undefined, undefined)),
+			{noDebug: false})
+	}))
+	context.subscriptions.push(vscode.commands.registerCommand('blitzmax.buildAndRun', () => {
+		vscode.debug.startDebugging(undefined,
+			<vscode.DebugConfiguration>(provider.resolveDebugConfiguration(undefined, undefined)),
+			{noDebug: true})
+	}))
 }
 
 export class BmxDebugConfigurationProvider implements vscode.DebugConfigurationProvider {
@@ -36,10 +47,12 @@ export class BmxDebugConfigurationProvider implements vscode.DebugConfigurationP
 		return config
 	}
 	
-	resolveDebugConfiguration(workspace: vscode.WorkspaceFolder | undefined, config: vscode.DebugConfiguration, token?: vscode.CancellationToken): vscode.ProviderResult<vscode.DebugConfiguration> {
+	resolveDebugConfiguration(workspace: vscode.WorkspaceFolder | undefined, config: vscode.DebugConfiguration | undefined, token?: vscode.CancellationToken): vscode.ProviderResult<vscode.DebugConfiguration> {
 		
 		const doc = vscode.window.activeTextEditor?.document
 		if (doc) workspace = vscode.workspace.getWorkspaceFolder(doc.uri)
+		
+		if (!config) config = {type: '', request: '', name: ''}
 		
 		// Are we part of any workspace?
 		if (!workspace) {
@@ -194,13 +207,16 @@ export class BmxDebugSession extends LoggingDebugSession {
 		if (this._bmxProcess) this._bmxProcess.kill('SIGINT')
 		
 		this._bmxProcess = process.spawn( this._bmxProcessPath, [])
-		
-		this._bmxProcess.on('error', (err) => {
-			this.sendEvent(new OutputEvent(err.message.toString(), 'stderr'))
-		})
+		//if (this._bmxProcess) {
+		//	this.sendEvent(new OutputEvent('Debug started ' + Date(), 'stdout'))
+		//}
 		
 		this._bmxProcess.stdout.on('data', (data) => {
 			this.sendEvent(new OutputEvent(data.toString(), 'stdout'))
+		})
+		
+		this._bmxProcess.on('error', (err) => {
+			this.sendEvent(new OutputEvent(err.message.toString(), 'stderr'))
 		})
 		
 		this._bmxProcess.stderr.on('data', (data) => {

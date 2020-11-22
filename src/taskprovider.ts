@@ -6,7 +6,7 @@ import * as cp from 'child_process'
 import * as path from 'path'
 
 let terminal: BmxBuildTaskTerminal | undefined
-let defaultBuildDefinition: BmxBuildTaskDefinition = {
+export let internalBuildDefinition: BmxBuildTaskDefinition = {
 	type: 'bmx',
 	funcargcasting: 'warning',
 	make: 'application',
@@ -18,7 +18,7 @@ let defaultBuildDefinition: BmxBuildTaskDefinition = {
 
 export interface BmxBuildOptions {
 	make: string
-	onlycompile?: string
+	onlycompile?: boolean
 	source: string
 	fullcompile?: boolean
 	appstub?: string | undefined
@@ -34,7 +34,7 @@ export interface BmxBuildOptions {
 	quiet?: boolean
 	quick?: boolean
 	release?: boolean
-	standalone?: string
+	standalone?: boolean
 	static?: boolean
 	apptype?: string
 	platform?: string
@@ -57,40 +57,97 @@ export interface BmxBuildTaskDefinition extends BmxBuildOptions, vscode.TaskDefi
 	
 }
 
-export function registerTaskProvider(context) {
+export function registerTaskProvider( context: vscode.ExtensionContext ) {
+	// Register the provider
 	context.subscriptions.push(
 		vscode.tasks.registerTaskProvider('bmx', new BmxBuildTaskProvider)
 	)
+	
+	// Related commands
+	context.subscriptions.push(vscode.commands.registerCommand('blitzmax.build', () => {
+		vscode.tasks.executeTask(makeTask(getBuildDefinitionFromWorkspace(undefined)))
+	}))
 }
 
-export function getBuildDefinitionFromWorkspace(workspace: vscode.WorkspaceFolder | undefined = undefined): BmxBuildTaskDefinition | undefined {
+export function getBuildDefinitionFromWorkspace(workspace: vscode.WorkspaceFolder | undefined = undefined): BmxBuildTaskDefinition {
 	
 	if (!workspace) {
 		const doc = vscode.window.activeTextEditor?.document
 		if (doc) workspace = vscode.workspace.getWorkspaceFolder(doc.uri)
 	}
 	
-	// If there's no workspace, we just return the default build definition
-	if (!workspace) return defaultBuildDefinition
+	// If there's no workspace, we just return the internal build definition
+	if (!workspace) return internalBuildDefinition
 	
 	// Figure out the default task and get the definition
-	const config = vscode.workspace.getConfiguration( 'tasks', workspace )
-	if (config) {
+	const config = vscode.workspace.getConfiguration('tasks', workspace)
+	const tasks: vscode.WorkspaceConfiguration | undefined = config.get('tasks')
+	if (tasks) {
 		
-		const tasks: vscode.WorkspaceConfiguration | undefined = config.get( 'tasks' )
-		if (tasks) {
+		let firstBmxTask: BmxBuildTaskDefinition | undefined
+		for (let i = 0; i < tasks.length; i++) {
+			const task: BmxBuildTaskDefinition = tasks[i]
+			if (!task || task.type != 'bmx' ) continue
+			if (!firstBmxTask) firstBmxTask = task
+			if (task.group && task.group.isDefault) return task
+		}
+		if (firstBmxTask) return firstBmxTask
+	}
+	
+	// Something went wrong, return default
+	return internalBuildDefinition
+}
+
+export function saveAsDefaultTaskDefinition(newDef: BmxBuildTaskDefinition | undefined) : boolean {
+	
+	if (!newDef) return false
+	
+	const doc = vscode.window.activeTextEditor?.document
+	let workspace: vscode.WorkspaceFolder | undefined
+	if (doc) workspace = vscode.workspace.getWorkspaceFolder(doc.uri)
+	if (!workspace) {
+		internalBuildDefinition = newDef
+		return true
+	}
+	
+	// Try to update the actual default task
+	const config = vscode.workspace.getConfiguration('tasks')
+	const tasks: BmxBuildTaskDefinition[] | undefined = config.get('tasks')
+	if (tasks){
+		
+		let updatedTasks: BmxBuildTaskDefinition[] = []
+		let foundDefault: boolean = false
+		let firstBmxTaskAtIndex: number = -1
+		for (let i = 0; i < tasks.length; i++) {
+			const oldDef: BmxBuildTaskDefinition = tasks[i]
+			if (!oldDef) continue
+			if (firstBmxTaskAtIndex < 0 && oldDef.type == 'bmx') firstBmxTaskAtIndex = i
 			
-			for (let i = 0; i < tasks.length; i++) {
-				const def: BmxBuildTaskDefinition = tasks[i]
-				if (!def) continue
+			if (oldDef.group && oldDef.group.isDefault){
 				
-				if (def.group.isDefault) return def
+				updatedTasks.push(newDef)
+				foundDefault = true
+			} else updatedTasks.push(oldDef)
+		}
+		
+		if (foundDefault) {
+			config.update('tasks', updatedTasks)
+			return true
+		} else {
+			if (firstBmxTaskAtIndex >= 0) {
+				updatedTasks[firstBmxTaskAtIndex] = newDef
+				config.update('tasks', updatedTasks)
+				return true
+			} else {
+				updatedTasks.push(newDef)
+				config.update('tasks', updatedTasks)
+				return true
 			}
 		}
 	}
 	
-	// Something went wrong, return default
-	return defaultBuildDefinition
+	config.update('tasks', [newDef])
+	return true
 }
 
 export class BmxBuildTaskProvider implements vscode.TaskProvider {
@@ -102,9 +159,9 @@ export class BmxBuildTaskProvider implements vscode.TaskProvider {
 		// Provide new tasks
 		this.tasks = []
 		
-		this.tasks.push(makeSimpleTask('console application', 'Build a console application', 'application', 'console'))
-		this.tasks.push(makeSimpleTask('gui application', 'Build a GUI application', 'application', 'gui'))
 		this.tasks.push(makeSimpleTask('module','Build a module', 'module'))
+		this.tasks.push(makeSimpleTask('gui application', 'Build a GUI application', 'application', 'gui'))
+		this.tasks.push(makeSimpleTask('console application', 'Build a console application', 'application', 'console'))
 		
 		return this.tasks
 	}
@@ -117,12 +174,12 @@ export class BmxBuildTaskProvider implements vscode.TaskProvider {
 }
 
 export function makeSimpleTask(label: string, detail: string, make: string, apptype: string | undefined = undefined): vscode.Task {
-	let definition = Object.assign({label, detail, make, apptype}, defaultBuildDefinition)
+	let definition = Object.assign({label, detail, make, apptype}, internalBuildDefinition)
 	return makeTask(definition)
 }
 
 export function makeTask(definition: BmxBuildTaskDefinition): vscode.Task {
-		
+	
 	// Setup custom execution
 	let exec = new vscode.CustomExecution(async (resolvedDefinition: vscode.TaskDefinition): Promise<vscode.Pseudoterminal> => {
 		
@@ -410,4 +467,178 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 			})
 		})
 	}
+}
+
+export async function toggleBuildOptions(definition: BmxBuildTaskDefinition | undefined, option: string): Promise<BmxBuildTaskDefinition | undefined> {
+	
+	if (!definition) return undefined
+	
+	switch (option) {
+		case 'make':
+			await vscode.window.showQuickPick(["application", "module", "library", "bootstrap"], {canPickMany: false}).then((picked) => {
+				if (picked) definition.make = picked
+			})
+			break
+			
+		case 'onlycompile':
+			definition.onlycompile = !definition.onlycompile
+			break
+			
+		case 'source':
+			await vscode.window.showInputBox({prompt: 'Absolute path to root source file', value: definition.source != '${file}' ? definition.source : vscode.window.activeTextEditor?.document.uri.fsPath}).then((picked) => {
+				if (picked != undefined) definition.source = picked
+				if (!definition.source) definition.source = '${file}'
+			})
+			break
+			
+		case 'fullcompile':
+			definition.fullcompile = !definition.fullcompile
+			break
+			
+		case 'appstub':
+			await vscode.window.showInputBox({prompt: 'Custom appstub'}).then((picked) => {
+				if (picked != undefined) definition.appstub = picked
+			})
+			break
+			
+		case 'debug':
+			definition.debug = !definition.debug
+			break
+			
+		case 'architecture':
+			await vscode.window.showQuickPick(["armeabiv7a", "arm64v8a", "armeabi", "arm64", "arm", "x86", "x64"], {canPickMany: false}).then((picked) => {
+				if (picked) definition.architecture = picked
+			})
+			break
+			
+		case 'gdb':
+			definition.gdb = !definition.gdb
+			break
+			
+		case 'threaded':
+			definition.threaded = !definition.threaded
+			break
+			
+		case 'universal':
+			definition.universal = !definition.universal
+			break
+			
+		case 'crosscompile':
+			await vscode.window.showQuickPick(["win32", "linux", "macos", "ios", "android", "raspberrypi", "nx"], {canPickMany: false}).then((picked) => {
+				if (picked) definition.crosscompile = picked
+			})
+			break
+			
+		case 'musl':
+			definition.musl = !definition.musl
+			break
+			
+		case 'nostrictupgrade':
+			definition.nostrictupgrade = !definition.nostrictupgrade
+			break
+			
+		case 'output':
+			await vscode.window.showInputBox({prompt: 'Output file'}).then((picked) => {
+				if (picked != undefined) definition.output = picked
+			})
+			break
+			
+		case 'quiet':
+			definition.quiet = !definition.quiet
+			break
+			
+		case 'quick':
+			definition.quick = !definition.quick
+			break
+			
+		case 'release':
+			definition.release = !definition.release
+			break
+			
+		case 'standalone':
+			definition.standalone = !definition.standalone
+			break
+			
+		case 'static':
+			definition.static = !definition.static
+			break
+			
+		case 'apptype':
+			await vscode.window.showQuickPick(["console", "gui"], {canPickMany: false}).then((picked) => {
+				if (picked) definition.apptype = picked
+			})
+			break
+			
+		case 'platform':
+			await vscode.window.showQuickPick(["win32", "macos", "linux", "android", "raspberrypi", "emscripten"], {canPickMany: false}).then((picked) => {
+				if (picked) definition.platform = picked
+			})
+			break
+			
+		case 'verbose':
+			definition.verbose = !definition.verbose
+			break
+			
+		case 'funcargcasting':
+			await vscode.window.showQuickPick(["error", "warning"], {canPickMany: false}).then((picked) => {
+				if (picked) definition.funcargcasting = picked
+			})
+			break
+			
+		case 'framework':
+			await vscode.window.showInputBox({prompt: 'Module to use as framework'}).then((picked) => {
+				if (picked != undefined) definition.framework = picked
+			})
+			break
+			
+		case 'nomanifest':
+			definition.nomanifest = !definition.nomanifest
+			break
+			
+		case 'single':
+			definition.single = !definition.single
+			break
+			
+		case 'nodef':
+			definition.nodef = !definition.nodef
+			break
+			
+		case 'nohead':
+			definition.nohead = !definition.nohead
+			break
+			
+		case 'override':
+			definition.override = !definition.override
+			break
+			
+		case 'overerr':
+			definition.overerr = !definition.overerr
+			break
+			
+		case 'no-pi':
+			definition.nopie = !definition.nopie
+			break
+			
+		case 'upx':
+			definition.upx = !definition.upx
+			break
+			
+		case 'conditionals':
+			await vscode.window.showInputBox({prompt: 'User defined conditionals (space as separator)', value: definition.conditionals?.join(' ')}).then((picked) => {
+				if (picked != undefined) definition.conditionals = picked.split(' ')
+			})
+			break
+			
+		case 'args':
+			await vscode.window.showInputBox({prompt: 'User defined arguments (space as separator)', value: definition.args?.join(' ')}).then((picked) => {
+				if (picked != undefined) definition.args = picked.split(' ')
+			})
+			break
+			
+		default:
+			console.log(`Unknown build option ${option}`)
+			break
+	}
+	
+	return definition
 }

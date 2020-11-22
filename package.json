@@ -104,8 +104,90 @@
 				"command": "blitzmax.pickBlitzMaxPath",
 				"title": "Pick your BlitzMax path",
 				"category": "BlitzMax"
+			},
+			{
+				"command": "blitzmax.setSourceFile",
+				"title": "Set as default task source file",
+				"category": "BlitzMax"
+			},
+			{
+				"command": "blitzmax.build",
+				"title": "Build Application",
+				"category": "BlitzMax",
+				"icon": {
+					"light": "media/build_light.svg",
+					"dark": "media/build_dark.svg"
+				}
+			},
+			{
+				"command": "blitzmax.buildAndRun",
+				"title": "Build & Run Application",
+				"category": "BlitzMax",
+				"icon": {
+					"light": "media/build_run_light.svg",
+					"dark": "media/build_run_dark.svg"
+				}
+			},
+			{
+				"command": "blitzmax.buildAndDebug",
+				"title": "Build & Debug Application",
+				"category": "BlitzMax",
+				"icon": {
+					"light": "media/build_debug_light.svg",
+					"dark": "media/build_debug_dark.svg"
+				}
 			}
 		],
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "blitzmax",
+					"title": "BlitzMax",
+					"icon": "media/icon.svg"
+				}
+			]
+		},
+		"views": {
+			"blitzmax": [
+				{
+					"id": "blitzmax-build",
+					"name": "Build Options"
+				}
+			]
+		},
+		"menus": {
+			"editor/title": [
+				{
+					"when": "editorLangId == blitzmax",
+					"command": "blitzmax.build",
+					"group": "navigation@-2"
+				},
+				{
+					"when": "editorLangId == blitzmax",
+					"command": "blitzmax.buildAndDebug",
+					"group": "navigation@-1"
+				},
+				{
+					"when": "editorLangId == blitzmax",
+					"command": "blitzmax.buildAndRun",
+					"group": "navigation@0"
+				}
+			],
+			"explorer/context": [
+				{
+					"when": "resourceLangId == blitzmax",
+					"command": "blitzmax.setSourceFile",
+					"group": "1_modification"
+				}
+			],
+			"editor/title/context": [
+				{
+					"when": "resourceLangId == blitzmax",
+					"command": "blitzmax.setSourceFile",
+					"group": "0"
+				}
+			]
+		},
 		"languages": [
 			{
 				"id": "blitzmax",
@@ -203,11 +285,6 @@
 							"appstub": {
 								"type": "string",
 								"markdownDescription": "[Builds an app using a custom appstub](https://blitzmax.org/docs/en/tools/bmk/#-b-custom-appstub-module)"
-							},
-							"debug": {
-								"type": "boolean",
-								"default": false,
-								"markdownDescription": "[Builds a debug version](https://blitzmax.org/docs/en/tools/bmk/#-d)"
 							},
 							"architecture": {
 								"type": "string",

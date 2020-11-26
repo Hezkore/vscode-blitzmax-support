@@ -2,11 +2,13 @@
 
 import * as vscode from 'vscode'
 import * as path from 'path'
+import * as fs from 'fs'
+import { boolToString } from './common'
 import { getBuildDefinitionFromWorkspace,
 	saveAsDefaultTaskDefinition,
 	internalBuildDefinition,
 	toggleBuildOptions } from './taskProvider'
-import * as fs from 'fs'
+
 
 export function registerBmxBuildTreeProvider(context: vscode.ExtensionContext) {
 	
@@ -84,37 +86,37 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 			let items: vscode.TreeItem[] = []
 
 			items.push(this.createChildItem('make', 'Type of project', def.make))
-			items.push(this.createChildItem('onlycompile', 'Compile sources only, no building of the application)', def.onlycompile ? 'true' : 'false'))
+			items.push(this.createChildItem('onlycompile', 'Compile sources only, no building of the application)', boolToString(def.onlycompile)))
 			items.push(this.createChildItem('source', 'Absolute path to root source file', def.source))
-			items.push(this.createChildItem('fullcompile', 'Recompiles all source/modules regardless of timestamp', def.fullcompile ? 'true' : 'false'))
-			items.push(this.createChildItem('appstub', 'Builds an app using a custom appstub', def.appstub ? 'true' : 'false'))
-			items.push(this.createChildItem('debug', 'Builds a debug version', def.debug ? 'true' : 'false'))
+			items.push(this.createChildItem('fullcompile', 'Recompiles all source/modules regardless of timestamp', boolToString(def.fullcompile)))
+			items.push(this.createChildItem('appstub', 'Builds an app using a custom appstub', def.appstub))
+			items.push(this.createChildItem('debug', 'Builds a debug version', boolToString(def.debug)))
 			items.push(this.createChildItem('architecture', 'Compiles to the specified architecture', def.architecture))
-			items.push(this.createChildItem('gdb', 'Generates line mappings suitable for GDB debugging', def.gdb ? 'true' : 'false'))
-			items.push(this.createChildItem('threaded', 'Builds multithreaded version|h)', def.threaded ? 'true' : 'false'))
-			items.push(this.createChildItem('universal', 'Creates a Universal build for supported platforms', def.universal ? 'true' : 'false'))
+			items.push(this.createChildItem('gdb', 'Generates line mappings suitable for GDB debugging', boolToString(def.gdb)))
+			items.push(this.createChildItem('threaded', 'Builds multithreaded version)', boolToString(def.threaded)))
+			items.push(this.createChildItem('universal', 'Creates a Universal build for supported platforms', boolToString(def.universal)))
 			items.push(this.createChildItem('crosscompile', 'Cross-compiles to the specific target platform', def.crosscompile))
-			items.push(this.createChildItem('musl', 'Enables musl libc compatibility', def.musl ? 'true' : 'false'))
-			items.push(this.createChildItem('nostrictupgrade', 'Don\'t upgrade strict method void return types, if required', def.nostrictupgrade ? 'true' : 'false'))
+			items.push(this.createChildItem('musl', 'Enables musl libc compatibility', boolToString(def.musl)))
+			items.push(this.createChildItem('nostrictupgrade', 'Don\'t upgrade strict method void return types, if required', boolToString(def.nostrictupgrade)))
 			items.push(this.createChildItem('output', 'Specifies the output file', def.output))
-			items.push(this.createChildItem('quiet', 'Quiet build', def.quiet ? 'true' : 'false'))
-			items.push(this.createChildItem('quick', 'Do not scan modules for changes', def.quick ? 'true' : 'false'))
-			items.push(this.createChildItem('release', 'Builds a release version', def.release ? 'true' : 'false'))
-			items.push(this.createChildItem('standalone', 'Generate but do not compile into binary form', def.standalone ? 'true' : 'false'))
-			items.push(this.createChildItem('static', 'Statically link binary', def.static ? 'true' : 'false'))
+			items.push(this.createChildItem('quiet', 'Quiet build', boolToString(def.quiet)))
+			items.push(this.createChildItem('quick', 'Do not scan modules for changes', boolToString(def.quick)))
+			items.push(this.createChildItem('release', 'Builds a release version', boolToString(def.release)))
+			items.push(this.createChildItem('standalone', 'Generate but do not compile into binary form', boolToString(def.standalone)))
+			items.push(this.createChildItem('static', 'Statically link binary', boolToString(def.static)))
 			items.push(this.createChildItem('apptype', 'Specifies the application type"', def.apptype))
 			items.push(this.createChildItem('platform', 'Select platform to create code for', def.platform))
-			items.push(this.createChildItem('verbose', 'Verbose (noisy) build', def.verbose ? 'true' : 'false'))
+			items.push(this.createChildItem('verbose', 'Verbose (noisy) build', boolToString(def.verbose)))
 			items.push(this.createChildItem('funcargcasting', 'How to handle function argument casting issues', def.funcargcasting))
 			items.push(this.createChildItem('framework', 'Defines to use a specific module as framework', def.framework))
-			items.push(this.createChildItem('nomanifest', 'Do not generate a manifest file for the built application', def.nomanifest ? 'true' : 'false'))
-			items.push(this.createChildItem('single', 'Disabled multi threaded processing in a bmk built with thread support', def.single ? 'true' : 'false'))
-			items.push(this.createChildItem('nodef', 'Defines to not generate .def files useable by created DLLs/shared libraries', def.nodef ? 'true' : 'false'))
-			items.push(this.createChildItem('nohead', 'Defines to not generate header files useable by created DLLs/shared libraries', def.nohead ? 'true' : 'false'))
-			items.push(this.createChildItem('override', 'Sets requirement for overriding methods and functions to append override to their definitions', def.override ? 'true' : 'false'))
-			items.push(this.createChildItem('overerr', 'Defines missing override keywords in overridden methods and functions to be handled as error instead of warning', def.overerr ? 'true' : 'false'))
-			items.push(this.createChildItem('no-pie', 'Do not generate PIE binaries', def.nopie ? 'true' : 'false'))
-			items.push(this.createChildItem('upx', 'Compress the created binary with UPX', def.upx ? 'true' : 'false'))
+			items.push(this.createChildItem('nomanifest', 'Do not generate a manifest file for the built application', boolToString(def.nomanifest)))
+			items.push(this.createChildItem('single', 'Disabled multi threaded processing in a bmk built with thread support', boolToString(def.single)))
+			items.push(this.createChildItem('nodef', 'Defines to not generate .def files useable by created DLLs/shared libraries', boolToString(def.nodef)))
+			items.push(this.createChildItem('nohead', 'Defines to not generate header files useable by created DLLs/shared libraries', boolToString(def.nohead)))
+			items.push(this.createChildItem('override', 'Sets requirement for overriding methods and functions to append override to their definitions', boolToString(def.override)))
+			items.push(this.createChildItem('overerr', 'Defines missing override keywords in overridden methods and functions to be handled as error instead of warning', boolToString(def.overerr)))
+			items.push(this.createChildItem('no-pie', 'Do not generate PIE binaries', boolToString(def.nopie)))
+			items.push(this.createChildItem('upx', 'Compress the created binary with UPX', boolToString(def.upx)))
 			items.push(this.createChildItem('conditionals', 'User defined conditionals, usable via `?myconditional`', def.conditionals?.join(', ')))
 			items.push(this.createChildItem('args', 'User defined arguments', def.args?.join(', ')))
 			

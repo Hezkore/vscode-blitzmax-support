@@ -5,6 +5,22 @@ import * as os from 'os'
 import * as fs from 'fs'
 import * as path from 'path'
 
+export function boolToString(bool: boolean | undefined): string | undefined {
+	switch (bool) {
+		case undefined: return undefined
+		case true: return 'true'
+		default: return 'false'
+	}
+}
+
+export function toggleBool(bool: boolean | undefined): boolean | undefined {
+	switch (bool) {
+		case undefined: return true
+		case true: return false
+		default: return undefined
+	}
+}
+
 export function existsSync(file: string): string | undefined {
 	
 	if (os.platform() == 'win32') file = file.toUpperCase()

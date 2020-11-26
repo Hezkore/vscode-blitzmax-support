@@ -4,6 +4,7 @@ import * as vscode from 'vscode'
 import * as awaitNotify from 'await-notify'
 import * as cp from 'child_process'
 import * as path from 'path'
+import { toggleBool } from './common'
 
 let terminal: BmxBuildTaskTerminal | undefined
 export let internalBuildDefinition: BmxBuildTaskDefinition = {
@@ -481,7 +482,7 @@ export async function toggleBuildOptions(definition: BmxBuildTaskDefinition | un
 			break
 			
 		case 'onlycompile':
-			definition.onlycompile = !definition.onlycompile
+			definition.onlycompile = toggleBool(definition.onlycompile)
 			break
 			
 		case 'source':
@@ -492,7 +493,7 @@ export async function toggleBuildOptions(definition: BmxBuildTaskDefinition | un
 			break
 			
 		case 'fullcompile':
-			definition.fullcompile = !definition.fullcompile
+			definition.fullcompile = toggleBool(definition.fullcompile)
 			break
 			
 		case 'appstub':
@@ -502,7 +503,7 @@ export async function toggleBuildOptions(definition: BmxBuildTaskDefinition | un
 			break
 			
 		case 'debug':
-			definition.debug = !definition.debug
+			definition.debug = toggleBool(definition.debug)
 			break
 			
 		case 'architecture':
@@ -512,15 +513,15 @@ export async function toggleBuildOptions(definition: BmxBuildTaskDefinition | un
 			break
 			
 		case 'gdb':
-			definition.gdb = !definition.gdb
+			definition.gdb = toggleBool(definition.gdb)
 			break
 			
 		case 'threaded':
-			definition.threaded = !definition.threaded
+			definition.threaded = toggleBool(definition.threaded)
 			break
 			
 		case 'universal':
-			definition.universal = !definition.universal
+			definition.universal = toggleBool(definition.universal)
 			break
 			
 		case 'crosscompile':
@@ -530,11 +531,11 @@ export async function toggleBuildOptions(definition: BmxBuildTaskDefinition | un
 			break
 			
 		case 'musl':
-			definition.musl = !definition.musl
+			definition.musl = toggleBool(definition.musl)
 			break
 			
 		case 'nostrictupgrade':
-			definition.nostrictupgrade = !definition.nostrictupgrade
+			definition.nostrictupgrade = toggleBool(definition.nostrictupgrade)
 			break
 			
 		case 'output':
@@ -544,23 +545,23 @@ export async function toggleBuildOptions(definition: BmxBuildTaskDefinition | un
 			break
 			
 		case 'quiet':
-			definition.quiet = !definition.quiet
+			definition.quiet = toggleBool(definition.quiet)
 			break
 			
 		case 'quick':
-			definition.quick = !definition.quick
+			definition.quick = toggleBool(definition.quick)
 			break
 			
 		case 'release':
-			definition.release = !definition.release
+			definition.release = toggleBool(definition.release)
 			break
 			
 		case 'standalone':
-			definition.standalone = !definition.standalone
+			definition.standalone = toggleBool(definition.standalone)
 			break
 			
 		case 'static':
-			definition.static = !definition.static
+			definition.static = toggleBool(definition.static)
 			break
 			
 		case 'apptype':
@@ -576,7 +577,7 @@ export async function toggleBuildOptions(definition: BmxBuildTaskDefinition | un
 			break
 			
 		case 'verbose':
-			definition.verbose = !definition.verbose
+			definition.verbose = toggleBool(definition.verbose)
 			break
 			
 		case 'funcargcasting':
@@ -592,35 +593,35 @@ export async function toggleBuildOptions(definition: BmxBuildTaskDefinition | un
 			break
 			
 		case 'nomanifest':
-			definition.nomanifest = !definition.nomanifest
+			definition.nomanifest = toggleBool(definition.nomanifest)
 			break
 			
 		case 'single':
-			definition.single = !definition.single
+			definition.single = toggleBool(definition.single)
 			break
 			
 		case 'nodef':
-			definition.nodef = !definition.nodef
+			definition.nodef = toggleBool(definition.nodef)
 			break
 			
 		case 'nohead':
-			definition.nohead = !definition.nohead
+			definition.nohead = toggleBool(definition.nohead)
 			break
 			
 		case 'override':
-			definition.override = !definition.override
+			definition.override = toggleBool(definition.override)
 			break
 			
 		case 'overerr':
-			definition.overerr = !definition.overerr
+			definition.overerr = toggleBool(definition.overerr)
 			break
 			
-		case 'no-pi':
-			definition.nopie = !definition.nopie
+		case 'no-pie':
+			definition.nopie = toggleBool(definition.nopie)
 			break
 			
 		case 'upx':
-			definition.upx = !definition.upx
+			definition.upx = toggleBool(definition.upx)
 			break
 			
 		case 'conditionals':

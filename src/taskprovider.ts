@@ -68,6 +68,14 @@ export function registerTaskProvider( context: vscode.ExtensionContext ) {
 	context.subscriptions.push(vscode.commands.registerCommand('blitzmax.build', () => {
 		vscode.tasks.executeTask(makeTask(getBuildDefinitionFromWorkspace(undefined)))
 	}))
+	
+	context.subscriptions.push(vscode.commands.registerCommand('blitzmax.setSourceFile', (document: vscode.Uri) => {
+		const path = document ? document.fsPath : vscode.window.activeTextEditor?.document.uri.fsPath
+		if (!path) return
+		const def = getBuildDefinitionFromWorkspace()
+		def.source = path
+		saveAsDefaultTaskDefinition(def)
+	}))
 }
 
 export function getBuildDefinitionFromWorkspace(workspace: vscode.WorkspaceFolder | undefined = undefined): BmxBuildTaskDefinition {

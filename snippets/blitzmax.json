@@ -1,0 +1,309 @@
+{
+	"Rem Block" : {
+		"prefix" : "$BLOCK_COMMENT_START",
+		"body" : [ "$BLOCK_COMMENT_START $0", "$BLOCK_COMMENT_END" ],
+		"description" : "Remember Block"
+	},
+	
+	"Function" : {
+		"prefix" : "Function",
+		"body" : [ "Function ${1:Identifier}($3)", "\t", "\t$0", "EndFunction" ],
+		"description" : "Function"
+	},
+	
+	"Method" : {
+		"prefix" : "Method",
+		"body" : [ "Method ${1:Identifier}($3)", "\t", "\t$0", "EndMethod" ],
+		"description" : "Method"
+	},
+	
+	"Method Operator" : {
+		"prefix" : "Method Operator",
+		"body" : [ "Method Operator ${1|+,-,*,/,&,~,:+,:-,:*,:/,:&,:~,[],[]=,Mod,Shl,Shr,:Mod,:Shl,:Shr,<,>,<=,>=,=,<>|}( ${3:value} )", "\t", "\t$0", "EndMethod" ],
+		"description" : "Index Operator Overloading"
+	},
+	
+	"For" : {
+		"prefix" : "For",
+		"body" : [ "For Local ${1:IndexVariable} = 0 Until ${2:LastValue}", "\t", "\t$0", "Next" ],
+		"description" : "For Loop"
+	},
+	
+	"For Step" : {
+		"prefix" : "For Step",
+		"body" : [ "For Local ${1:IndexVariable} = 0 Until ${2:LastValue} Step ${3:StepSize}", "\t", "\t$0", "Next" ],
+		"description" : "For Step Loop"
+	},
+	
+	"For EachIn" : {
+		"prefix" : "For EachIn",
+		"body" : [ "For Local ${1:IndexVariable} = EachIn ${2:LastValue}", "\t", "\t$0", "Next" ],
+		"description" : "For EachIn Loop"
+	},
+	
+	"While" : {
+		"prefix" : "While",
+		"body" : [ "While ${1:Expression}", "\t", "\t$0", "Wend" ],
+		"description" : "While Loop"
+	},
+	
+	"Repeat" : {
+		"prefix" : "Repeat",
+		"body" : [ "Repeat", "\t", "\t$0", "Until ${1:Expression}" ],
+		"description" : "Repeat Until Loop"
+	},
+	
+	"Repeat Forever" : {
+		"prefix" : "Repeat Forever",
+		"body" : [ "Repeat", "\t", "\t$0", "Forever" ],
+		"description" : "Repeat Forever Loop"
+	},
+	
+	"Enum" : {
+		"prefix" : "Enum",
+		"body" : [ "Enum E${1:Identifier}", "\t", "\t$0", "EndEnum" ],
+		"description" : "Enumerator"
+	},
+	
+	"Type" : {
+		"prefix" : "Type",
+		"body" : [ "Type T${1:Identifier}", "\t", "\tMethod New($3)", "\t\t", "\t\t$2", "\tEndMethod$0", "EndType" ],
+		"description" : "Type"
+	},
+	
+	"Interface" : {
+		"prefix" : "Interface",
+		"body" : [ "Interface I${1:Identifier}", "\t", "\t$0", "EndInterface" ],
+		"description" : "Interface"
+	},
+	
+	"Struct" : {
+		"prefix" : "Struct",
+		"body" : [ "Struct S${1:Identifier}", "\t", "\t$0", "EndStruct" ],
+		"description" : "Structure"
+	},
+	
+	"Select" : {
+		"prefix" : "Select",
+		"body" : [ "Select ${1:Identifier}", "\tCase ${2:Identifier}", "\t\t$3", "\t\t", "\tDefault", "\t\t$0", "\t\t", "EndSelect" ],
+		"description" : "Select/Case Block"
+	},
+	
+	"If" : {
+		"prefix" : "If",
+		"body" : [ "If ${1:Expression} Then", "\t", "\t$0", "EndIf" ],
+		"description" : "If Then Block"
+	},
+	
+	"Then" : {
+		"prefix" : "Then",
+		"body" : [ "Then", "\t", "\t$0", "EndIf" ],
+		"description" : "Then"
+	},
+	
+	"Conditional Compiling" : {
+		"prefix" : "?",
+		"body" : [ "?${1|Debug,Threaded,Release,Win32,Win32x86,Win64,Win32x64,MacOS,MacOSX86,MacOSX64,MacOSPPC,osx,osxx86,osxppc,osxx64,ios,iosx86,iosx64,iosarmv7,iosarm64,Linux,LinuxX86,LinuxX64,LinuxARM,android,androidx86,androidx64,androidarm,androidarmeabi,androidarmeabiv7a,androidarm64v8a,raspberrypi,raspberrypiARM,emscripten,emscriptenjs,X86,X64,PPC,arm,armeabi,armeabiv7a,arm64v8a,js,armv7,arm64,ptr32,ptr64,BigEndian,LittleEndian,opengles,bmxng|}", "\t$0", "?" ],
+		"description" : "Conditional Compiling Block"
+	},
+	
+	"Local" : {
+		"prefix" : "Local",
+		"body" : [ "Local ${1:Identifier}:${2:Type}" ],
+		"description" : "Local Variable"
+	},
+	
+	"Global" : {
+		"prefix" : "Global",
+		"body" : [ "Global ${1:Identifier}:${2:Type}" ],
+		"description" : "Global Variable"
+	},
+	
+	"Const" : {
+		"prefix" : "Const",
+		"body" : [ "Const ${1:Identifier}:${2:Type} = $0" ],
+		"description" : "Constant Variable"
+	},
+	
+	"Field" : {
+		"prefix" : "Field",
+		"body" : [ "Field ${1:Identifier}:${2:Type}" ],
+		"description" : "Field Variable"
+	},
+	
+	"Try" : {
+		"prefix" : "Try",
+		"body" : [ "Try", "\t${1:ExTest()}", "Catch ex:Object", "\t${0:Print ex.ToString()}", "EndTry" ],
+		"description" : "Try Catch Block"
+	},
+	
+	"BBDoc Basic" : {
+		"prefix" : "BBDoc Basic",
+		"body" : [ "$BLOCK_COMMENT_START", "bbdoc: ${1:intro}", "about: ${0:about}", "$BLOCK_COMMENT_END" ],
+		"description" : "BBDoc Block"
+	},
+	
+	"BBDoc Keyword" : {
+		"prefix" : "BBDoc Keyword",
+		"body" : [ "BLOCK_COMMENT_START", "bbdoc: ${1:intro}", "about: ${2:about}", "keyword: ${0:keyword}", "BLOCK_COMMENT_END" ],
+		"description" : "BBDoc Keyword Block"
+	},
+	
+	"BBDoc Full" : {
+		"prefix" : "BBDoc Full",
+		"body" : [ "$BLOCK_COMMENT_START", "bbdoc: ${1:intro}", "about: ${2:about}", "returns: ${3:returns}", "param: ${4:param}", "keyword: ${0:keyword}", "BLOCK_COMMENT_END" ],
+		"description" : "BBDoc Full Block"
+	},
+	
+	"@0Application Template" : {
+		"prefix" : "Template App",
+		"body" : [ "$LINE_COMMENT ${WORKSPACE_NAME/(.*)/${1:/upcase}/} - $TM_FILENAME",
+			"$LINE_COMMENT $CURRENT_DATE/$CURRENT_MONTH/$CURRENT_YEAR $CURRENT_HOUR:$CURRENT_MINUTE",
+			"$LINE_COMMENT ",
+			"",
+			"SuperStrict",
+			"",
+			"$LINE_COMMENT Modules",
+			"Framework BRL.StandardIO",
+			"",
+			"$LINE_COMMENT Imports",
+			"$LINE_COMMENT Import \"\"",
+			"",
+			"OnEnd( EndApp )",
+			"Main( AppArgs )",
+			"",
+			"Function Main( args:string[] )",
+			"\t",
+			"\t${0:$TM_SELECTED_TEXT}",
+			"EndFunction",
+			"",
+			"Function EndApp()",
+			"\t",
+			"\tPrint( \"End of application\" )",
+			"EndFunction"],
+		"description" : "Basic application template"
+	},
+	
+	"@0Module Template" : {
+		"prefix" : "Template Module",
+		"body" : [ "$LINE_COMMENT Module ${1:MY}.$TM_FILENAME_BASE",
+			"$LINE_COMMENT $CURRENT_DATE/$CURRENT_MONTH/$CURRENT_YEAR $CURRENT_HOUR:$CURRENT_MINUTE",
+			"$LINE_COMMENT ",
+			"",
+			"SuperStrict",
+			"",
+			"$BLOCK_COMMENT_START",
+			"bbdoc: ${4:Category/Name}",
+			"about:",
+			"${5:Description}",
+			"$BLOCK_COMMENT_END",
+			"Module ${1:MY}.$TM_FILENAME_BASE",
+			"",
+			"ModuleInfo \"Version: 1.00\"",
+			"ModuleInfo \"Author: ${2:Your Name}\"",
+			"ModuleInfo \"License: MIT\"",
+			"ModuleInfo \"Copyright: $CURRENT_YEAR $2\"",
+			"",
+			"ModuleInfo \"History: 1.00\"",
+			"ModuleInfo \"History: Initial Release\"",
+			"",
+			"$LINE_COMMENT Dependencies",
+			"Import BRL.StandardIO",
+			"",
+			"$LINE_COMMENT Imports",
+			"$LINE_COMMENT Import \"\"",
+			"",
+			"${TM_SELECTED_TEXT:$BLOCK_COMMENT_START\nbbdoc: ${6:An example function}\nabout:\n${7:This function is just an example\nPass @someText a string}\n$BLOCK_COMMENT_END\nFunction Example( someText:String )\n\t\n\tPrint( someText )\nEndFunction}",
+			"",
+			"$0"],
+		"description" : "Basic module template"
+	},
+	
+	"@0MaxGUI Canvas Template" : {
+		"prefix" : "Template MaxGUI Canvas",
+		"body" : [ "$LINE_COMMENT ${WORKSPACE_NAME/(.*)/${1:/upcase}/} - $TM_FILENAME",
+			"$LINE_COMMENT $CURRENT_DATE/$CURRENT_MONTH/$CURRENT_YEAR $CURRENT_HOUR:$CURRENT_MINUTE",
+			"$LINE_COMMENT ",
+			"",
+			"SuperStrict",
+			"",
+			"Framework MaxGui.Drivers",
+			"Import BRL.TimerDefault",
+			"Import BRL.EventQueue",
+			"Import BRL.GLMax2D",
+			"",
+			"Local window:TGadget = CreateWindow( \"My Canvas Window\", 0, 0, 320, 240, Null, WINDOW_TITLEBAR | WINDOW_CLIENTCOORDS | WINDOW_CENTER | WINDOW_RESIZABLE )",
+			"Local canvas:TGadget = CreateCanvas( 0, 0, 320, 240, window )",
+			"Local timer:TTimer = CreateTimer( 60 )",
+			"",
+			"SetGadgetLayout( canvas, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_ALIGNED )",
+			"",
+			"While WaitEvent()",
+			"\t",
+			"\tSelect EventID()",
+			"\t\tCase EVENT_TIMERTICK",
+			"\t\t\tRedrawGadget( canvas )",
+			"\t\t\t",
+			"\t\tCase EVENT_GADGETPAINT",
+			"\t\t\tSetGraphics( CanvasGraphics( canvas ) )",
+			"\t\t\tOnRender( canvas )",
+			"\t\t\t",
+			"\t\tCase EVENT_WINDOWCLOSE",
+			"\t\t\tFreeGadget( canvas )",
+			"\t\t\tEnd",
+			"\t\t\t",
+			"\t\tCase EVENT_APPTERMINATE",
+			"\t\t\tEnd",
+			"\t\t\t",
+			"\t\tDefault",
+			"\t\t\tPrint( CurrentEvent.ToString() )",
+			"\t\t\t",
+			"\tEndSelect",
+			"Wend",
+			"",
+			"Function OnRender(canvas:TGadget)",
+			"\t",
+			"\tSetOrigin( 160, 120 )",
+			"\tSetLineWidth( 5 )",
+			"\tCls()",
+			"\t",
+			"\t$0Local t:Int = MilliSecs()",
+			"\tDrawLine( 0, 0, Float( 120*Cos( t ) ), Float( 120*Sin( t ) ) )",
+			"\tDrawLine( 0, 0, Float( 80*Cos( t/60 ) ), Float( 80*Sin( t/60 ) ) )",
+			"\t",
+			"\tFlip()",
+			"EndFunction"],
+		"description" : "Basic MaxGUI canvas template"
+	},
+	
+	"@0MaxGUI Window Template" : {
+		"prefix" : "Template MaxGUI Window",
+		"body" : [ "$LINE_COMMENT ${WORKSPACE_NAME/(.*)/${1:/upcase}/} - $TM_FILENAME",
+			"$LINE_COMMENT $CURRENT_DATE/$CURRENT_MONTH/$CURRENT_YEAR $CURRENT_HOUR:$CURRENT_MINUTE",
+			"$LINE_COMMENT ",
+			"",
+			"SuperStrict",
+			"",
+			"Framework MaxGui.Drivers",
+			"Import BRL.EventQueue",
+			"",
+			"Local window:TGadget = CreateWindow( \"My Window\", 0, 0, 320, 240, Null, WINDOW_TITLEBAR | WINDOW_CLIENTCOORDS | WINDOW_CENTER | WINDOW_RESIZABLE )",
+			"",
+			"While WaitEvent()",
+			"\t",
+			"\tSelect EventID()",
+			"\t\tCase EVENT_WINDOWCLOSE",
+			"\t\t\tPrint( \"Window closed\" )",
+			"\t\t\tEnd",
+			"\t\t\t",
+			"\t\tCase EVENT_APPTERMINATE",
+			"\t\t\tEnd",
+			"\t\t\t",
+			"\t\tDefault",
+			"\t\t\tPrint( CurrentEvent.ToString() )",
+			"\t\t\t",
+			"\tEndSelect",
+			"Wend"],
+		"description" : "Basic MaxGUI window template"
+	}
+}

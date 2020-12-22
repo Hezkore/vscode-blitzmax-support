@@ -1,3 +1,6 @@
+## 2.1.1
+* Added snippets
+
 ## 2.1.0
 * Added build-tree
 * Added debug/build shortcuts

@@ -607,7 +607,7 @@ export class BmxDebugSession extends LoggingDebugSession {
 				function ensureDumpIsComplete( step: BmxStackStep ) {
 					return new Promise(function (resolve, reject) {
 						(function waitFordump(){
-							if (step.children) return resolve()
+							if (step.children) return
 							setTimeout( waitFordump, 25 )
 						})()
 					})

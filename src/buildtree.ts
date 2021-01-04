@@ -7,7 +7,7 @@ import { boolToString } from './common'
 import { getBuildDefinitionFromWorkspace,
 	saveAsDefaultTaskDefinition,
 	internalBuildDefinition,
-	toggleBuildOptions } from './taskProvider'
+	toggleBuildOptions } from './taskprovider'
 
 
 export function registerBmxBuildTreeProvider(context: vscode.ExtensionContext) {
@@ -23,7 +23,7 @@ export function registerBmxBuildTreeProvider(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('blitzmax.toggleBuildOption', async (option: any) => {
 		if (typeof option !== "string") {
 			const treeItem: vscode.TreeItem = option
-			if (treeItem && treeItem.label) option = treeItem.label.toLocaleLowerCase()
+			if (treeItem && treeItem.label) option = treeItem.label.toString().toLowerCase()
 		}
 		
 		const definition = getBuildDefinitionFromWorkspace()
@@ -113,7 +113,7 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 				items.push(this.createChildItem('release', 'Builds a release version', boolToString(def.release)))
 				items.push(this.createChildItem('standalone', 'Generate but do not compile into binary form', boolToString(def.standalone)))
 				items.push(this.createChildItem('static', 'Statically link binary', boolToString(def.static)))
-				items.push(this.createChildItem('platform', 'Select platform to create code for', def.platform))
+				//items.push(this.createChildItem('platform', 'Select platform to create code for', def.platform))
 				items.push(this.createChildItem('verbose', 'Verbose (noisy) build', boolToString(def.verbose)))
 				items.push(this.createChildItem('funcargcasting', 'How to handle function argument casting issues', def.funcargcasting))
 				items.push(this.createChildItem('framework', 'Defines to use a specific module as framework', def.framework))

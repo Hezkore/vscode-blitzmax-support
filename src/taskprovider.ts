@@ -263,7 +263,7 @@ export function makeTask(definition: BmxBuildTaskDefinition): vscode.Task {
 		
 		if (resolvedDefinition.apptype) args.push('-t', resolvedDefinition.apptype)
 		
-		if (resolvedDefinition.platform) args.push('-p', resolvedDefinition.platform)
+		//if (resolvedDefinition.platform) args.push('-p', resolvedDefinition.platform)
 		
 		if (resolvedDefinition.verbose) args.push('-v')
 		

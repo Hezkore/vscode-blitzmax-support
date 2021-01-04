@@ -1,3 +1,8 @@
+## 2.1.2
+* Removed -p parameter
+* Updated dependencies
+* Fixed some Linux specific issues
+
 ## 2.1.1
 * Added snippets
 

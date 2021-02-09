@@ -1,3 +1,7 @@
+## 2.1.3
+* Updated dependencies
+* Fixed some taskprovider issues
+
 ## 2.1.2
 * Removed -p parameter
 * Updated dependencies

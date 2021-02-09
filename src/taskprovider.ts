@@ -5,6 +5,7 @@ import * as awaitNotify from 'await-notify'
 import * as cp from 'child_process'
 import * as path from 'path'
 import { toggleBool } from './common'
+import { EOL } from 'os'
 
 let terminal: BmxBuildTaskTerminal | undefined
 export let internalBuildDefinition: BmxBuildTaskDefinition = {
@@ -336,7 +337,6 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 	lastPercent: number
 	percent: number
 	colorReset: boolean
-	progress: any
 	
 	prepare(cmd: string, args: string[] | undefined, cwd: string | undefined) {
 		this.cmd = cmd
@@ -351,34 +351,54 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 	close() {
 	}
 	
-	processBmkOutput(data){
-		data.toString().split('\r\n').forEach((str: string) => {
-			// Try to colour some of the lines
-			// Links
-			if (str.startsWith('[') && str.endsWith(']')) {
-				this.writeEmitter.fire('\u001b[36m')
+	printBmkOutput(data: any, colorOuput: boolean | undefined, progressBar: any){
+		const str: string[] = data.toString().split(EOL)
+		
+		for (let index = 0; index < str.length; index++) {
+			const line = str[index].trim()
+			
+			// Always update progress
+			if (progressBar && line.startsWith('[') && line[5] == ']') {
+				this.percent = Number( line.substring(1, 4) )
+				progressBar.report({ message: ` ${this.percent}%`, increment: this.percent - this.lastPercent })
+				this.lastPercent = this.percent
+			}
+			
+			// Add colors
+			if (colorOuput) {
+				this.colorBmkOutput(line)
+			} else {
+				this.writeEmitter.fire(line + '\r\n')
+			}
+		}
+	}
+	
+	colorBmkOutput(line: string){
+		// Try to colour some of the lines
+		// Links
+		if (line.startsWith('[') && line.endsWith(']')) {
+			this.writeEmitter.fire('\u001b[36m')
+			this.colorReset = true
+		} else {
+			// Errors
+			if (line.startsWith('Compile Error: ') || line.startsWith('Build Error: ')) {
+				this.writeEmitter.fire('\u001b[31m')
 				this.colorReset = true
 			} else {
-				// Errors
-				if (str.startsWith('Compile Error: ') || str.startsWith('Build Error: ')) {
-					this.writeEmitter.fire('\u001b[31m')
+				// Warnings
+				if (line.startsWith('Compile Warning: ')) {
+					this.writeEmitter.fire('\u001b[33m')
 					this.colorReset = true
-				} else {
-					// Warnings
-					if (str.startsWith('Compile Warning: ')) {
-						this.writeEmitter.fire('\u001b[33m')
-						this.colorReset = true
-					}
 				}
 			}
-			
-			this.writeEmitter.fire(str + '\r\n')
-			
-			if (this.colorReset) {
-				this.writeEmitter.fire('\u001b[0m')
-				this.colorReset = false
-			}
-		})
+		}
+		
+		this.writeEmitter.fire(line + '\r\n')
+		
+		if (this.colorReset) {
+			this.writeEmitter.fire('\u001b[0m')
+			this.colorReset = false
+		}
 	}
 	
 	private async doBuild(): Promise<void> {
@@ -392,12 +412,12 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 			this.writeEmitter.fire(`${this.cmd} ${this.args.join(' ')}\r\n\r\n`)
 			this.writeEmitter.fire('== BUILDING ==\r\n\r\n')
 			
-			const bmkColors = vscode.workspace.getConfiguration( 'blitzmax' ).get( 'pref.showBuildColors' )
+			const bmkColors: boolean | undefined = vscode.workspace.getConfiguration( 'blitzmax' ).get( 'pref.showBuildColors' )
 			let loc = vscode.ProgressLocation.Window
 			if (vscode.workspace.getConfiguration( 'blitzmax' ).get( 'pref.showBuildProgress' ))
 				loc = vscode.ProgressLocation.Notification
 			
-			this.progress = vscode.window.withProgress({
+			vscode.window.withProgress({
 				location: loc,
 				title: 'Building ' + path.parse(this.args[this.args.length-1]).base,
 				cancellable: true
@@ -416,34 +436,15 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 				let bmkProcess = cp.spawn(this.cmd, this.args, {cwd: this.cwd})
 				
 				bmkProcess.stdout.on('data', (data) => {
-					const str = data.toString()
-					
-					// Always update progress
-					if (str.startsWith('[') && str[5] == ']') {
-						this.percent = Number( str.split('%')[0].slice(1) )
-						this.progress.report({ message: ` ${this.percent}%`, increment: this.percent - this.lastPercent })
-						this.lastPercent = this.percent
-					}
-					
-					// Add colors
-					if (bmkColors) {
-						this.processBmkOutput(str)
-					} else {
-						this.writeEmitter.fire(data.toString())
-					}
+					this.printBmkOutput(data, bmkColors, progress)
 				})
 				
 				bmkProcess.stderr.on('data', (data) => {
-					// Add colors
-					if (bmkColors) {
-						this.processBmkOutput(data)
-					} else {
-						this.writeEmitter.fire(data.toString())
-					}
+					this.printBmkOutput(data, bmkColors, progress)
 				})
 				
 				bmkProcess.on('error', (error) => {
-					this.processBmkOutput(error.message)
+					this.printBmkOutput(error.message, true, progress)
 				})
 				
 				bmkProcess.on('close', (code) => {
@@ -466,7 +467,7 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 					
 					this.writeEmitter.fire(`Execution time: ${procEnd[0]}s ${procEnd[1]/1000000}ms\r\n\r\n`)
 					
-					this.closeEmitter.fire(code)
+					this.closeEmitter.fire(code ? code : 0)
 					this.busy.notify()
 					resolve()
 				})

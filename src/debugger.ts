@@ -11,6 +11,8 @@ import * as path from 'path'
 import * as awaitNotify from 'await-notify'
 import * as vscode from 'vscode'
 import { makeTask, getBuildDefinitionFromWorkspace, BmxBuildTaskDefinition, BmxBuildOptions } from './taskprovider'
+import { EOL } from 'os'
+import { BmxDebugParser } from './debugparser'
 
 interface BmxLaunchRequestArguments extends BmxBuildOptions, DebugProtocol.LaunchRequestArguments {
 	noDebug?: boolean
@@ -89,7 +91,9 @@ export class BmxDebugSession extends LoggingDebugSession {
 	
 	// We don't support multiple threads!
 	private static THREAD_ID = 1
-
+	
+	private _killSignal: NodeJS.Signals = 'SIGKILL'
+	
 	private _variableHandles = new Handles<string>()
 	
 	private _buildDone = new awaitNotify.Subject()
@@ -109,6 +113,8 @@ export class BmxDebugSession extends LoggingDebugSession {
 	private _stackSteps: BmxStackStep[] = []
 	
 	private _stackStepId: number = 0
+	
+	private _debugParser: BmxDebugParser
 	
 	public constructor() {
 		super('bmx-debug.txt')
@@ -193,6 +199,7 @@ export class BmxDebugSession extends LoggingDebugSession {
 		
 		// Launch!
 		//console.log("LAUNCHING: " + this._bmxProcessPath)
+		if (args.noDebug) this._debugParser = new BmxDebugParser(this)
 		this.startRuntime()
 		
 		//console.log( 'started ' + this._bmxProcessPath )
@@ -204,13 +211,14 @@ export class BmxDebugSession extends LoggingDebugSession {
 		if (!this._bmxProcessPath) return
 		
 		// Kill if already running
-		if (this._bmxProcess) this._bmxProcess.kill('SIGINT')
+		if (this._bmxProcess) this._bmxProcess.kill(this._killSignal)
 		
 		this._bmxProcess = process.spawn( this._bmxProcessPath, [])
 		//if (this._bmxProcess) {
 		//	this.sendEvent(new OutputEvent('Debug started ' + Date(), 'stdout'))
 		//}
 		
+		// Any normal stdout goes to debug console
 		this._bmxProcess.stdout.on('data', (data) => {
 			this.sendEvent(new OutputEvent(data.toString(), 'stdout'))
 		})
@@ -220,18 +228,23 @@ export class BmxDebugSession extends LoggingDebugSession {
 		})
 		
 		this._bmxProcess.stderr.on('data', (data) => {
-			this.sendEvent(new OutputEvent(data.toString(), 'stderr'))
-
+			if (this._debugParser) {
+				this._debugParser.parse(data.toString())
+			} else {
+				this.sendEvent(new OutputEvent(data.toString(), 'stderr'))
+			}
+			
+			/*
 			let insideBlock: number = 0
 			let blockType: string | undefined
 			let dumpForBmxStep: BmxStackStep[] | undefined
 			let trace: string[] = []
-			const lines: string[] = data.toString().split( '\r\n' )
+			const lines: string[] = data.toString().split( EOL )
 			for (let i = 0; i < lines.length; i++) {
 				if (!lines[i].startsWith( '~>' )) continue
 				const line = lines[i].slice( 2 )
 				if (!line) continue
-
+				
 				if (!blockType) {
 					if (line.startsWith( 'ObjectDump@' )) {
 						const addr = line.slice( 11, -1 )
@@ -242,7 +255,7 @@ export class BmxDebugSession extends LoggingDebugSession {
 						continue
 					}
 				}
-
+				
 				switch (line) {
 					case 'DebugStop:':
 						if (!blockType) {
@@ -293,6 +306,7 @@ export class BmxDebugSession extends LoggingDebugSession {
 						break
 				}
 			}
+			*/
 		})
 		
 		this._bmxProcess.on('close', (code) => {
@@ -311,7 +325,7 @@ export class BmxDebugSession extends LoggingDebugSession {
 		}
 		
 		// Are we running the process?
-		if (this._bmxProcess) this._bmxProcess.kill('SIGINT')
+		if (this._bmxProcess) this._bmxProcess.kill(this._killSignal)
 		
 		this.sendResponse(response)
 	}

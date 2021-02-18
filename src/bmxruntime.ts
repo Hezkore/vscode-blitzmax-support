@@ -1,0 +1,356 @@
+'use strict'
+
+import {
+	LoggingDebugSession,
+	InitializedEvent, OutputEvent,
+	Thread,  TerminatedEvent, ContinuedEvent
+} from 'vscode-debugadapter'
+import { DebugProtocol } from 'vscode-debugprotocol'
+import * as process from 'child_process'
+import * as path from 'path'
+import * as awaitNotify from 'await-notify'
+import * as vscode from 'vscode'
+import { makeTask, getBuildDefinitionFromWorkspace, BmxBuildTaskDefinition, BmxBuildOptions } from './taskprovider'
+import { BmxDebugger, BmxDebugStackFrame } from './bmxdebugger'
+
+interface BmxLaunchRequestArguments extends BmxBuildOptions, DebugProtocol.LaunchRequestArguments {
+}
+
+// A bunch of initial setup stuff and providers
+//
+export function registerBmxDebugger( context: vscode.ExtensionContext ) {
+		
+	// Register a configuration provider for 'bmx' debug type
+	const provider = new BmxDebugConfigurationProvider()
+	context.subscriptions.push( vscode.debug.registerDebugConfigurationProvider( 'bmx', provider ) )
+	
+	let factory: vscode.DebugAdapterDescriptorFactory = new BmxInlineDebugAdapterFactory()
+	context.subscriptions.push( vscode.debug.registerDebugAdapterDescriptorFactory( 'bmx', factory) )
+	if ('dispose' in factory) context.subscriptions.push( factory )
+	
+	// Related commands
+	context.subscriptions.push(vscode.commands.registerCommand('blitzmax.buildAndDebug', () => {
+		vscode.debug.startDebugging(undefined,
+			<vscode.DebugConfiguration>(provider.resolveDebugConfiguration(undefined, undefined)),
+			{noDebug: false})
+	}))
+	context.subscriptions.push(vscode.commands.registerCommand('blitzmax.buildAndRun', () => {
+		vscode.debug.startDebugging(undefined,
+			<vscode.DebugConfiguration>(provider.resolveDebugConfiguration(undefined, undefined)),
+			{noDebug: true})
+	}))
+}
+
+// Read or create the configuration
+//
+export class BmxDebugConfigurationProvider implements vscode.DebugConfigurationProvider {
+	
+	resolveDebugConfigurationWithSubstitutedVariables(workspace: vscode.WorkspaceFolder | undefined, config: vscode.DebugConfiguration, token?:  vscode.CancellationToken): vscode.ProviderResult<vscode.DebugConfiguration> {
+		return config
+	}
+	
+	resolveDebugConfiguration(workspace: vscode.WorkspaceFolder | undefined, config: vscode.DebugConfiguration | undefined, token?: vscode.CancellationToken): vscode.ProviderResult<vscode.DebugConfiguration> {
+		
+		const doc = vscode.window.activeTextEditor?.document
+		if (doc) workspace = vscode.workspace.getWorkspaceFolder(doc.uri)
+		
+		if (!config) config = {type: '', request: '', name: ''}
+		
+		// Are we part of any workspace?
+		if (!workspace) {
+			config.type = ''
+			config.request = ''
+			config.name = ''
+		}
+		
+		// If launch.json is missing or empty, we create a new one based on the current task
+		if (!config.type && !config.request && !config.name) {
+			const definition = getBuildDefinitionFromWorkspace(workspace)
+			if (definition) {
+				config = Object.assign({name: definition.label, request: 'launch'}, definition)
+			}
+		}
+		
+		if (!config.source) {
+			return vscode.window.showInformationMessage( 'Cannot find a source file to debug' ).then(_ => {
+				return undefined	// abort launch
+			})
+		}
+		
+		return config
+	}
+}
+
+export class BmxInlineDebugAdapterFactory implements vscode.DebugAdapterDescriptorFactory {
+	createDebugAdapterDescriptor(_session: vscode.DebugSession): vscode.ProviderResult<vscode.DebugAdapterDescriptor> {
+		return new vscode.DebugAdapterInlineImplementation(new BmxDebugSession())
+	}
+}
+
+// BlitzMax runtime
+//
+export class BmxDebugSession extends LoggingDebugSession {
+	
+	// We don't support multiple threads!
+	static THREAD_ID = 1
+	
+	isDebugging: boolean // True if the Bmx debugger has halted the application
+	lastStackFrameId: number
+	stack: BmxDebugStackFrame[] = []
+	
+	private _killSignal: NodeJS.Signals = 'SIGKILL'
+	private _buildDone = new awaitNotify.Subject()
+	private _buildTaskExecution: vscode.TaskExecution | undefined
+	private _buildError: boolean
+	private _bmxProcess: process.ChildProcessWithoutNullStreams
+	private _isRestart: boolean
+	private _bmxProcessPath: string | undefined
+	private debugParser: BmxDebugger
+	
+	public constructor() {
+		super('bmx-debug.txt')
+		
+		this.setDebuggerLinesStartAt1( false )
+		this.setDebuggerColumnsStartAt1( false )
+	}
+	
+	sendKeyInput(key: string){
+		console.log('Sending key "'+ key +'" to debugger')
+		this._bmxProcess.stdin.write( key + '\n' )
+	}
+	
+	protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
+		
+		// Build and return capabilities
+		response.body = response.body || {}
+		response.body.supportsStepInTargetsRequest = true
+		response.body.supportsReadMemoryRequest = true
+		response.body.supportsTerminateRequest = true
+		response.body.supportsRestartRequest = true
+		response.body.supportsConditionalBreakpoints = false
+		response.body.supportsFunctionBreakpoints = false
+		response.body.supportsHitConditionalBreakpoints = false
+		response.body.supportsInstructionBreakpoints = false
+		response.body.supportsBreakpointLocationsRequest = false
+		response.body.supportsDataBreakpoints = false
+		
+		this.sendResponse(response)
+		
+		this.sendEvent(new InitializedEvent())
+	}
+	
+	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: BmxLaunchRequestArguments) {
+		
+		// Setup a build task definition based on our launch arguments
+		let debuggerTaskDefinition: BmxBuildTaskDefinition = <BmxBuildTaskDefinition>(args)
+		
+		// Set debugging based on button pressed
+		// FIX: This apparently doesn't work via the 'Run' menu?
+		debuggerTaskDefinition.debug = !!!args.noDebug
+		
+		if (debuggerTaskDefinition.debug) {
+			console.log('DEBUGGING BLITZMAX!')
+			this.debugParser = new BmxDebugger(this)
+			debuggerTaskDefinition.release = false
+		} else {
+			console.log('NOT DEBUGGING BLITZMAX!')
+		}
+		
+		// Create a build task from our definition
+		let debuggerTask = makeTask(debuggerTaskDefinition)
+		
+		// Prepare what happens once the task is done
+		vscode.tasks.onDidEndTaskProcess(((e) => {
+			// Make sure it's our debugger task
+			if (e.execution.task === debuggerTask) {
+				this._buildError = e.exitCode ? true : false
+				this._buildDone.notify()
+			}
+		}))
+		
+		// Store the task execution
+		vscode.tasks.onDidStartTaskProcess(((e) => {
+			// Make sure it's our debugger task
+			if (e.execution.task === debuggerTask)
+				this._buildTaskExecution = e.execution
+		}))
+		
+		// Execute the task!
+		await vscode.tasks.executeTask(debuggerTask)
+		
+		// Wait until task is complete
+		await this._buildDone.wait()
+		
+		// Went as expected?
+		if (this._buildError || !this._buildTaskExecution) {
+			//console.log('Error during build task')
+			this.sendEvent( new TerminatedEvent() )
+			return undefined
+		} else {
+			//console.log('Starting debug session')
+		}
+		
+		this._buildTaskExecution = undefined
+		
+		// Figure out output path
+		this._bmxProcessPath = args.output
+		if (!this._bmxProcessPath) {
+			const outPath = path.parse(args.source)
+			this._bmxProcessPath = vscode.Uri.file( outPath.dir + '/' + outPath.name ).fsPath
+		}
+		
+		// Launch!
+		//console.log("LAUNCHING: " + this._bmxProcessPath)
+		this.startRuntime()
+		
+		//console.log( 'started ' + this._bmxProcessPath )
+		this.sendResponse(response)
+	}
+	
+	startRuntime(){
+		// Reset some stuff
+		this.isDebugging = false
+		
+		// Make sure we have a path
+		if (!this._bmxProcessPath) return
+		
+		// Kill if already running
+		if (this._bmxProcess){
+			if (this.isDebugging) {
+				// Use the debugger to quit
+				this.sendKeyInput('q')
+			} else {
+				// Just kill the process
+				this._bmxProcess.kill(this._killSignal)
+			}
+		}
+		
+		this._bmxProcess = process.spawn( this._bmxProcessPath, [])
+		
+		// Any normal stdout goes to debug console
+		this._bmxProcess.stdout.on('data', (data) => {
+			this.sendEvent(new OutputEvent(data.toString(), 'stdout'))
+		})
+		
+		this._bmxProcess.on('error', (err) => {
+			this.sendEvent(new OutputEvent(err.message.toString(), 'stderr'))
+		})
+		
+		this._bmxProcess.stderr.on('data', (data) => {
+			if (this.debugParser) {
+				this.debugParser.onDebugOutput(data.toString())
+			} else {
+				this.sendEvent(new OutputEvent(data.toString(), 'stderr'))
+			}
+		})
+		
+		this._bmxProcess.on('close', (code) => {
+			if (!this._isRestart)
+				this.sendEvent( new TerminatedEvent() )
+			this._isRestart = false
+		})
+	}
+	
+	protected terminateRequest(response: DebugProtocol.TerminateResponse, args: DebugProtocol.TerminateArguments, request?: DebugProtocol.Request) {
+		// Are we running the build task?
+		if (this._buildTaskExecution) {
+			this._buildTaskExecution.terminate()
+			this._buildTaskExecution = undefined
+		}
+		
+		// Are we running the process?
+		if (this._bmxProcess){
+			if (this.isDebugging) {
+				// Use the debugger to quit
+				this.sendKeyInput('q')
+			} else {
+				// Just kill the process
+				this._bmxProcess.kill(this._killSignal)
+			}
+		}
+		
+		this.sendResponse(response)
+	}
+	
+	protected pauseRequest(response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments, request?: DebugProtocol.Request){
+		response.message = 'Pause is not supported'
+		response.success = false
+		this.sendResponse(response)
+	}
+	
+	protected restartRequest(response: DebugProtocol.RestartResponse, args: DebugProtocol.RestartArguments, request?: DebugProtocol.Request){
+		this._isRestart = true
+		this.startRuntime()
+		this.sendResponse(response)
+	}
+	
+	protected threadsRequest(response: DebugProtocol.ThreadsResponse) {
+		// No threads! Just return a default thread
+		response.body = {threads: [new Thread( BmxDebugSession.THREAD_ID, "thread 1" )]}
+		this.sendResponse(response)
+	}
+	
+	protected async stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): Promise<void> {
+		response = await this.debugParser.onStackTraceRequest(response, args)
+		this.sendResponse(response)
+	}
+	
+	protected async scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): Promise<void> {
+		response = await this.debugParser.onScopesRequest(response, args)
+		this.sendResponse(response)
+	}
+	
+	protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments): Promise<void> {
+		response = await this.debugParser.onVariablesRequest(response, args)
+		this.sendResponse(response)
+	}
+	
+	protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void {
+		this.isDebugging = false
+		this.sendEvent( new ContinuedEvent( BmxDebugSession.THREAD_ID ) )
+		this.sendKeyInput('r')
+	}
+	
+	protected reverseContinueRequest(response: DebugProtocol.ReverseContinueResponse, args: DebugProtocol.ReverseContinueArguments) : void {
+		console.log('reverseContinueRequest')
+ 	}
+	 
+	protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
+		this.isDebugging = false
+		this.sendEvent( new ContinuedEvent( BmxDebugSession.THREAD_ID ) )
+		this.sendKeyInput('s')
+	}
+	
+	protected stepBackRequest(response: DebugProtocol.StepBackResponse, args: DebugProtocol.StepBackArguments): void {
+		console.log('stepBackRequest')
+		this.sendResponse(response)
+	}
+	
+	protected stepInTargetsRequest(response: DebugProtocol.StepInTargetsResponse, args: DebugProtocol.StepInTargetsArguments) {
+		console.log('stepInTargetsRequest')
+	}
+	
+	protected stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments): void {
+		this.isDebugging = false
+		this.sendEvent( new ContinuedEvent( BmxDebugSession.THREAD_ID ) )
+		this.sendKeyInput('e')
+	}
+	
+	protected stepOutRequest(response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments): void {
+		this.isDebugging = false
+		this.sendEvent( new ContinuedEvent( BmxDebugSession.THREAD_ID ) )
+		this.sendKeyInput('l')
+	}
+	
+	protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): void {
+		console.log('evaluateRequest')
+	}
+	
+	protected completionsRequest(response: DebugProtocol.CompletionsResponse, args: DebugProtocol.CompletionsArguments): void {
+		console.log('completionsRequest')
+	}
+	
+	protected cancelRequest(response: DebugProtocol.CancelResponse, args: DebugProtocol.CancelArguments) {
+		console.log('cancelRequest')
+	}
+}

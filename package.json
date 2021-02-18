@@ -1,6 +1,6 @@
 {
 	"name": "blitzmax",
-	"version": "2.1.3",
+	"version": "2.2.0",
 	"publisher": "Hezkore",
 	"displayName": "BlitzMax",
 	"description": "BlitzMax for Visual Studio Code.",
@@ -244,7 +244,7 @@
 			{
 				"type": "bmx",
 				"label": "BlitzMax Debug",
-				"program": "./out/debugger.js",
+				"program": "./out/bmxruntime.js",
 				"configurationAttributes": {
 					"launch": {
 						"required": [

@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode'
 import { registerBmxLsp, deactivateLsp } from './lsp'
-import { registerBmxDebugger } from './debugger'
+import { registerBmxDebugger } from './bmxruntime'
 import { registerTaskProvider } from './taskprovider'
 import { registerTerminalLinkProvider } from './linkprovider'
 import { registerHelperGuide } from './helper'

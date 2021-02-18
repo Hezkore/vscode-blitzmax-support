@@ -1,3 +1,6 @@
+## 2.2.0
+* New BlitzMax debug parser
+
 ## 2.1.3
 * Updated dependencies
 * Fixed some taskprovider issues

@@ -1,3 +1,8 @@
+## 2.2.1
+* New icons
+* LSP fixes
+* Debugger fixes
+
 ## 2.2.0
 * New BlitzMax debug parser
 

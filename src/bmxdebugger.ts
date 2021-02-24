@@ -243,10 +243,10 @@ export class BmxDebugger {
 				}
 				
 				// Find the variable with the correct reference number
-				// TODO REMOVE IT!
 				let variable: BmxDebugVariable | undefined
-				for (let i = 0; i < this.referenceVariables.length; i++) {
-					const compareVariable = this.referenceVariables[i];
+				let variableIndex: number = 0
+				for (variableIndex; variableIndex < this.referenceVariables.length; variableIndex++) {
+					const compareVariable = this.referenceVariables[variableIndex]
 					if (compareVariable.variablesReference == args.variablesReference) {
 						variable = compareVariable
 						break
@@ -271,6 +271,9 @@ export class BmxDebugger {
 					const line = event.data[i]
 					response.body.variables.push(this.convertToVariable(line))
 				}
+				
+				// Remove this reference variable
+				this.referenceVariables.splice(variableIndex, 1)
 			}
 			
 			return resolve(response)

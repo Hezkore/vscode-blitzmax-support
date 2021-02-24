@@ -5,13 +5,19 @@ import * as path from 'path'
 import { existsSync } from './common'
 
 let bmxPath: string | undefined
+const bmxNoPathMessage = `No BlitzMax path configured!
+
+The BlitzMax extension needs to know your BlitzMax location.
+Please select the root of your BlitzMax folder.
+
+This can be changed in settings later.`
 
 export function registerHelperGuide(context: vscode.ExtensionContext) {
 	
 	// Make sure we know the BlitzMax path
 	bmxPath = vscode.workspace.getConfiguration('blitzmax').get('base.path')
 	vscode.workspace.onDidChangeConfiguration((event) => {
-		if (event.affectsConfiguration( 'blitzmax.path' )) {
+		if (event.affectsConfiguration( 'blitzmax.base.path' )) {
 			bmxPath = vscode.workspace.getConfiguration('blitzmax').get('base.path')
 			triggerHelpGuides()
 		}
@@ -52,7 +58,7 @@ export function registerHelperGuide(context: vscode.ExtensionContext) {
 function triggerHelpGuides() {
 	// Notify that no BlitzMax path is set
 	if (!bmxPath) {
-		vscode.window.showWarningMessage('No BlitzMax path configured', 'Select path').then(picked => {
+		vscode.window.showWarningMessage(bmxNoPathMessage, {modal: true}, 'Select path').then(picked => {
 			if (picked) {
 				vscode.commands.executeCommand('workbench.action.openSettings', '@ext:hezkore.blitzmax')
 				vscode.commands.executeCommand('blitzmax.pickBlitzMaxPath')

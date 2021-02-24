@@ -13,7 +13,7 @@ import * as vscode from 'vscode'
 import { makeTask, getBuildDefinitionFromWorkspace, BmxBuildTaskDefinition, BmxBuildOptions } from './taskprovider'
 import { BmxDebugger, BmxDebugStackFrame } from './bmxdebugger'
 
-interface BmxLaunchRequestArguments extends BmxBuildOptions, DebugProtocol.LaunchRequestArguments {
+interface BmxLaunchRequestArguments extends DebugProtocol.LaunchRequestArguments, BmxBuildOptions {
 }
 
 // A bunch of initial setup stuff and providers
@@ -72,7 +72,7 @@ export class BmxDebugConfigurationProvider implements vscode.DebugConfigurationP
 		}
 		
 		if (!config.source) {
-			return vscode.window.showInformationMessage( 'Cannot find a source file to debug' ).then(_ => {
+			return vscode.window.showInformationMessage( 'Cannot find source file to debug' ).then(_ => {
 				return undefined	// abort launch
 			})
 		}
@@ -115,7 +115,7 @@ export class BmxDebugSession extends LoggingDebugSession {
 	}
 	
 	sendKeyInput(key: string){
-		console.log('Sending key "'+ key +'" to debugger')
+		//console.log('Sending key "'+ key +'" to debugger')
 		this._bmxProcess.stdin.write( key + '\n' )
 	}
 	
@@ -146,6 +146,7 @@ export class BmxDebugSession extends LoggingDebugSession {
 		
 		// Set debugging based on button pressed
 		// FIX: This apparently doesn't work via the 'Run' menu?
+		console.log("DEBUG?: " + args.noDebug)
 		debuggerTaskDefinition.debug = !!!args.noDebug
 		
 		if (debuggerTaskDefinition.debug) {

@@ -1,7 +1,7 @@
 'use strict'
 
 import * as vscode from 'vscode'
-import { registerBmxLsp, deactivateLsp } from './lsp'
+import { registerBmxLSP, deactivateLSP } from './lsp'
 import { registerBmxDebugger } from './bmxruntime'
 import { registerTaskProvider } from './taskprovider'
 import { registerTerminalLinkProvider } from './linkprovider'
@@ -10,7 +10,7 @@ import { registerBmxBuildTreeProvider } from './buildtree'
 
 export function activate(context: vscode.ExtensionContext) {
 	
-	registerBmxLsp(context)
+	registerBmxLSP(context)
 	registerHelperGuide(context)
 	registerBmxDebugger(context)
 	registerTaskProvider(context)
@@ -19,5 +19,5 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
-	deactivateLsp()
+	deactivateLSP()
 }

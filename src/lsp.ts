@@ -1,13 +1,13 @@
 'use strict'
 
 import * as vscode from 'vscode'
-import * as lsp from 'vscode-languageclient'
+import * as lsp from 'vscode-languageclient/node'
 import { existsSync } from './common'
 
 let outputChannel: vscode.OutputChannel
-let activeBmxLsp: BmxLsp | undefined
-let defaultBmxLsp: BmxLsp | undefined
-let runningBmxLsps: Map<string, BmxLsp> = new Map()
+let activeBmxLsp: BmxLSP | undefined
+let defaultBmxLsp: BmxLSP | undefined
+let runningBmxLsps: Map<string, BmxLSP> = new Map()
 let lspStatusBarItem: vscode.StatusBarItem
 
 let _sortedWorkspaceFolders: string[] | undefined
@@ -44,7 +44,7 @@ function getOuterMostWorkspaceFolder(folder: vscode.WorkspaceFolder | undefined)
 	return folder
 }
 
-export function registerBmxLsp(context: vscode.ExtensionContext) {
+export function registerBmxLSP(context: vscode.ExtensionContext) {
 	
 	// Create our output channel
 	outputChannel = vscode.window.createOutputChannel('BlitzMax Language Server')
@@ -65,7 +65,7 @@ export function registerBmxLsp(context: vscode.ExtensionContext) {
 				
 				switch (pick?.split(' ')[0]) {
 					case 'Restart':
-						restartLsp(activeBmxLsp)
+						restartSingleLSP(activeBmxLsp)
 						break
 					case 'Information':
 						vscode.window.showInformationMessage(`${activeBmxLsp.name}\r\n${activeBmxLsp.version}`)
@@ -89,8 +89,7 @@ export function registerBmxLsp(context: vscode.ExtensionContext) {
 	// Reset LSPs when settings change
 	vscode.workspace.onDidChangeConfiguration((event) => {
 		if (event.affectsConfiguration( 'blitzmax.path' )) {
-			restartLsps()
-			updateStatusBarItem()
+			restartAllLSP()
 		}
 	})
 	
@@ -106,7 +105,7 @@ export function registerBmxLsp(context: vscode.ExtensionContext) {
 	})
 }
 
-export function deactivateLsp(): Thenable<void> {
+export function deactivateLSP(): Thenable<void> {
 	let promises: Thenable<void>[] = []
 	for (let bmxLsp of runningBmxLsps.values()) {
 		promises.push(bmxLsp.client.stop())
@@ -116,7 +115,7 @@ export function deactivateLsp(): Thenable<void> {
 
 function changeBmxDocument(document: vscode.TextDocument | undefined) {
 	if (!document || document.languageId != "blitzmax") return
-	activateBmxLsp(
+	activateBmxLSP(
 		getOuterMostWorkspaceFolder(
 			vscode.workspace.getWorkspaceFolder(document.uri)
 		)
@@ -131,7 +130,7 @@ function changeBmxDocument(document: vscode.TextDocument | undefined) {
 	}
 }
 
-function activateBmxLsp(workspace: vscode.WorkspaceFolder | undefined): BmxLsp {
+function activateBmxLSP(workspace: vscode.WorkspaceFolder | undefined): BmxLSP {
 	// Do we have an active LSP?
 	if (activeBmxLsp) {
 		// Is it the same LSP?
@@ -146,7 +145,7 @@ function activateBmxLsp(workspace: vscode.WorkspaceFolder | undefined): BmxLsp {
 	}
 	
 	// Try to find an existing LSP for this workspace
-	let existingBmxLsp: BmxLsp | undefined
+	let existingBmxLsp: BmxLSP | undefined
 	if (workspace) {
 		existingBmxLsp = runningBmxLsps.get(workspace.uri.toString())
 	} else {
@@ -162,7 +161,7 @@ function activateBmxLsp(workspace: vscode.WorkspaceFolder | undefined): BmxLsp {
 	}
 	
 	// Start a new LSP
-	existingBmxLsp = new BmxLsp( workspace )
+	existingBmxLsp = new BmxLSP( workspace )
 	
 	// Where do we store this?
 	if (!workspace) {
@@ -176,7 +175,7 @@ function activateBmxLsp(workspace: vscode.WorkspaceFolder | undefined): BmxLsp {
 	return activeBmxLsp
 }
 
-function restartLsps() {
+function restartAllLSP() {
 	activeBmxLsp = undefined
 	
 	if (defaultBmxLsp) {
@@ -187,13 +186,19 @@ function restartLsps() {
 	runningBmxLsps.forEach(async bmxLsp => {
 		if (bmxLsp.client) await bmxLsp.client.stop()
 	})
+	
 	runningBmxLsps.clear()
+	
+	updateStatusBarItem()
 }
 
-async function restartLsp(lsp: BmxLsp | undefined) {
+async function restartSingleLSP(lsp: BmxLSP | undefined) {
 	if (!lsp) return
 	
-	if (activeBmxLsp === lsp) activeBmxLsp = undefined
+	if (activeBmxLsp === lsp) {
+		activeBmxLsp = undefined
+		updateStatusBarItem()
+	}
 	
 	if (lsp === defaultBmxLsp) {
 		defaultBmxLsp = undefined
@@ -203,7 +208,7 @@ async function restartLsp(lsp: BmxLsp | undefined) {
 	
 	if (lsp.client) await lsp.client.stop()
 	
-	activateBmxLsp(lsp.workspace)
+	activateBmxLSP(lsp.workspace)
 }
 
 function updateStatusBarItem() {
@@ -223,7 +228,7 @@ function updateStatusBarItem() {
 	}
 }
 
-class BmxLsp {
+class BmxLSP {
 	
 	name: string | undefined
 	version: string | undefined

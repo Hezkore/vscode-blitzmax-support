@@ -1,14 +1,11 @@
 'use strict'
 
 import {
-	StackFrame, Scope, Variable,
-	InitializedEvent, OutputEvent, StoppedEvent,
-	Thread, Handles, TerminatedEvent, ContinuedEvent
+	StackFrame, Scope, Variable, StoppedEvent
 } from 'vscode-debugadapter'
 import { DebugProtocol } from 'vscode-debugprotocol'
 import { BmxDebugSession } from './bmxruntime'
 import { EOL } from 'os'
-import * as vscode from 'vscode'
 import * as path from 'path'
 import * as awaitNotify from 'await-notify'
 
@@ -44,7 +41,7 @@ export class BmxDebugger {
 		for (let i = 0; i < output.split(EOL).length; i++) {
 			const line = output.split(EOL)[i]
 			if (line.length <= 0 ) continue
-			console.log('D: ' + line)
+			//console.log('D: ' + line)
 			
 			// Does the current event have a name?
 			// This will create a new event
@@ -93,11 +90,11 @@ export class BmxDebugger {
 					
 					// Send to event queue or process internally
 					if (!this.isInternalEvent(this.currentEvent)) {
-						console.log('Queued Debugger Event: ' + this.currentEvent.name)
+						//console.log('Queued Debugger Event: ' + this.currentEvent.name)
 						this.eventQueue.push(this.currentEvent)
 						this.eventProcess.notify()
 					} else {
-						console.log('Internal Debugger Event: ' + this.currentEvent.name)
+						//console.log('Internal Debugger Event: ' + this.currentEvent.name)
 					}
 					
 					// Reset
@@ -246,6 +243,7 @@ export class BmxDebugger {
 				}
 				
 				// Find the variable with the correct reference number
+				// TODO REMOVE IT!
 				let variable: BmxDebugVariable | undefined
 				for (let i = 0; i < this.referenceVariables.length; i++) {
 					const compareVariable = this.referenceVariables[i];

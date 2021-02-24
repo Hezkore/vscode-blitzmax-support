@@ -88,7 +88,7 @@ export function registerBmxLSP(context: vscode.ExtensionContext) {
 	
 	// Reset LSPs when settings change
 	vscode.workspace.onDidChangeConfiguration((event) => {
-		if (event.affectsConfiguration( 'blitzmax.path' )) {
+		if (event.affectsConfiguration( 'blitzmax.base.path' )) {
 			restartAllLSP()
 		}
 	})

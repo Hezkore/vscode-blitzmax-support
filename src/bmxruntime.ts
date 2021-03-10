@@ -3,7 +3,7 @@
 import {
 	LoggingDebugSession,
 	InitializedEvent, OutputEvent,
-	Thread,  TerminatedEvent, ContinuedEvent
+	Thread, TerminatedEvent
 } from 'vscode-debugadapter'
 import { DebugProtocol } from 'vscode-debugprotocol'
 import * as process from 'child_process'
@@ -97,12 +97,12 @@ export class BmxDebugSession extends LoggingDebugSession {
 	isDebugging: boolean // True if the Bmx debugger has halted the application
 	lastStackFrameId: number
 	stack: BmxDebugStackFrame[] = []
+	bmxProcess: process.ChildProcessWithoutNullStreams
 	
 	private _killSignal: NodeJS.Signals = 'SIGKILL'
 	private _buildDone = new awaitNotify.Subject()
 	private _buildTaskExecution: vscode.TaskExecution | undefined
 	private _buildError: boolean
-	private _bmxProcess: process.ChildProcessWithoutNullStreams
 	private _isRestart: boolean
 	private _bmxProcessPath: string | undefined
 	private debugParser: BmxDebugger
@@ -114,10 +114,7 @@ export class BmxDebugSession extends LoggingDebugSession {
 		this.setDebuggerColumnsStartAt1( false )
 	}
 	
-	sendKeyInput(key: string){
-		//console.log('Sending key "'+ key +'" to debugger')
-		this._bmxProcess.stdin.write( key + '\n' )
-	}
+
 	
 	protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
 		
@@ -216,28 +213,28 @@ export class BmxDebugSession extends LoggingDebugSession {
 		if (!this._bmxProcessPath) return
 		
 		// Kill if already running
-		if (this._bmxProcess){
-			if (this.isDebugging) {
+		if (this.bmxProcess){
+			if (this.isDebugging && this.debugParser) {
 				// Use the debugger to quit
-				this.sendKeyInput('q')
+				this.debugParser.sendInputToDebugger('q')
 			} else {
 				// Just kill the process
-				this._bmxProcess.kill(this._killSignal)
+				this.bmxProcess.kill(this._killSignal)
 			}
 		}
 		
-		this._bmxProcess = process.spawn( this._bmxProcessPath, [])
+		this.bmxProcess = process.spawn( this._bmxProcessPath, [])
 		
 		// Any normal stdout goes to debug console
-		this._bmxProcess.stdout.on('data', (data) => {
+		this.bmxProcess.stdout.on('data', (data) => {
 			this.sendEvent(new OutputEvent(data.toString(), 'stdout'))
 		})
 		
-		this._bmxProcess.on('error', (err) => {
+		this.bmxProcess.on('error', (err) => {
 			this.sendEvent(new OutputEvent(err.message.toString(), 'stderr'))
 		})
 		
-		this._bmxProcess.stderr.on('data', (data) => {
+		this.bmxProcess.stderr.on('data', (data) => {
 			if (this.debugParser) {
 				this.debugParser.onDebugOutput(data.toString())
 			} else {
@@ -245,7 +242,7 @@ export class BmxDebugSession extends LoggingDebugSession {
 			}
 		})
 		
-		this._bmxProcess.on('close', (code) => {
+		this.bmxProcess.on('close', (code) => {
 			if (!this._isRestart)
 				this.sendEvent( new TerminatedEvent() )
 			this._isRestart = false
@@ -260,13 +257,13 @@ export class BmxDebugSession extends LoggingDebugSession {
 		}
 		
 		// Are we running the process?
-		if (this._bmxProcess){
-			if (this.isDebugging) {
+		if (this.bmxProcess){
+			if (this.isDebugging && this.debugParser) {
 				// Use the debugger to quit
-				this.sendKeyInput('q')
+				this.debugParser.sendInputToDebugger('q')
 			} else {
 				// Just kill the process
-				this._bmxProcess.kill(this._killSignal)
+				this.bmxProcess.kill(this._killSignal)
 			}
 		}
 		
@@ -306,52 +303,23 @@ export class BmxDebugSession extends LoggingDebugSession {
 		this.sendResponse(response)
 	}
 	
-	protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void {
-		this.isDebugging = false
-		this.sendEvent( new ContinuedEvent( BmxDebugSession.THREAD_ID ) )
-		this.sendKeyInput('r')
+	protected async continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): Promise<void> {
+		response = await this.debugParser.continueRequest(response, args)
+		this.sendResponse(response)
 	}
-	
-	protected reverseContinueRequest(response: DebugProtocol.ReverseContinueResponse, args: DebugProtocol.ReverseContinueArguments) : void {
-		console.log('reverseContinueRequest')
- 	}
 	 
-	protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
-		this.isDebugging = false
-		this.sendEvent( new ContinuedEvent( BmxDebugSession.THREAD_ID ) )
-		this.sendKeyInput('s')
-	}
-	
-	protected stepBackRequest(response: DebugProtocol.StepBackResponse, args: DebugProtocol.StepBackArguments): void {
-		console.log('stepBackRequest')
+	protected async nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): Promise<void> {
+		response = await this.debugParser.nextRequest(response, args)
 		this.sendResponse(response)
 	}
 	
-	protected stepInTargetsRequest(response: DebugProtocol.StepInTargetsResponse, args: DebugProtocol.StepInTargetsArguments) {
-		console.log('stepInTargetsRequest')
+	protected async stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments): Promise<void> {
+		response = await this.debugParser.stepInRequest(response, args)
+		this.sendResponse(response)
 	}
 	
-	protected stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments): void {
-		this.isDebugging = false
-		this.sendEvent( new ContinuedEvent( BmxDebugSession.THREAD_ID ) )
-		this.sendKeyInput('e')
-	}
-	
-	protected stepOutRequest(response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments): void {
-		this.isDebugging = false
-		this.sendEvent( new ContinuedEvent( BmxDebugSession.THREAD_ID ) )
-		this.sendKeyInput('l')
-	}
-	
-	protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): void {
-		console.log('evaluateRequest')
-	}
-	
-	protected completionsRequest(response: DebugProtocol.CompletionsResponse, args: DebugProtocol.CompletionsArguments): void {
-		console.log('completionsRequest')
-	}
-	
-	protected cancelRequest(response: DebugProtocol.CancelResponse, args: DebugProtocol.CancelArguments) {
-		console.log('cancelRequest')
+	protected async stepOutRequest(response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments): Promise<void> {
+		response = await this.debugParser.stepOutRequest(response, args)
+		this.sendResponse(response)
 	}
 }

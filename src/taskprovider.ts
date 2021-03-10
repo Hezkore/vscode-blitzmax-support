@@ -351,7 +351,7 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 	close() {
 	}
 	
-	printBmkOutput(data: any, colorOuput: boolean | undefined, progressBar: any){
+	printBmkOutput(data: any, colorOuput: boolean | undefined, progressBar: any) {
 		const str: string[] = data.toString().split(EOL)
 		
 		for (let index = 0; index < str.length; index++) {
@@ -363,8 +363,8 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 				progressBar.report({ message: ` ${this.percent}%`, increment: this.percent - this.lastPercent })
 				this.lastPercent = this.percent
 			}
-			
-			// Add colors
+						
+			// Print output and potentially add colors
 			if (colorOuput) {
 				this.colorBmkOutput(line)
 			} else {
@@ -373,24 +373,23 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 		}
 	}
 	
-	colorBmkOutput(line: string){
+	colorBmkOutput(line: string) {
 		// Try to colour some of the lines
-		// Links
-		if (line.startsWith('[') && line.endsWith(']')) {
-			this.writeEmitter.fire('\u001b[36m')
-			this.colorReset = true
-		} else {
-			// Errors
-			if (line.startsWith('Compile Error: ') || line.startsWith('Build Error: ')) {
+		switch (this.detectBmkOutputType(line)) {
+			case 1: // Links
+				this.writeEmitter.fire('\u001b[36m')
+				this.colorReset = true
+				break
+				
+			case 2: // Warnings
+				this.writeEmitter.fire('\u001b[33m')
+				this.colorReset = true
+				break
+				
+			case 3: // Errors
 				this.writeEmitter.fire('\u001b[31m')
 				this.colorReset = true
-			} else {
-				// Warnings
-				if (line.startsWith('Compile Warning: ')) {
-					this.writeEmitter.fire('\u001b[33m')
-					this.colorReset = true
-				}
-			}
+				break
 		}
 		
 		this.writeEmitter.fire(line + '\r\n')
@@ -399,6 +398,25 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 			this.writeEmitter.fire('\u001b[0m')
 			this.colorReset = false
 		}
+	}
+	
+	detectBmkOutputType(line: string) {
+		// Links
+		if (line.startsWith('[') && line.endsWith(']')) {
+			return 1
+		} else {
+			// Errors
+			if (line.startsWith('Compile Error: ') || line.startsWith('Build Error: ')) {
+				return 3
+			} else {
+				// Warnings
+				if (line.startsWith('Compile Warning: ')) {
+					return 2
+				}
+			}
+		}
+		
+		return 0
 	}
 	
 	private async doBuild(): Promise<void> {

@@ -1,7 +1,7 @@
 'use strict'
 
 import {
-	StackFrame, Scope, Variable, StoppedEvent
+	StackFrame, Scope, Variable, StoppedEvent, ContinuedEvent
 } from 'vscode-debugadapter'
 import { DebugProtocol } from 'vscode-debugprotocol'
 import { BmxDebugSession } from './bmxruntime'
@@ -16,6 +16,19 @@ enum BmxDebuggerState {
 interface BmxDebuggerEvent {
 	name: string
 	extra?: string
+	data: string[]
+}
+
+export interface BmxDebugStackFrame extends StackFrame {
+}
+
+export interface BmxDebugScope extends Scope {
+}
+
+export interface BmxDebugVariable extends Variable {
+}
+
+interface BmxCachedDump {
 	data: string[]
 }
 
@@ -35,6 +48,10 @@ export class BmxDebugger {
 	
 	constructor(session: BmxDebugSession) {
 		this.session = session
+	}
+	
+	sendInputToDebugger(key: string){
+		this.session.bmxProcess.stdin.write( key + '\n' )
 	}
 	
 	onDebugOutput(output: string) {
@@ -132,7 +149,45 @@ export class BmxDebugger {
 	resetReferenceId() {
 		this.nextReferenceId = 0
 	}
+	
+	isRootScopeReference(ref: number): boolean {
+		for (let i = 0; i < this.scopes.length; i++) {
+			const scope = this.scopes[i]
+			if (!scope || !scope.variablesReference) continue
+			if (scope.variablesReference == ref) return true
+		}
+		return false
+	}
+	
+	convertToVariable(str: string): BmxDebugVariable {
+		let value: string = ''
+		let name: string = ''
 		
+		if (str.includes('=')) {
+			value = str.slice(str.lastIndexOf('=') + 1)
+			name = str.slice(0, str.length - value.length - 1)
+		} else {
+			value = ''
+			name = str
+		}
+		
+		let variable = {
+			name: name, value: value,
+			variablesReference: 0
+		}
+		
+		// Do we need to reference this variable in the future?
+		if (value.startsWith('$') && !value.endsWith('}')) {
+			variable.variablesReference = this.getNextReferenceId()
+			this.referenceVariables.push(variable)
+		}
+		
+		return variable
+	}
+	
+	
+	// From runtime
+	//
 	async onStackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments):  Promise<DebugProtocol.StackTraceResponse> {
 		return new Promise(async (resolve, reject) => {
 			this.resetReferenceId()
@@ -140,7 +195,7 @@ export class BmxDebugger {
 			this.referenceVariables = []
 			
 			// Send 't' to debugger to get the stack frames and initial values
-			this.session.sendKeyInput('t')
+			this.sendInputToDebugger('t')
 			
 			// Wait for the return event
 			await this.eventProcess.wait()
@@ -257,7 +312,7 @@ export class BmxDebugger {
 				if (!variable) return resolve(response)
 				
 				// Send dump request to debugger
-				this.session.sendKeyInput('d' + variable.value.slice(1))
+				this.sendInputToDebugger('d' + variable.value.slice(1))
 				
 				// Wait for the return event
 				await this.eventProcess.wait()
@@ -280,51 +335,31 @@ export class BmxDebugger {
 		})
 	}
 	
-	isRootScopeReference(ref: number): boolean {
-		for (let i = 0; i < this.scopes.length; i++) {
-			const scope = this.scopes[i]
-			if (!scope || !scope.variablesReference) continue
-			if (scope.variablesReference == ref) return true
-		}
-		return false
+	async continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): Promise<DebugProtocol.ContinueResponse> {
+		this.session.isDebugging = false
+		this.session.sendEvent( new ContinuedEvent( BmxDebugSession.THREAD_ID ) )
+		this.sendInputToDebugger('r')
+		return response
+	}
+	 
+	async nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): Promise<DebugProtocol.NextResponse> {
+		this.session.isDebugging = false
+		this.session.sendEvent( new ContinuedEvent( BmxDebugSession.THREAD_ID ) )
+		this.sendInputToDebugger('s')
+		return response
 	}
 	
-	convertToVariable(str: string): BmxDebugVariable {
-		let value: string = ''
-		let name: string = ''
-		
-		if (str.includes('=')) {
-			value = str.slice(str.lastIndexOf('=') + 1)
-			name = str.slice(0, str.length - value.length - 1)
-		} else {
-			value = ''
-			name = str
-		}
-		
-		let variable = {
-			name: name, value: value,
-			variablesReference: 0
-		}
-		
-		// Do we need to reference this variable in the future?
-		if (value.startsWith('$') && !value.endsWith('}')) {
-			variable.variablesReference = this.getNextReferenceId()
-			this.referenceVariables.push(variable)
-		}
-		
-		return variable
+	async stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments): Promise<DebugProtocol.StepInResponse> {
+		this.session.isDebugging = false
+		this.session.sendEvent( new ContinuedEvent( BmxDebugSession.THREAD_ID ) )
+		this.sendInputToDebugger('e')
+		return response
 	}
-}
-
-export interface BmxDebugStackFrame extends StackFrame {
-}
-
-export interface BmxDebugScope extends Scope {
-}
-
-export interface BmxDebugVariable extends Variable {
-}
-
-interface BmxCachedDump {
-	data: string[]
+	
+	async stepOutRequest(response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments): Promise<DebugProtocol.StepOutResponse> {
+		this.session.isDebugging = false
+		this.session.sendEvent( new ContinuedEvent( BmxDebugSession.THREAD_ID ) )
+		this.sendInputToDebugger('l')
+		return response
+	}
 }

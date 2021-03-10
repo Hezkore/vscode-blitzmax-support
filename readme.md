@@ -10,7 +10,7 @@ This extension provides the following features inside VS Code for BlitzMax sourc
 * Debugging
 * Snippets
 
-You can discuss this extension on Discord: [![Discord Chat](https://img.shields.io/discord/613699895139762176.svg?logo=discord&style=social)](https://discord.gg/DrrVwhz)\
+You can discuss this extension on Discord: [![Discord Chat](https://img.shields.io/discord/613699895139762176.svg?logo=discord&style=social)](https://discord.gg/yF6PMaY5aE)\
 We hang out in the **#vscode-extension** channel!
 
 ### **Get Started Writing BlitzMax in VS Code**

@@ -245,6 +245,7 @@
 				"type": "bmx",
 				"label": "BlitzMax Debug",
 				"program": "./out/bmxruntime.js",
+				"languages": ["blitzmax"],
 				"configurationAttributes": {
 					"launch": {
 						"required": [
@@ -341,7 +342,7 @@
 							},
 							"output": {
 								"type": "string",
-								"markdownDescription": "[Specifies the output file](https://blitzmax.org/docs/en/tools/bmk/#-o-output-file)"
+								"markdownDescription": "[Specifies the output file relative to the workspace foder](https://blitzmax.org/docs/en/tools/bmk/#-o-output-file)"
 							},
 							"quiet": {
 								"type": "boolean",
@@ -571,7 +572,7 @@
 					},
 					"output": {
 						"type": "string",
-						"markdownDescription": "[Specifies the output file](https://blitzmax.org/docs/en/tools/bmk/#-o-output-file)"
+						"markdownDescription": "[Specifies the output file relative to the workspace foder](https://blitzmax.org/docs/en/tools/bmk/#-o-output-file)"
 					},
 					"quiet": {
 						"type": "boolean",

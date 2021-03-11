@@ -7,13 +7,14 @@ import {
 } from 'vscode-debugadapter'
 import { DebugProtocol } from 'vscode-debugprotocol'
 import * as process from 'child_process'
-import * as path from 'path'
 import * as awaitNotify from 'await-notify'
 import * as vscode from 'vscode'
-import { makeTask, getBuildDefinitionFromWorkspace, BmxBuildTaskDefinition, BmxBuildOptions } from './taskprovider'
+import { makeTask, taskOutput, getBuildDefinitionFromWorkspace, BmxBuildTaskDefinition, BmxBuildOptions } from './taskprovider'
 import { BmxDebugger, BmxDebugStackFrame } from './bmxdebugger'
 
 interface BmxLaunchRequestArguments extends DebugProtocol.LaunchRequestArguments, BmxBuildOptions {
+	workspace?: vscode.WorkspaceFolder
+	noDebug?: boolean
 }
 
 // A bunch of initial setup stuff and providers
@@ -77,6 +78,8 @@ export class BmxDebugConfigurationProvider implements vscode.DebugConfigurationP
 			})
 		}
 		
+		config.workspace = workspace
+		
 		return config
 	}
 }
@@ -98,6 +101,7 @@ export class BmxDebugSession extends LoggingDebugSession {
 	lastStackFrameId: number
 	stack: BmxDebugStackFrame[] = []
 	bmxProcess: process.ChildProcessWithoutNullStreams
+	workspace: vscode.WorkspaceFolder | undefined
 	
 	private _killSignal: NodeJS.Signals = 'SIGKILL'
 	private _buildDone = new awaitNotify.Subject()
@@ -113,8 +117,6 @@ export class BmxDebugSession extends LoggingDebugSession {
 		this.setDebuggerLinesStartAt1( false )
 		this.setDebuggerColumnsStartAt1( false )
 	}
-	
-
 	
 	protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
 		
@@ -136,14 +138,19 @@ export class BmxDebugSession extends LoggingDebugSession {
 		this.sendEvent(new InitializedEvent())
 	}
 	
+	protected configurationDoneRequest(response: DebugProtocol.ConfigurationDoneResponse, args: DebugProtocol.ConfigurationDoneArguments): void {
+		super.configurationDoneRequest(response, args)
+	}
+	
 	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: BmxLaunchRequestArguments) {
+		console.log("DEBUG?: " + args.noDebug)
 		
 		// Setup a build task definition based on our launch arguments
 		let debuggerTaskDefinition: BmxBuildTaskDefinition = <BmxBuildTaskDefinition>(args)
 		
 		// Set debugging based on button pressed
 		// FIX: This apparently doesn't work via the 'Run' menu?
-		console.log("DEBUG?: " + args.noDebug)
+		
 		debuggerTaskDefinition.debug = !!!args.noDebug
 		
 		if (debuggerTaskDefinition.debug) {
@@ -189,13 +196,10 @@ export class BmxDebugSession extends LoggingDebugSession {
 		}
 		
 		this._buildTaskExecution = undefined
+		this.workspace = args.workspace
 		
 		// Figure out output path
-		this._bmxProcessPath = args.output
-		if (!this._bmxProcessPath) {
-			const outPath = path.parse(args.source)
-			this._bmxProcessPath = vscode.Uri.file( outPath.dir + '/' + outPath.name ).fsPath
-		}
+		this._bmxProcessPath = taskOutput(debuggerTaskDefinition, args.workspace)
 		
 		// Launch!
 		//console.log("LAUNCHING: " + this._bmxProcessPath)
@@ -223,7 +227,7 @@ export class BmxDebugSession extends LoggingDebugSession {
 			}
 		}
 		
-		this.bmxProcess = process.spawn( this._bmxProcessPath, [])
+		this.bmxProcess = process.spawn(this._bmxProcessPath)
 		
 		// Any normal stdout goes to debug console
 		this.bmxProcess.stdout.on('data', (data) => {
@@ -231,6 +235,8 @@ export class BmxDebugSession extends LoggingDebugSession {
 		})
 		
 		this.bmxProcess.on('error', (err) => {
+			vscode.window.showErrorMessage('BlitzMax process error: ' +
+				err.message.toString())
 			this.sendEvent(new OutputEvent(err.message.toString(), 'stderr'))
 		})
 		

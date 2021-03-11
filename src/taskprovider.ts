@@ -188,6 +188,23 @@ export function makeSimpleTask(label: string, detail: string, make: string, appt
 	return makeTask(definition)
 }
 
+export function taskOutput(definition: vscode.TaskDefinition, workspace: vscode.WorkspaceFolder | undefined): string{
+	let outPath: string = ''
+	
+	if (definition.output) {
+		outPath = workspace ? vscode.Uri.file( workspace.uri.fsPath + '/' + definition.output ).fsPath : definition.output
+	} else {
+		const sourcePath = path.parse(definition.source)
+		outPath = vscode.Uri.file( sourcePath.dir + '/' + sourcePath.name ).fsPath
+	}
+	
+	if (definition.debug) {
+		outPath += '.debug'
+	}
+	
+	return outPath
+}
+
 export function makeTask(definition: BmxBuildTaskDefinition): vscode.Task {
 	
 	// Setup custom execution
@@ -296,7 +313,7 @@ export function makeTask(definition: BmxBuildTaskDefinition): vscode.Task {
 		
 		if (resolvedDefinition.args) args = args.concat(resolvedDefinition.args)
 		
-		if (resolvedDefinition.output) args.push('-o', resolvedDefinition.output)
+		args.push('-o', taskOutput(resolvedDefinition, workspace))
 		
 		args.push(resolvedDefinition.source)
 		

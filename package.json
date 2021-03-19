@@ -1,6 +1,6 @@
 {
 	"name": "blitzmax",
-	"version": "2.3.0",
+	"version": "2.3.1",
 	"publisher": "Hezkore",
 	"displayName": "BlitzMax",
 	"description": "BlitzMax for Visual Studio Code.",
@@ -111,6 +111,11 @@
 				"blitzmax.lsp.args": {
 					"type": "array",
 					"description": "LSP specfics arguments."
+				},
+				"blitzmax.lsp.hotReload": {
+					"type": "boolean",
+					"default": false,
+					"description": "Restart LSP if changes to the LSP binary are detected."
 				}
 			}
 		},

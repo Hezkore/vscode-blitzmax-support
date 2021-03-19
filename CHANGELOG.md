@@ -1,3 +1,7 @@
+## 2.3.1
+* LSP hot reload option
+* LSP fixes
+
 ## 2.3.0
 * New LSP options
 * Fixed a few LSP bugs

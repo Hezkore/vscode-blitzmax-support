@@ -1,8 +1,10 @@
 'use strict'
 
+import { unwatchFile, watchFile } from 'fs'
+import { setTimeout } from 'timers'
 import * as vscode from 'vscode'
 import * as lsp from 'vscode-languageclient/node'
-import { workspaceOrGlobalConfigArray, workspaceOrGlobalConfigString } from './common'
+import { workspaceOrGlobalConfigBoolean, workspaceOrGlobalConfigArray, workspaceOrGlobalConfigString } from './common'
 
 let outputChannel: vscode.OutputChannel
 let activeBmxLsp: BmxLSP | undefined
@@ -98,7 +100,9 @@ export function registerBmxLSP(context: vscode.ExtensionContext) {
 	// Reset LSPs when settings change
 	vscode.workspace.onDidChangeConfiguration((event) => {
 		if (event.affectsConfiguration('blitzmax.base.path') ||
-			event.affectsConfiguration('blitzmax.lsp.path')) {
+			event.affectsConfiguration('blitzmax.lsp.path') ||
+			event.affectsConfiguration('blitzmax.lsp.args') ||
+			event.affectsConfiguration('blitzmax.lsp.hotReload')) {
 			restartAllLSP()
 		}
 	})
@@ -239,6 +243,7 @@ class BmxLSP {
 	workspace: vscode.WorkspaceFolder | undefined
 	clientOptions: lsp.LanguageClientOptions
 	client: lsp.LanguageClient
+	clientPath: string | undefined
 	status: {icon: string, color?: string, error?: string, tooltip?: string} = {icon: '$(sync~spin)', error: undefined}
 	
 	_started: boolean
@@ -282,20 +287,20 @@ class BmxLSP {
 		}
 		
 		// Detect LSP path
-		let lspPath = workspaceOrGlobalConfigString(this.workspace, 'blitzmax.lsp.path')
-		if (!lspPath) return
+		this.clientPath = workspaceOrGlobalConfigString(this.workspace, 'blitzmax.lsp.path')
+		if (!this.clientPath) return
 		
 		// Relative LSP path?
-		if (lspPath.startsWith('.')) {
+		if (this.clientPath.startsWith('.')) {
 			// relative
-			lspPath = lspPath.slice(1)
+			this.clientPath = this.clientPath.slice(1)
 			const bmxPath = workspaceOrGlobalConfigString(this.workspace, 'blitzmax.base.path')
-			if (bmxPath) lspPath = vscode.Uri.file(bmxPath + lspPath).fsPath
+			if (bmxPath) this.clientPath = vscode.Uri.file(bmxPath + this.clientPath).fsPath
 		}
 		
 		// Setup LSP
 		this.client = new lsp.LanguageClient('BlitzMax Language Server',
-			{ command: lspPath, args: workspaceOrGlobalConfigArray(this.workspace, 'blitzmax.lsp.args'), options: { env: undefined } },
+			{ command: this.clientPath, args: workspaceOrGlobalConfigArray(this.workspace, 'blitzmax.lsp.args'), options: { env: undefined } },
 			this.clientOptions
 		)
 		
@@ -349,5 +354,26 @@ class BmxLSP {
 		// START!
 		this.client.start()
 		this._started = true
+		
+		// Watcher for hot reloading LSP
+		if (workspaceOrGlobalConfigBoolean(this.workspace, 'blitzmax.lsp.hotReload')) {
+			watchFile(this.clientPath, { interval: 500}, (curr, prev) => {
+				// Stop watching the file
+				if (this.clientPath) unwatchFile(this.clientPath)
+				
+				// Wait for all tasks to be complete before restarting
+				var timeout = setInterval(() => {
+					if (!!!vscode.tasks.taskExecutions.length) {
+						clearInterval(timeout)
+						
+						outputChannel.appendLine('LSP binary updated, restarting...')
+						if (this.client) this.client.stop() // Do early closing
+						
+						// Wait before restarting
+						setTimeout(() => restartSingleLSP(this), 100)
+					}
+				}, 100)
+			})
+		}
 	}
 }

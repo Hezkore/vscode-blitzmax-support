@@ -19,6 +19,11 @@ export function workspaceOrGlobalConfigString(workspace: vscode.WorkspaceFolder 
 	if (typeof (gVal) === 'string') return gVal
 }
 
+export function workspaceOrGlobalConfigBoolean(workspace: vscode.WorkspaceFolder | undefined, section: string): boolean | undefined {
+	const gVal = workspaceOrGlobalConfig(workspace, section)
+	if (typeof (gVal) === 'boolean') return gVal
+}
+
 export function workspaceOrGlobalConfigArray(workspace: vscode.WorkspaceFolder | undefined, section: string): any[] | undefined {
 	const gVal = workspaceOrGlobalConfig(workspace, section)
 	if (Array.isArray(gVal)) return gVal

@@ -1,3 +1,11 @@
+## 2.3.0
+* New LSP options
+* Fixed a few LSP bugs
+* Fixed "Run Without Debugging" still starting a debug session
+* The BlitzMax debugger will now be selected by default for .bmx files
+* Fixed a build output path problem
+* Prettier build terminal output
+
 ## 2.2.1
 * New icons
 * LSP fixes
@@ -8,7 +16,7 @@
 
 ## 2.1.3
 * Updated dependencies
-* Fixed some taskprovider issues
+* Fixed some task provider issues
 
 ## 2.1.2
 * Removed -p parameter

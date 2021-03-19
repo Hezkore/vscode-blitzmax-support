@@ -14,7 +14,6 @@ import { BmxDebugger, BmxDebugStackFrame } from './bmxdebugger'
 
 interface BmxLaunchRequestArguments extends DebugProtocol.LaunchRequestArguments, BmxBuildOptions {
 	workspace?: vscode.WorkspaceFolder
-	noDebug?: boolean
 }
 
 // A bunch of initial setup stuff and providers
@@ -68,7 +67,7 @@ export class BmxDebugConfigurationProvider implements vscode.DebugConfigurationP
 		if (!config.type && !config.request && !config.name) {
 			const definition = getBuildDefinitionFromWorkspace(workspace)
 			if (definition) {
-				config = Object.assign({name: definition.label, request: 'launch'}, definition)
+				config = Object.assign({ noDebug: config.noDebug , name: definition.label, request: 'launch' }, definition)
 			}
 		}
 		
@@ -143,22 +142,14 @@ export class BmxDebugSession extends LoggingDebugSession {
 	}
 	
 	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: BmxLaunchRequestArguments) {
-		console.log("DEBUG?: " + args.noDebug)
-		
 		// Setup a build task definition based on our launch arguments
 		let debuggerTaskDefinition: BmxBuildTaskDefinition = <BmxBuildTaskDefinition>(args)
-		
-		// Set debugging based on button pressed
-		// FIX: This apparently doesn't work via the 'Run' menu?
 		
 		debuggerTaskDefinition.debug = !!!args.noDebug
 		
 		if (debuggerTaskDefinition.debug) {
-			console.log('DEBUGGING BLITZMAX!')
 			this.debugParser = new BmxDebugger(this)
 			debuggerTaskDefinition.release = false
-		} else {
-			console.log('NOT DEBUGGING BLITZMAX!')
 		}
 		
 		// Create a build task from our definition

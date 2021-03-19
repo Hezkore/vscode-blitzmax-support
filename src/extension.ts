@@ -1,21 +1,23 @@
 'use strict'
 
 import * as vscode from 'vscode'
-import { registerBmxLSP, deactivateLSP } from './lsp'
-import { registerBmxDebugger } from './bmxruntime'
+import { registerLSP, deactivateLSP } from './lsp'
+import { registerDebugger } from './bmxruntime'
 import { registerTaskProvider } from './taskprovider'
 import { registerTerminalLinkProvider } from './linkprovider'
 import { registerHelperGuide } from './helper'
-import { registerBmxBuildTreeProvider } from './buildtree'
+import { registerBuildTreeProvider } from './buildtree'
+import { registerBreakpoints } from './breakpoints'
 
 export function activate(context: vscode.ExtensionContext) {
 	
-	registerBmxLSP(context)
+	registerLSP(context)
+	registerDebugger(context)
+	registerBreakpoints(context)
 	registerHelperGuide(context)
-	registerBmxDebugger(context)
 	registerTaskProvider(context)
+	registerBuildTreeProvider(context)
 	registerTerminalLinkProvider(context)
-	registerBmxBuildTreeProvider(context)
 }
 
 export function deactivate() {

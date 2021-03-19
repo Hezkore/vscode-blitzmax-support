@@ -18,7 +18,7 @@ interface BmxLaunchRequestArguments extends DebugProtocol.LaunchRequestArguments
 
 // A bunch of initial setup stuff and providers
 //
-export function registerBmxDebugger( context: vscode.ExtensionContext ) {
+export function registerDebugger( context: vscode.ExtensionContext ) {
 		
 	// Register a configuration provider for 'bmx' debug type
 	const provider = new BmxDebugConfigurationProvider()

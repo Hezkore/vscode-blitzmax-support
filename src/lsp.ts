@@ -46,7 +46,7 @@ function getOuterMostWorkspaceFolder(folder: vscode.WorkspaceFolder | undefined)
 	return folder
 }
 
-export function registerBmxLSP(context: vscode.ExtensionContext) {
+export function registerLSP(context: vscode.ExtensionContext) {
 	
 	// Create our output channel
 	outputChannel = vscode.window.createOutputChannel('BlitzMax Language Server')

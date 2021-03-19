@@ -1,6 +1,6 @@
 {
 	"name": "blitzmax",
-	"version": "2.3.1",
+	"version": "2.4.0",
 	"publisher": "Hezkore",
 	"displayName": "BlitzMax",
 	"description": "BlitzMax for Visual Studio Code.",
@@ -67,6 +67,11 @@
 		"onLanguage:blitzmax"
 	],
 	"contributes": {
+		"breakpoints": [
+			{
+				"language": "blitzmax"
+			}
+		],
 		"snippets": [
 			{
 				"language": "blitzmax",
@@ -260,7 +265,9 @@
 				"type": "bmx",
 				"label": "BlitzMax Debug",
 				"program": "./out/bmxruntime.js",
-				"languages": ["blitzmax"],
+				"languages": [
+					"blitzmax"
+				],
 				"configurationAttributes": {
 					"launch": {
 						"required": [

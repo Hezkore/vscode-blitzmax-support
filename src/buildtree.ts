@@ -10,7 +10,7 @@ import { getBuildDefinitionFromWorkspace,
 	toggleBuildOptions } from './taskprovider'
 
 
-export function registerBmxBuildTreeProvider(context: vscode.ExtensionContext) {
+export function registerBuildTreeProvider(context: vscode.ExtensionContext) {
 	
 	const bmxBuildTreeProvider = new BmxBuildTreeProvider(context)
 	vscode.window.registerTreeDataProvider('blitzmax-build', bmxBuildTreeProvider)

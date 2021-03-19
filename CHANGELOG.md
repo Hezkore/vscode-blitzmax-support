@@ -1,3 +1,6 @@
+## 2.4.0
+* Breakpoint support
+
 ## 2.3.1
 * LSP hot reload option
 * LSP fixes

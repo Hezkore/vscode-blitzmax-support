@@ -5,6 +5,25 @@ import * as os from 'os'
 import * as fs from 'fs'
 import * as path from 'path'
 
+export function workspaceOrGlobalConfig(workspace: vscode.WorkspaceFolder | undefined, section: string): unknown {
+	const rootSection = section.substr(0, section.indexOf('.'))
+	const childSection = section.slice(rootSection.length + 1)
+	
+	return workspace ?
+		vscode.workspace.getConfiguration(rootSection, workspace).get(childSection) :
+		vscode.workspace.getConfiguration(rootSection).inspect(childSection)?.globalValue
+}
+
+export function workspaceOrGlobalConfigString(workspace: vscode.WorkspaceFolder | undefined, section: string): string | undefined {
+	const gVal = workspaceOrGlobalConfig(workspace, section)
+	if (typeof (gVal) === 'string') return gVal
+}
+
+export function workspaceOrGlobalConfigArray(workspace: vscode.WorkspaceFolder | undefined, section: string): any[] | undefined {
+	const gVal = workspaceOrGlobalConfig(workspace, section)
+	if (Array.isArray(gVal)) return gVal
+}
+
 export function boolToString(bool: boolean | undefined): string | undefined {
 	switch (bool) {
 		case undefined: return undefined

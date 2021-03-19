@@ -101,6 +101,16 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Color output from build tasks."
+				},
+				"blitzmax.lsp.path": {
+					"type": "string",
+					"description": "Relative or absolute path to LSP.",
+					"default": "./bin/lsp",
+					"scope": "machine-overridable"
+				},
+				"blitzmax.lsp.args": {
+					"type": "array",
+					"description": "LSP specfics arguments."
 				}
 			}
 		},

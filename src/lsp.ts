@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode'
 import * as lsp from 'vscode-languageclient/node'
-import { existsSync } from './common'
+import { workspaceOrGlobalConfigArray, workspaceOrGlobalConfigString } from './common'
 
 let outputChannel: vscode.OutputChannel
 let activeBmxLsp: BmxLSP | undefined
@@ -55,20 +55,29 @@ export function registerBmxLSP(context: vscode.ExtensionContext) {
 		
 		if (!activeBmxLsp) return
 		
+		if (!activeBmxLsp._running) {
+			outputChannel.show()
+			vscode.commands.executeCommand('workbench.action.openSettings', '@ext:hezkore.blitzmax blitzmax.lsp')
+			return
+		}
+		
 		if (activeBmxLsp.status.error) {
 			// Show error
 			vscode.window.showErrorMessage(activeBmxLsp.status.error)
 		} else {
 			// Show options
-			vscode.window.showQuickPick([`Restart ${activeBmxLsp.name}`, 'Information']).then((pick) => {
+			vscode.window.showQuickPick([`Restart ${activeBmxLsp.name}`, 'View output', 'About']).then((pick) => {
 				if (!activeBmxLsp) return
 				
 				switch (pick?.split(' ')[0]) {
 					case 'Restart':
 						restartSingleLSP(activeBmxLsp)
 						break
-					case 'Information':
+					case 'About':
 						vscode.window.showInformationMessage(`${activeBmxLsp.name}\r\n${activeBmxLsp.version}`)
+						break
+					case 'View':
+						outputChannel.show()
 						break
 				}
 			})
@@ -88,7 +97,8 @@ export function registerBmxLSP(context: vscode.ExtensionContext) {
 	
 	// Reset LSPs when settings change
 	vscode.workspace.onDidChangeConfiguration((event) => {
-		if (event.affectsConfiguration( 'blitzmax.base.path' )) {
+		if (event.affectsConfiguration('blitzmax.base.path') ||
+			event.affectsConfiguration('blitzmax.lsp.path')) {
 			restartAllLSP()
 		}
 	})
@@ -122,12 +132,6 @@ function changeBmxDocument(document: vscode.TextDocument | undefined) {
 	)
 	
 	updateStatusBarItem()
-	
-	if (activeBmxLsp) {
-		//console.log("Using LSP " + activeBmxLsp.workspace?.name)
-	} else {
-		//console.log("Not using any LSP")
-	}
 }
 
 function activateBmxLSP(workspace: vscode.WorkspaceFolder | undefined): BmxLSP {
@@ -230,7 +234,7 @@ function updateStatusBarItem() {
 
 class BmxLSP {
 	
-	name: string | undefined
+	name: string = "BlitzMax Language Server"
 	version: string | undefined
 	workspace: vscode.WorkspaceFolder | undefined
 	clientOptions: lsp.LanguageClientOptions
@@ -238,6 +242,7 @@ class BmxLSP {
 	status: {icon: string, color?: string, error?: string, tooltip?: string} = {icon: '$(sync~spin)', error: undefined}
 	
 	_started: boolean
+	_running: boolean
 	
 	pause() {
 		if (this.client && this._started) {
@@ -276,27 +281,21 @@ class BmxLSP {
 			this.clientOptions.workspaceFolder = {uri: vscode.Uri.parse(''), name: '', index: -1}
 		}
 		
-		// Figure out path to BlitzMax
-		let bmxPath: string | undefined
-		
-		if (this.workspace) {
-			// If this is part of a workspace, we use that path
-			bmxPath = vscode.workspace.getConfiguration( 'blitzmax', this.workspace ).get( 'base.path' )
-		} else {
-			// If this is a separate unkown file, we use the default BlitzMax path
-			let globalBmxPath = vscode.workspace.getConfiguration( 'blitzmax' ).inspect( 'base.path' )?.globalValue
-			if (typeof(globalBmxPath)==='string') bmxPath = globalBmxPath
-		}
-		
 		// Detect LSP path
-		const lspPath = vscode.Uri.file( bmxPath + "/bin/lsp" )
+		let lspPath = workspaceOrGlobalConfigString(this.workspace, 'blitzmax.lsp.path')
+		if (!lspPath) return
 		
-		// Does it exist?
-		if (!existsSync(lspPath.fsPath)) return
+		// Relative LSP path?
+		if (lspPath.startsWith('.')) {
+			// relative
+			lspPath = lspPath.slice(1)
+			const bmxPath = workspaceOrGlobalConfigString(this.workspace, 'blitzmax.base.path')
+			if (bmxPath) lspPath = vscode.Uri.file(bmxPath + lspPath).fsPath
+		}
 		
 		// Setup LSP
 		this.client = new lsp.LanguageClient('BlitzMax Language Server',
-			{ command: lspPath.fsPath, args: undefined, options: { env: undefined } },
+			{ command: lspPath, args: workspaceOrGlobalConfigArray(this.workspace, 'blitzmax.lsp.args'), options: { env: undefined } },
 			this.clientOptions
 		)
 		
@@ -306,7 +305,7 @@ class BmxLSP {
 				this.name = this.client.initializeResult.serverInfo.name
 				this.version = this.client.initializeResult.serverInfo.version
 			} else {
-				this.name = "Unknown Language Server"
+				this.name = "BlitzMax Language Server"
 				this.version = "Unknown Version"
 			}
 			this.status.icon = '$(check-all)'
@@ -324,6 +323,7 @@ class BmxLSP {
 						this.status.icon = '$(sync~spin)'
 						this.status.color = undefined
 						this.status.tooltip = 'Language server is starting...'
+						this._running = false
 						break
 						
 					case 2:
@@ -331,6 +331,7 @@ class BmxLSP {
 						this.status.icon = '$(check)'
 						this.status.color = undefined
 						this.status.tooltip = 'Language server started, waiting for initialization...'
+						this._running = true
 						break
 						
 					default:
@@ -338,6 +339,7 @@ class BmxLSP {
 						this.status.icon = '$(circle-slash)'
 						this.status.color = 'errorForeground'
 						this.status.tooltip = 'Language server encountered an error'
+						this._running = false
 						break
 				}
 				updateStatusBarItem()

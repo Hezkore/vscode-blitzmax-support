@@ -1,3 +1,6 @@
+## 2.4.1
+* Fixed a LSP error
+
 ## 2.4.0
 * Breakpoint support
 

@@ -3,6 +3,7 @@
 import { unwatchFile, watchFile } from 'fs'
 import { setTimeout } from 'timers'
 import * as vscode from 'vscode'
+import { existsSync } from './common'
 import * as lsp from 'vscode-languageclient/node'
 import { workspaceOrGlobalConfigBoolean, workspaceOrGlobalConfigArray, workspaceOrGlobalConfigString } from './common'
 
@@ -291,11 +292,18 @@ class BmxLSP {
 		if (!this.clientPath) return
 		
 		// Relative LSP path?
-		if (this.clientPath.startsWith('.')) {
+		const isRelativePath: boolean = this.clientPath.startsWith('.')
+		if (isRelativePath) {
 			// relative
 			this.clientPath = this.clientPath.slice(1)
 			const bmxPath = workspaceOrGlobalConfigString(this.workspace, 'blitzmax.base.path')
 			if (bmxPath) this.clientPath = vscode.Uri.file(bmxPath + this.clientPath).fsPath
+			
+			// Does it exist?
+			if (!existsSync(this.clientPath)) {
+				// We can ignore non-existant binary quietly if it's a relative path
+				return
+			}
 		}
 		
 		// Setup LSP

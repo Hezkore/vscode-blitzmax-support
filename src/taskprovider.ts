@@ -327,7 +327,9 @@ export function makeTask(definition: BmxBuildTaskDefinition): vscode.Task {
 	if (!definition.label) definition.label = 'blitzmax'
 	
 	// Create the task
-	let task = new vscode.Task( definition, vscode.TaskScope.Workspace, definition.label, 'BlitzMax', exec, '$blitzmax' )
+	//
+	let task = new vscode.Task( definition, vscode.TaskScope.Workspace, definition.label,'BlitzMax', exec,
+		['$blitzmax', '$gcc'] ) // Include the GCC problem matcher for glue code
 	
 	// Setup task MaxIDE like
 	task.presentationOptions.echo = false

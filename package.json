@@ -1,6 +1,6 @@
 {
 	"name": "blitzmax",
-	"version": "2.4.2",
+	"version": "2.4.3",
 	"publisher": "Hezkore",
 	"displayName": "BlitzMax",
 	"description": "BlitzMax for Visual Studio Code.",
@@ -175,11 +175,18 @@
 		"views": {
 			"blitzmax": [
 				{
-					"id": "blitzmax-build",
-					"name": "Build Options"
+					"id": "blitzmax-options",
+					"name": "BlitzMax Options"
 				}
 			]
 		},
+		"viewsWelcome": [
+			{
+				"view": "blitzmax-options",
+				"contents": "Open a BlitzMax file or folder to edit your BlitzMax options here.\n[Open File](command:workbench.action.files.openFile)\n[Open Folder](command:vscode.openFolder)\nTo learn more about BlitzMax [visit our homepage](https://blitzmax.org/).",
+				"when": "editorLangId != blitzmax"
+			}
+		],
 		"menus": {
 			"editor/title": [
 				{

@@ -15,7 +15,7 @@ import {
 export function registerBuildTreeProvider( context: vscode.ExtensionContext ) {
 
 	const bmxBuildTreeProvider = new BmxBuildTreeProvider( context )
-	vscode.window.registerTreeDataProvider( 'blitzmax-build', bmxBuildTreeProvider )
+	vscode.window.registerTreeDataProvider( 'blitzmax-options', bmxBuildTreeProvider )
 
 	vscode.workspace.onDidChangeConfiguration( ( event ) => {
 		if ( event.affectsConfiguration( 'tasks' ) ) bmxBuildTreeProvider.refresh()
@@ -159,7 +159,7 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 			if ( vscode.workspace && vscode.workspace.rootPath && vscode.workspace.name ) {
 				const files = fs.readdirSync( vscode.workspace.rootPath )
 				if ( files.length > 0 ) {
-					rootName = 'Workspace: ' + vscode.workspace.name.toUpperCase()
+					rootName = vscode.workspace.name.toUpperCase()
 					this.isForWorkspace = true
 				} else this.isForWorkspace = false
 			} else this.isForWorkspace = false

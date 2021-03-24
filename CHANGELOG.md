@@ -1,3 +1,7 @@
+## 2.4.3
+* The build view is now the options view
+* Added options view welcome screen
+
 ## 2.4.2
 * Quick Run button will now change depending on debugging state
 * Added 'hidpi' and 'gprof' build options

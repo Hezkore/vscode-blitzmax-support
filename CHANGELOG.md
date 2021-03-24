@@ -1,3 +1,6 @@
+## 2.4.5
+* Updated webpack
+
 ## 2.4.4
 * Optimized file sizes
 

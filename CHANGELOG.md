@@ -1,3 +1,10 @@
+## 2.4.2
+* Quick Run button will now change depending on debugging state
+* Added 'hidpi' and 'gprof' build options
+* Updated build tree layout
+* Default build task is now identical to MaxIDE
+* Fixed some incorrect build flags
+
 ## 2.4.1
 * Fixed a LSP error
 
@@ -11,7 +18,7 @@
 ## 2.3.0
 * New LSP options
 * Fixed a few LSP bugs
-* Fixed "Run Without Debugging" still starting a debug session
+* Fixed 'Run Without Debugging' still starting a debug session
 * The BlitzMax debugger will now be selected by default for .bmx files
 * Fixed a build output path problem
 * Prettier build terminal output

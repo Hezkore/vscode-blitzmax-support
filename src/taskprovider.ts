@@ -4,18 +4,21 @@ import * as vscode from 'vscode'
 import * as awaitNotify from 'await-notify'
 import * as cp from 'child_process'
 import * as path from 'path'
-import { toggleBool } from './common'
-import { EOL } from 'os'
+import * as os from 'os'
 
 let terminal: BmxBuildTaskTerminal | undefined
 export let internalBuildDefinition: BmxBuildTaskDefinition = {
 	type: 'bmx',
 	funcargcasting: 'warning',
 	make: 'application',
-	apptype: 'console',
+	apptype: 'gui',
 	source: '${file}',
-	release: true,
-	debug: false
+	fullcompile: true,
+	quick: true,
+	hidpi: true,
+	architecture: os.arch(),
+	target: os.platform() == 'darwin' ? 'macos' : os.platform(),
+	debug: true
 }
 
 export interface BmxBuildOptions {
@@ -26,20 +29,20 @@ export interface BmxBuildOptions {
 	appstub?: string | undefined
 	debug?: boolean
 	architecture?: string
+	hidpi?: boolean
 	gdb?: boolean
+	gprof?: boolean
 	threaded?: boolean
 	universal?: boolean
-	crosscompile?: string
+	target?: string
 	musl?: boolean
 	nostrictupgrade?: boolean
 	output?: string
 	quiet?: boolean
 	quick?: boolean
-	release?: boolean
 	standalone?: boolean
 	static?: boolean
 	apptype?: string
-	platform?: string
 	verbose?: boolean
 	funcargcasting?: string
 	framework?: string
@@ -56,281 +59,281 @@ export interface BmxBuildOptions {
 }
 
 export interface BmxBuildTaskDefinition extends BmxBuildOptions, vscode.TaskDefinition {
-	
+
 }
 
 export function registerTaskProvider( context: vscode.ExtensionContext ) {
 	// Register the provider
 	context.subscriptions.push(
-		vscode.tasks.registerTaskProvider('bmx', new BmxBuildTaskProvider)
+		vscode.tasks.registerTaskProvider( 'bmx', new BmxBuildTaskProvider )
 	)
-	
+
 	// Related commands
-	context.subscriptions.push(vscode.commands.registerCommand('blitzmax.build', () => {
-		vscode.tasks.executeTask(makeTask(getBuildDefinitionFromWorkspace(undefined)))
-	}))
-	
-	context.subscriptions.push(vscode.commands.registerCommand('blitzmax.setSourceFile', (document: vscode.Uri) => {
+	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.build', () => {
+		vscode.tasks.executeTask( makeTask( getBuildDefinitionFromWorkspace( undefined ) ) )
+	} ) )
+
+	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.setSourceFile', ( document: vscode.Uri ) => {
 		const path = document ? document.fsPath : vscode.window.activeTextEditor?.document.uri.fsPath
-		if (!path) return
+		if ( !path ) return
 		const def = getBuildDefinitionFromWorkspace()
 		def.source = path
-		saveAsDefaultTaskDefinition(def)
-	}))
+		saveAsDefaultTaskDefinition( def )
+	} ) )
 }
 
-export function getBuildDefinitionFromWorkspace(workspace: vscode.WorkspaceFolder | undefined = undefined): BmxBuildTaskDefinition {
-	
-	if (!workspace) {
+export function getBuildDefinitionFromWorkspace( workspace: vscode.WorkspaceFolder | undefined = undefined ): BmxBuildTaskDefinition {
+
+	if ( !workspace ) {
 		const doc = vscode.window.activeTextEditor?.document
-		if (doc) workspace = vscode.workspace.getWorkspaceFolder(doc.uri)
+		if ( doc ) workspace = vscode.workspace.getWorkspaceFolder( doc.uri )
 	}
-	
+
 	// If there's no workspace, we just return the internal build definition
-	if (!workspace) return internalBuildDefinition
-	
+	if ( !workspace ) return internalBuildDefinition
+
 	// Figure out the default task and get the definition
-	const config = vscode.workspace.getConfiguration('tasks', workspace)
-	const tasks: vscode.WorkspaceConfiguration | undefined = config.get('tasks')
-	if (tasks) {
-		
+	const config = vscode.workspace.getConfiguration( 'tasks', workspace )
+	const tasks: vscode.WorkspaceConfiguration | undefined = config.get( 'tasks' )
+	if ( tasks ) {
+
 		let firstBmxTask: BmxBuildTaskDefinition | undefined
-		for (let i = 0; i < tasks.length; i++) {
+		for ( let i = 0; i < tasks.length; i++ ) {
 			const task: BmxBuildTaskDefinition = tasks[i]
-			if (!task || task.type != 'bmx' ) continue
-			if (!firstBmxTask) firstBmxTask = task
-			if (task.group && task.group.isDefault) return task
+			if ( !task || task.type != 'bmx' ) continue
+			if ( !firstBmxTask ) firstBmxTask = task
+			if ( task.group && task.group.isDefault ) return task
 		}
-		if (firstBmxTask) return firstBmxTask
+		if ( firstBmxTask ) return firstBmxTask
 	}
-	
+
 	// Something went wrong, return default
 	return internalBuildDefinition
 }
 
-export function saveAsDefaultTaskDefinition(newDef: BmxBuildTaskDefinition | undefined) : boolean {
-	
-	if (!newDef) return false
-	
+export function saveAsDefaultTaskDefinition( newDef: BmxBuildTaskDefinition | undefined ): boolean {
+
+	if ( !newDef ) return false
+
 	const doc = vscode.window.activeTextEditor?.document
 	let workspace: vscode.WorkspaceFolder | undefined
-	if (doc) workspace = vscode.workspace.getWorkspaceFolder(doc.uri)
-	if (!workspace) {
+	if ( doc ) workspace = vscode.workspace.getWorkspaceFolder( doc.uri )
+	if ( !workspace ) {
 		internalBuildDefinition = newDef
 		return true
 	}
-	
+
 	// Try to update the actual default task
-	const config = vscode.workspace.getConfiguration('tasks')
-	const tasks: BmxBuildTaskDefinition[] | undefined = config.get('tasks')
-	if (tasks){
-		
+	const config = vscode.workspace.getConfiguration( 'tasks' )
+	const tasks: BmxBuildTaskDefinition[] | undefined = config.get( 'tasks' )
+	if ( tasks ) {
+
 		let updatedTasks: BmxBuildTaskDefinition[] = []
 		let foundDefault: boolean = false
 		let firstBmxTaskAtIndex: number = -1
-		for (let i = 0; i < tasks.length; i++) {
+		for ( let i = 0; i < tasks.length; i++ ) {
 			const oldDef: BmxBuildTaskDefinition = tasks[i]
-			if (!oldDef) continue
-			if (firstBmxTaskAtIndex < 0 && oldDef.type == 'bmx') firstBmxTaskAtIndex = i
-			
-			if (oldDef.group && oldDef.group.isDefault){
-				
-				updatedTasks.push(newDef)
+			if ( !oldDef ) continue
+			if ( firstBmxTaskAtIndex < 0 && oldDef.type == 'bmx' ) firstBmxTaskAtIndex = i
+
+			if ( oldDef.group && oldDef.group.isDefault ) {
+
+				updatedTasks.push( newDef )
 				foundDefault = true
-			} else updatedTasks.push(oldDef)
+			} else updatedTasks.push( oldDef )
 		}
-		
-		if (foundDefault) {
-			config.update('tasks', updatedTasks)
+
+		if ( foundDefault ) {
+			config.update( 'tasks', updatedTasks )
 			return true
 		} else {
-			if (firstBmxTaskAtIndex >= 0) {
+			if ( firstBmxTaskAtIndex >= 0 ) {
 				updatedTasks[firstBmxTaskAtIndex] = newDef
-				config.update('tasks', updatedTasks)
+				config.update( 'tasks', updatedTasks )
 				return true
 			} else {
-				updatedTasks.push(newDef)
-				config.update('tasks', updatedTasks)
+				updatedTasks.push( newDef )
+				config.update( 'tasks', updatedTasks )
 				return true
 			}
 		}
 	}
-	
-	config.update('tasks', [newDef])
+
+	config.update( 'tasks', [newDef] )
 	return true
 }
 
 export class BmxBuildTaskProvider implements vscode.TaskProvider {
 	private tasks: vscode.Task[] | undefined
-	
+
 	provideTasks( token?: vscode.CancellationToken ): vscode.ProviderResult<vscode.Task[]> {
-		if (this.tasks !== undefined) return this.tasks
-		
+		if ( this.tasks !== undefined ) return this.tasks
+
 		// Provide new tasks
 		this.tasks = []
-		
-		this.tasks.push(makeSimpleTask('module','Build a module', 'module'))
-		this.tasks.push(makeSimpleTask('gui application', 'Build a GUI application', 'application', 'gui'))
-		this.tasks.push(makeSimpleTask('console application', 'Build a console application', 'application', 'console'))
-		
+
+		this.tasks.push( makeSimpleTask( 'module', 'Build a module', 'module' ) )
+		this.tasks.push( makeSimpleTask( 'gui application', 'Build a GUI application', 'application', 'gui' ) )
+		this.tasks.push( makeSimpleTask( 'console application', 'Build a console application', 'application', 'console' ) )
+
 		return this.tasks
 	}
-	
-	public resolveTask(_task: vscode.Task): vscode.Task | undefined {
+
+	public resolveTask( _task: vscode.Task ): vscode.Task | undefined {
 		const definition: BmxBuildTaskDefinition = <any>_task.definition
-		
+
 		return makeTask( definition )
-    }
+	}
 }
 
-export function makeSimpleTask(label: string, detail: string, make: string, apptype: string | undefined = undefined): vscode.Task {
-	let definition = Object.assign({label, detail, make, apptype}, internalBuildDefinition)
-	return makeTask(definition)
+export function makeSimpleTask( label: string, detail: string, make: string, apptype: string | undefined = undefined ): vscode.Task {
+	let definition = Object.assign( { label, detail, make, apptype }, internalBuildDefinition )
+	return makeTask( definition )
 }
 
-export function taskOutput(definition: vscode.TaskDefinition, workspace: vscode.WorkspaceFolder | undefined): string{
+export function taskOutput( definition: vscode.TaskDefinition, workspace: vscode.WorkspaceFolder | undefined ): string {
 	let outPath: string = ''
-	
-	if (definition.output) {
+
+	if ( definition.output ) {
 		outPath = workspace ? vscode.Uri.file( workspace.uri.fsPath + '/' + definition.output ).fsPath : definition.output
 	} else {
-		const sourcePath = path.parse(definition.source)
+		const sourcePath = path.parse( definition.source )
 		outPath = vscode.Uri.file( sourcePath.dir + '/' + sourcePath.name ).fsPath
 	}
-	
-	if (definition.debug) {
+
+	if ( definition.debug ) {
 		outPath += '.debug'
 	}
-	
+
 	return outPath
 }
 
-export function makeTask(definition: BmxBuildTaskDefinition): vscode.Task {
-	
+export function makeTask( definition: BmxBuildTaskDefinition ): vscode.Task {
+
 	// Setup custom execution
-	let exec = new vscode.CustomExecution(async (resolvedDefinition: vscode.TaskDefinition): Promise<vscode.Pseudoterminal> => {
-		
+	let exec = new vscode.CustomExecution( async ( resolvedDefinition: vscode.TaskDefinition ): Promise<vscode.Pseudoterminal> => {
+
 		let bmkPath: vscode.Uri | undefined
 		let args: string[] = []
-		let workspace = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(resolvedDefinition.source))
-		
-		if (resolvedDefinition.bmk) {
-			bmkPath = vscode.Uri.file(resolvedDefinition.bmk)
+		let workspace = vscode.workspace.getWorkspaceFolder( vscode.Uri.file( resolvedDefinition.source ) )
+
+		if ( resolvedDefinition.bmk ) {
+			bmkPath = vscode.Uri.file( resolvedDefinition.bmk )
 		} else {
 			let bmxPath: string | undefined
-			
-			if (workspace) {
+
+			if ( workspace ) {
 				// If this is part of a workspace, we use that path
 				bmxPath = vscode.workspace.getConfiguration( 'blitzmax', workspace ).get( 'base.path' )
 			} else {
 				// If this is a separate unkown file, we use the default BlitzMax path
 				let globalBmxPath = vscode.workspace.getConfiguration( 'blitzmax' ).inspect( 'base.path' )?.globalValue
-				if (typeof(globalBmxPath)==='string') bmxPath = globalBmxPath
+				if ( typeof ( globalBmxPath ) === 'string' ) bmxPath = globalBmxPath
 			}
-			
-			bmkPath = vscode.Uri.file(bmxPath + '/bin/bmk')
+
+			bmkPath = vscode.Uri.file( bmxPath + '/bin/bmk' )
 		}
-		
+
 		// Process args
-		switch (resolvedDefinition.make) {
+		switch ( resolvedDefinition.make ) {
 			case 'module':
-				args.push('makemods')
+				args.push( 'makemods' )
 				break
 			case 'library':
-				args.push('makelib')
+				args.push( 'makelib' )
 				break
 			case 'bootstrap':
-				args.push('makebootstrap')
+				args.push( 'makebootstrap' )
 				break
 			default:
-				args.push('makeapp')
+				args.push( 'makeapp' )
 				break
 		}
-		
-		if (resolvedDefinition.onlycompile) args.push('compile')
-		
-		if (resolvedDefinition.fullcompile) args.push('-a')
-		
-		if (resolvedDefinition.appstub) args.push('-b', resolvedDefinition.appstub)
-		
-		if (resolvedDefinition.debug) args.push('-d')
-		
-		if (resolvedDefinition.architecture) args.push('-g', resolvedDefinition.architecture)
-		
-		if (resolvedDefinition.gdb) args.push('-gdb')
-		
-		if (resolvedDefinition.threaded) args.push('-h')
-		
-		if (resolvedDefinition.universal) args.push('-i')
-		
-		if (resolvedDefinition.crosscompile) args.push('-l', resolvedDefinition.crosscompile)
-		
-		if (resolvedDefinition.musl) args.push('-musl')
-		
-		if (resolvedDefinition.nostrictupgrade) args.push('-nostrictupgrade')
-		
-		if (resolvedDefinition.quiet) args.push('-q')
-		
-		if (resolvedDefinition.quick) args.push('-quick')
-		
-		if (resolvedDefinition.release) args.push('-r')
-		
-		if (resolvedDefinition.standalone) args.push('-standalone')
-		
-		if (resolvedDefinition.static) args.push('-static')
-		
-		if (resolvedDefinition.apptype) args.push('-t', resolvedDefinition.apptype)
-		
-		//if (resolvedDefinition.platform) args.push('-p', resolvedDefinition.platform)
-		
-		if (resolvedDefinition.verbose) args.push('-v')
-		
-		if (resolvedDefinition.funcargcasting == 'warning') args.push('-w')
-		
-		if (resolvedDefinition.framework) args.push('-f', resolvedDefinition.framework)
-		
-		if (resolvedDefinition.nomanifest) args.push('-nomanifest')
-		
-		if (resolvedDefinition.single) args.push('-single')
-		
-		if (resolvedDefinition.nodef) args.push('-nodef')
-		
-		if (resolvedDefinition.nohead) args.push('-nohead')
-		
-		if (resolvedDefinition.override) args.push('-override')
-		
-		if (resolvedDefinition.overerr) args.push('-overerr')
-		
-		if (resolvedDefinition.nopie) args.push('-no-pie')
-		
-		if (resolvedDefinition.upx) args.push('-upx')
-		
+
+		args.push( resolvedDefinition.debug ? '-d' : '-r' )
+
+		if ( resolvedDefinition.fullcompile ) args.push( '-a' )
+
+		if ( resolvedDefinition.verbose ) args.push( '-v' )
+
+		if ( resolvedDefinition.quick ) args.push( '-quick' )
+
+		if ( resolvedDefinition.funcargcasting == 'warning' ) args.push( '-w' )
+
+		if ( resolvedDefinition.override ) args.push( '-override' )
+
+		if ( resolvedDefinition.override && resolvedDefinition.overerr ) args.push( '-overerr' )
+
+		if ( resolvedDefinition.target ) args.push( '-l', resolvedDefinition.target )
+
+		if ( resolvedDefinition.architecture ) args.push( '-g', resolvedDefinition.architecture )
+
+		if ( resolvedDefinition.onlycompile ) args.push( 'compile' )
+
+		if ( resolvedDefinition.appstub ) args.push( '-b', resolvedDefinition.appstub )
+
+		if ( resolvedDefinition.gdb ) args.push( '-gdb' )
+
+		if ( resolvedDefinition.gprof ) args.push( '-gprof' )
+
+		if ( resolvedDefinition.threaded ) args.push( '-h' )
+
+		if ( resolvedDefinition.universal ) args.push( '-i' )
+
+		if ( resolvedDefinition.musl ) args.push( '-musl' )
+
+		if ( resolvedDefinition.nostrictupgrade ) args.push( '-nostrictupgrade' )
+
+		if ( resolvedDefinition.quiet ) args.push( '-q' )
+
+		if ( resolvedDefinition.standalone ) args.push( '-standalone' )
+
+		if ( resolvedDefinition.static ) args.push( '-static' )
+
+		if ( resolvedDefinition.apptype !== 'console' ) args.push( '-t', resolvedDefinition.apptype )
+
+		if ( resolvedDefinition.apptype == 'gui' && resolvedDefinition.hidpi ) args.push( '-hi' )
+
+		if ( resolvedDefinition.framework ) args.push( '-f', resolvedDefinition.framework )
+
+		if ( resolvedDefinition.nomanifest ) args.push( '-nomanifest' )
+
+		if ( resolvedDefinition.single ) args.push( '-single' )
+
+		if ( resolvedDefinition.nodef ) args.push( '-nodef' )
+
+		if ( resolvedDefinition.nohead ) args.push( '-nohead' )
+
+		if ( resolvedDefinition.nopie ) args.push( '-no-pie' )
+
+		if ( resolvedDefinition.upx ) args.push( '-upx' )
+
 		const conditionals = resolvedDefinition.conditionals
-		if (conditionals) {
+		if ( conditionals ) {
 			args.push( '-ud' )
 			args.push( conditionals.toString().trim().replace( ' ', '' ) )
 		}
-		
-		if (resolvedDefinition.args) args = args.concat(resolvedDefinition.args)
-		
-		args.push('-o', taskOutput(resolvedDefinition, workspace))
-		
-		args.push(resolvedDefinition.source)
-		
+
+		if ( resolvedDefinition.args ) args = args.concat( resolvedDefinition.args )
+
+		if ( resolvedDefinition.make == 'application' ) args.push( '-o', taskOutput( resolvedDefinition, workspace ) )
+
+		args.push( resolvedDefinition.source )
+
 		// Terminal setup
-		if (!terminal) terminal = new BmxBuildTaskTerminal
-		terminal.prepare(bmkPath.fsPath, args, workspace?.uri.fsPath)
+		if ( !terminal ) terminal = new BmxBuildTaskTerminal
+		terminal.prepare( bmkPath.fsPath, args, workspace?.uri.fsPath )
 		return terminal
-	})
-	
+	} )
+
 	// Make sure label exists!
-	if (!definition.label) definition.label = 'blitzmax'
-	
+	if ( !definition.label ) definition.label = 'blitzmax'
+
 	// Create the task
 	//
-	let task = new vscode.Task( definition, vscode.TaskScope.Workspace, definition.label,'BlitzMax', exec,
+	let task = new vscode.Task( definition, vscode.TaskScope.Workspace, definition.label, 'BlitzMax', exec,
 		['$blitzmax', '$gcc'] ) // Include the GCC problem matcher for glue code
-	
+
 	// Setup task MaxIDE like
 	task.presentationOptions.echo = false
 	task.presentationOptions.focus = false
@@ -338,7 +341,7 @@ export function makeTask(definition: BmxBuildTaskDefinition): vscode.Task {
 	task.presentationOptions.reveal = vscode.TaskRevealKind.Silent
 	task.presentationOptions.showReuseMessage = false
 	task.presentationOptions.clear = true
-	
+
 	return task
 }
 
@@ -347,345 +350,171 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 	onDidWrite: vscode.Event<string> = this.writeEmitter.event
 	private closeEmitter = new vscode.EventEmitter<number>()
 	onDidClose?: vscode.Event<number> = this.closeEmitter.event
-	
+
 	cmd: string
 	args: string[] | undefined
 	cwd: string | undefined
 	busy = new awaitNotify.Subject()
-	
+
 	lastPercent: number
 	percent: number
 	colorReset: boolean
-	
-	prepare(cmd: string, args: string[] | undefined, cwd: string | undefined) {
+
+	prepare( cmd: string, args: string[] | undefined, cwd: string | undefined ) {
 		this.cmd = cmd
 		this.args = args
 		this.cwd = cwd
 	}
-	
-	open(initialDimensions: vscode.TerminalDimensions | undefined): void {
+
+	open( initialDimensions: vscode.TerminalDimensions | undefined ): void {
 		this.doBuild()
 	}
-	
+
 	close() {
 	}
-	
-	printBmkOutput(data: any, colorOuput: boolean | undefined, progressBar: any) {
-		const str: string[] = data.toString().split(EOL)
-		
-		for (let index = 0; index < str.length; index++) {
+
+	printBmkOutput( data: any, colorOuput: boolean | undefined, progressBar: any ) {
+		const str: string[] = data.toString().split( os.EOL )
+
+		for ( let index = 0; index < str.length; index++ ) {
 			const line = str[index].trim()
-			
+
 			// Always update progress
-			if (progressBar && line.startsWith('[') && line[5] == ']') {
-				this.percent = Number( line.substring(1, 4) )
-				progressBar.report({ message: ` ${this.percent}%`, increment: this.percent - this.lastPercent })
+			if ( progressBar && line.startsWith( '[' ) && line[5] == ']' ) {
+				this.percent = Number( line.substring( 1, 4 ) )
+				progressBar.report( { message: ` ${this.percent}%`, increment: this.percent - this.lastPercent } )
 				this.lastPercent = this.percent
 			}
-						
+
 			// Print output and potentially add colors
-			if (colorOuput) {
-				this.colorBmkOutput(line)
+			if ( colorOuput ) {
+				this.colorBmkOutput( line )
 			} else {
-				this.writeEmitter.fire(line + '\r\n')
+				this.writeEmitter.fire( line + '\r\n' )
 			}
 		}
 	}
-	
-	colorBmkOutput(line: string) {
+
+	colorBmkOutput( line: string ) {
 		// Try to colour some of the lines
-		switch (this.detectBmkOutputType(line)) {
+		switch ( this.detectBmkOutputType( line ) ) {
 			case 1: // Links
-				this.writeEmitter.fire('\u001b[36m')
+				this.writeEmitter.fire( '\u001b[36m' )
 				this.colorReset = true
 				break
-				
+
 			case 2: // Warnings
-				this.writeEmitter.fire('\u001b[33m')
+				this.writeEmitter.fire( '\u001b[33m' )
 				this.colorReset = true
 				break
-				
+
 			case 3: // Errors
-				this.writeEmitter.fire('\u001b[31m')
+				this.writeEmitter.fire( '\u001b[31m' )
 				this.colorReset = true
 				break
 		}
-		
-		this.writeEmitter.fire(line + '\r\n')
-		
-		if (this.colorReset) {
-			this.writeEmitter.fire('\u001b[0m')
+
+		this.writeEmitter.fire( line + '\r\n' )
+
+		if ( this.colorReset ) {
+			this.writeEmitter.fire( '\u001b[0m' )
 			this.colorReset = false
 		}
 	}
-	
-	detectBmkOutputType(line: string) {
+
+	detectBmkOutputType( line: string ) {
 		// Links
-		if (line.startsWith('[') && line.endsWith(']')) {
+		if ( line.startsWith( '[' ) && line.endsWith( ']' ) ) {
 			return 1
 		} else {
 			// Errors
-			if (line.startsWith('Compile Error: ') || line.startsWith('Build Error: ')) {
+			if ( line.startsWith( 'Compile Error: ' ) || line.startsWith( 'Build Error: ' ) ) {
 				return 3
 			} else {
 				// Warnings
-				if (line.startsWith('Compile Warning: ')) {
+				if ( line.startsWith( 'Compile Warning: ' ) ) {
 					return 2
 				}
 			}
 		}
-		
+
 		return 0
 	}
-	
+
 	private async doBuild(): Promise<void> {
-		return new Promise<void>((resolve) => {
+		return new Promise<void>( ( resolve ) => {
 			// We have a defininition, right?
-			if (!this.cmd || !this.args) {
-				this.closeEmitter.fire(-1)
+			if ( !this.cmd || !this.args ) {
+				this.closeEmitter.fire( -1 )
 				return resolve()
 			}
-			
-			this.writeEmitter.fire(`${this.cmd} ${this.args.join(' ')}\r\n\r\n`)
-			this.writeEmitter.fire('== BUILDING ==\r\n\r\n')
-			
+
+			this.writeEmitter.fire( `${this.cmd} ${this.args.join( ' ' )}\r\n\r\n` )
+			this.writeEmitter.fire( '== BUILDING ==\r\n\r\n' )
+
 			const bmkColors: boolean | undefined = vscode.workspace.getConfiguration( 'blitzmax' ).get( 'pref.showBuildColors' )
 			let loc = vscode.ProgressLocation.Window
-			if (vscode.workspace.getConfiguration( 'blitzmax' ).get( 'pref.showBuildProgress' ))
+			if ( vscode.workspace.getConfiguration( 'blitzmax' ).get( 'pref.showBuildProgress' ) )
 				loc = vscode.ProgressLocation.Notification
-			
-			vscode.window.withProgress({
+
+			vscode.window.withProgress( {
 				location: loc,
-				title: 'Building ' + path.parse(this.args[this.args.length-1]).base,
+				title: 'Building ' + path.parse( this.args[this.args.length - 1] ).base,
 				cancellable: true
-			}, async (progress, token) => {
-				token.onCancellationRequested(() => {
-					if (bmkProcess) {
-						bmkProcess.kill('SIGINT')
-						this.writeEmitter.fire(`\r\n== ABORTED ==\r\n\r\n`)
-						this.closeEmitter.fire(-1)
+			}, async ( progress, token ) => {
+				token.onCancellationRequested( () => {
+					if ( bmkProcess ) {
+						bmkProcess.kill( 'SIGINT' )
+						this.writeEmitter.fire( `\r\n== ABORTED ==\r\n\r\n` )
+						this.closeEmitter.fire( -1 )
 						this.busy.notify()
 						resolve()
 					}
-				})
-				
+				} )
+
 				const procStart = process.hrtime()
-				let bmkProcess = cp.spawn(this.cmd, this.args, {cwd: this.cwd})
-				
-				bmkProcess.stdout.on('data', (data) => {
-					this.printBmkOutput(data, bmkColors, progress)
-				})
-				
-				bmkProcess.stderr.on('data', (data) => {
-					this.printBmkOutput(data, bmkColors, progress)
-				})
-				
-				bmkProcess.on('error', (error) => {
-					this.printBmkOutput(error.message, true, progress)
-				})
-				
-				bmkProcess.on('close', (code) => {
-					if (code) {
-						this.writeEmitter.fire(`\r\n== ERROR ==\r\n\r\n`)
-						
+				let bmkProcess = cp.spawn( this.cmd, this.args, { cwd: this.cwd } )
+
+				bmkProcess.stdout.on( 'data', ( data ) => {
+					this.printBmkOutput( data, bmkColors, progress )
+				} )
+
+				bmkProcess.stderr.on( 'data', ( data ) => {
+					this.printBmkOutput( data, bmkColors, progress )
+				} )
+
+				bmkProcess.on( 'error', ( error ) => {
+					this.printBmkOutput( error.message, true, progress )
+				} )
+
+				bmkProcess.on( 'close', ( code ) => {
+					if ( code ) {
+						this.writeEmitter.fire( `\r\n== ERROR ==\r\n\r\n` )
+
 						// Is this too hacky?
-						setTimeout(() => {
-							if (vscode.workspace.getConfiguration( 'blitzmax' ).get( 'pref.jumpToProblemOnBuildError' ))
-								vscode.commands.executeCommand('editor.action.marker.nextInFiles')
-							
-							if (vscode.workspace.getConfiguration( 'blitzmax' ).get( 'pref.showProblemsOnBuildError' ))
-								vscode.commands.executeCommand('workbench.actions.view.problems')
-						}, 500)
+						setTimeout( () => {
+							if ( vscode.workspace.getConfiguration( 'blitzmax' ).get( 'pref.jumpToProblemOnBuildError' ) )
+								vscode.commands.executeCommand( 'editor.action.marker.nextInFiles' )
+
+							if ( vscode.workspace.getConfiguration( 'blitzmax' ).get( 'pref.showProblemsOnBuildError' ) )
+								vscode.commands.executeCommand( 'workbench.actions.view.problems' )
+						}, 500 )
 					} else {
-						this.writeEmitter.fire(`\r\n== COMPLETE  ==\r\n\r\n`)
+						this.writeEmitter.fire( `\r\n== COMPLETE  ==\r\n\r\n` )
 					}
-					
-					const procEnd = process.hrtime(procStart)
-					
-					this.writeEmitter.fire(`Execution time: ${procEnd[0]}s ${procEnd[1]/1000000}ms\r\n\r\n`)
-					
-					this.closeEmitter.fire(code ? code : 0)
+
+					const procEnd = process.hrtime( procStart )
+
+					this.writeEmitter.fire( `Execution time: ${procEnd[0]}s ${procEnd[1] / 1000000}ms\r\n\r\n` )
+
+					this.closeEmitter.fire( code ? code : 0 )
 					this.busy.notify()
 					resolve()
-				})
-				
+				} )
+
 				await this.busy.wait()
 				return resolve()
-			})
-		})
+			} )
+		} )
 	}
-}
-
-export async function toggleBuildOptions(definition: BmxBuildTaskDefinition | undefined, option: string): Promise<BmxBuildTaskDefinition | undefined> {
-	
-	if (!definition) return undefined
-	
-	switch (option) {
-		case 'make':
-			await vscode.window.showQuickPick(["application", "module", "library", "bootstrap"], {canPickMany: false}).then((picked) => {
-				if (picked) definition.make = picked
-			})
-			break
-			
-		case 'onlycompile':
-			definition.onlycompile = toggleBool(definition.onlycompile)
-			break
-			
-		case 'source':
-			await vscode.window.showInputBox({prompt: 'Absolute path to root source file', value: definition.source != '${file}' ? definition.source : vscode.window.activeTextEditor?.document.uri.fsPath}).then((picked) => {
-				if (picked != undefined) definition.source = picked
-				if (!definition.source) definition.source = '${file}'
-			})
-			break
-			
-		case 'fullcompile':
-			definition.fullcompile = toggleBool(definition.fullcompile)
-			break
-			
-		case 'appstub':
-			await vscode.window.showInputBox({prompt: 'Custom appstub'}).then((picked) => {
-				if (picked != undefined) definition.appstub = picked
-			})
-			break
-			
-		case 'debug':
-			definition.debug = toggleBool(definition.debug)
-			break
-			
-		case 'architecture':
-			await vscode.window.showQuickPick(["armeabiv7a", "arm64v8a", "armeabi", "arm64", "arm", "x86", "x64"], {canPickMany: false}).then((picked) => {
-				if (picked) definition.architecture = picked
-			})
-			break
-			
-		case 'gdb':
-			definition.gdb = toggleBool(definition.gdb)
-			break
-			
-		case 'threaded':
-			definition.threaded = toggleBool(definition.threaded)
-			break
-			
-		case 'universal':
-			definition.universal = toggleBool(definition.universal)
-			break
-			
-		case 'crosscompile':
-			await vscode.window.showQuickPick(["win32", "linux", "macos", "ios", "android", "raspberrypi", "nx"], {canPickMany: false}).then((picked) => {
-				if (picked) definition.crosscompile = picked
-			})
-			break
-			
-		case 'musl':
-			definition.musl = toggleBool(definition.musl)
-			break
-			
-		case 'nostrictupgrade':
-			definition.nostrictupgrade = toggleBool(definition.nostrictupgrade)
-			break
-			
-		case 'output':
-			await vscode.window.showInputBox({prompt: 'Output file'}).then((picked) => {
-				if (picked != undefined) definition.output = picked
-			})
-			break
-			
-		case 'quiet':
-			definition.quiet = toggleBool(definition.quiet)
-			break
-			
-		case 'quick':
-			definition.quick = toggleBool(definition.quick)
-			break
-			
-		case 'release':
-			definition.release = toggleBool(definition.release)
-			break
-			
-		case 'standalone':
-			definition.standalone = toggleBool(definition.standalone)
-			break
-			
-		case 'static':
-			definition.static = toggleBool(definition.static)
-			break
-			
-		case 'apptype':
-			await vscode.window.showQuickPick(["console", "gui"], {canPickMany: false}).then((picked) => {
-				if (picked) definition.apptype = picked
-			})
-			break
-			
-		case 'platform':
-			await vscode.window.showQuickPick(["win32", "macos", "linux", "android", "raspberrypi", "emscripten"], {canPickMany: false}).then((picked) => {
-				if (picked) definition.platform = picked
-			})
-			break
-			
-		case 'verbose':
-			definition.verbose = toggleBool(definition.verbose)
-			break
-			
-		case 'funcargcasting':
-			await vscode.window.showQuickPick(["error", "warning"], {canPickMany: false}).then((picked) => {
-				if (picked) definition.funcargcasting = picked
-			})
-			break
-			
-		case 'framework':
-			await vscode.window.showInputBox({prompt: 'Module to use as framework'}).then((picked) => {
-				if (picked != undefined) definition.framework = picked
-			})
-			break
-			
-		case 'nomanifest':
-			definition.nomanifest = toggleBool(definition.nomanifest)
-			break
-			
-		case 'single':
-			definition.single = toggleBool(definition.single)
-			break
-			
-		case 'nodef':
-			definition.nodef = toggleBool(definition.nodef)
-			break
-			
-		case 'nohead':
-			definition.nohead = toggleBool(definition.nohead)
-			break
-			
-		case 'override':
-			definition.override = toggleBool(definition.override)
-			break
-			
-		case 'overerr':
-			definition.overerr = toggleBool(definition.overerr)
-			break
-			
-		case 'no-pie':
-			definition.nopie = toggleBool(definition.nopie)
-			break
-			
-		case 'upx':
-			definition.upx = toggleBool(definition.upx)
-			break
-			
-		case 'conditionals':
-			await vscode.window.showInputBox({prompt: 'User defined conditionals (space as separator)', value: definition.conditionals?.join(' ')}).then((picked) => {
-				if (picked != undefined) definition.conditionals = picked.split(' ')
-			})
-			break
-			
-		case 'args':
-			await vscode.window.showInputBox({prompt: 'User defined arguments (space as separator)', value: definition.args?.join(' ')}).then((picked) => {
-				if (picked != undefined) definition.args = picked.split(' ')
-			})
-			break
-			
-		default:
-			console.log(`Unknown build option ${option}`)
-			break
-	}
-	
-	return definition
 }

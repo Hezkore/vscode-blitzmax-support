@@ -147,10 +147,7 @@ export class BmxDebugSession extends LoggingDebugSession {
 		
 		debuggerTaskDefinition.debug = !!!args.noDebug
 		
-		if (debuggerTaskDefinition.debug) {
-			this.debugParser = new BmxDebugger(this)
-			debuggerTaskDefinition.release = false
-		}
+		if (debuggerTaskDefinition.debug) this.debugParser = new BmxDebugger(this)
 		
 		// Create a build task from our definition
 		let debuggerTask = makeTask(debuggerTaskDefinition)

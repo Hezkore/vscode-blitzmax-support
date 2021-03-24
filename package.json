@@ -1,6 +1,6 @@
 {
 	"name": "blitzmax",
-	"version": "2.4.1",
+	"version": "2.4.2",
 	"publisher": "Hezkore",
 	"displayName": "BlitzMax",
 	"description": "BlitzMax for Visual Studio Code.",
@@ -188,12 +188,12 @@
 					"group": "navigation@-2"
 				},
 				{
-					"when": "editorLangId == blitzmax",
+					"when": "editorLangId == blitzmax && blitzmax:debugging",
 					"command": "blitzmax.buildAndDebug",
 					"group": "navigation@-1"
 				},
 				{
-					"when": "editorLangId == blitzmax",
+					"when": "editorLangId == blitzmax && !blitzmax:debugging",
 					"command": "blitzmax.buildAndRun",
 					"group": "navigation@0"
 				}
@@ -271,7 +271,8 @@
 				"configurationAttributes": {
 					"launch": {
 						"required": [
-							"source"
+							"source",
+							"make"
 						],
 						"properties": {
 							"bmk": {
@@ -327,10 +328,20 @@
 								],
 								"markdownDescription": "[Compiles to the specified architecture](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)"
 							},
+							"hidpi": {
+								"type": "boolean",
+								"default": false,
+								"markdownDescription": "Specifies that the application supports high-resolution screens"
+							},
 							"gdb": {
 								"type": "boolean",
 								"default": false,
 								"markdownDescription": "[Generates line mappings suitable for GDB debugging](https://blitzmax.org/docs/en/tools/bmk/#-gdb)"
+							},
+							"gprof": {
+								"type": "boolean",
+								"default": false,
+								"markdownDescription": "Gprof is a performance analysis tool for Unix applications"
 							},
 							"threaded": {
 								"type": "boolean",
@@ -341,7 +352,7 @@
 								"default": false,
 								"markdownDescription": "[Creates a Universal build for supported platforms](https://blitzmax.org/docs/en/tools/bmk/#-i)"
 							},
-							"crosscompile": {
+							"target": {
 								"type": "string",
 								"enum": [
 									"win32",
@@ -374,10 +385,6 @@
 								"type": "boolean",
 								"markdownDescription": "[Do not scan modules for changes](https://blitzmax.org/docs/en/tools/bmk/#-quick)"
 							},
-							"release": {
-								"type": "boolean",
-								"markdownDescription": "[Builds a release version](https://blitzmax.org/docs/en/tools/bmk/#-r)"
-							},
 							"standalone": {
 								"type": "boolean",
 								"markdownDescription": "[Generate but do not compile into binary form](https://blitzmax.org/docs/en/tools/bmk/#-standalone)"
@@ -393,18 +400,6 @@
 									"console",
 									"gui"
 								]
-							},
-							"platform": {
-								"type": "string",
-								"enum": [
-									"win32",
-									"macos",
-									"linux",
-									"android",
-									"raspberrypi",
-									"emscripten"
-								],
-								"markdownDescription": "[Select platform to create code for](https://blitzmax.org/docs/en/tools/bcc/#-p-platform)"
 							},
 							"verbose": {
 								"type": "boolean",
@@ -495,8 +490,8 @@
 			{
 				"type": "bmx",
 				"required": [
-					"make",
-					"source"
+					"source",
+					"make"
 				],
 				"properties": {
 					"bmk": {
@@ -557,10 +552,20 @@
 						],
 						"markdownDescription": "[Compiles to the specified architecture](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)"
 					},
+					"hidpi": {
+						"type": "boolean",
+						"default": false,
+						"markdownDescription": "Specifies that the application supports high-resolution screens"
+					},
 					"gdb": {
 						"type": "boolean",
 						"default": false,
 						"markdownDescription": "[Generates line mappings suitable for GDB debugging](https://blitzmax.org/docs/en/tools/bmk/#-gdb)"
+					},
+					"gprof": {
+						"type": "boolean",
+						"default": false,
+						"markdownDescription": "Gprof is a performance analysis tool for Unix applications"
 					},
 					"threaded": {
 						"type": "boolean",
@@ -571,7 +576,7 @@
 						"default": false,
 						"markdownDescription": "[Creates a Universal build for supported platforms](https://blitzmax.org/docs/en/tools/bmk/#-i)"
 					},
-					"crosscompile": {
+					"target": {
 						"type": "string",
 						"enum": [
 							"win32",
@@ -604,10 +609,6 @@
 						"type": "boolean",
 						"markdownDescription": "[Do not scan modules for changes](https://blitzmax.org/docs/en/tools/bmk/#-quick)"
 					},
-					"release": {
-						"type": "boolean",
-						"markdownDescription": "[Builds a release version](https://blitzmax.org/docs/en/tools/bmk/#-r)"
-					},
 					"standalone": {
 						"type": "boolean",
 						"markdownDescription": "[Generate but do not compile into binary form](https://blitzmax.org/docs/en/tools/bmk/#-standalone)"
@@ -623,18 +624,6 @@
 							"console",
 							"gui"
 						]
-					},
-					"platform": {
-						"type": "string",
-						"enum": [
-							"win32",
-							"macos",
-							"linux",
-							"android",
-							"raspberrypi",
-							"emscripten"
-						],
-						"markdownDescription": "[Select platform to create code for](https://blitzmax.org/docs/en/tools/bcc/#-p-platform)"
 					},
 					"verbose": {
 						"type": "boolean",

@@ -1,3 +1,6 @@
+## 2.4.4
+* Optimized file sizes
+
 ## 2.4.3
 * The build view is now the options view
 * Added options view welcome screen

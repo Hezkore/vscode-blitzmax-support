@@ -18,3 +18,4 @@ lsp-output.txt
 *.BLIdeUS
 *.BLIdeUS.*
 *.blpo
+node_modules/

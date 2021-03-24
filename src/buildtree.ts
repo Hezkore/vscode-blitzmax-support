@@ -67,7 +67,7 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 	}
 
 	refresh() {
-		vscode.commands.executeCommand('setContext', 'blitzmax:debugging', getBuildDefinitionFromWorkspace().debug);
+		vscode.commands.executeCommand( 'setContext', 'blitzmax:debugging', getBuildDefinitionFromWorkspace().debug );
 		this._onDidChangeTreeData.fire( null )
 	}
 
@@ -87,7 +87,10 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 		if ( enabled ) {
 			if ( typeof ( state ) === 'boolean' ) {
 				if ( state == true )
-					item.iconPath = new vscode.ThemeIcon( 'check', new  vscode.ThemeColor('list.highlightForeground') )
+					item.iconPath =
+						new vscode.ThemeIcon( 'check',
+							new vscode.ThemeColor( 'list.highlightForeground' )
+						)
 			}
 		} else {
 			// item.iconPath = new vscode.ThemeIcon( 'dash' )
@@ -144,25 +147,52 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 
 	generateWorkbenchRoot(): Promise<vscode.TreeItem[]> {
 
+		//const def = getBuildDefinitionFromWorkspace()
+		const sourceFile = vscode.window.activeTextEditor?.document
+
 		let rootName: string = 'Unknown'
 
-		const sourceFile = vscode.window.activeTextEditor?.document
+		// Is the file even a BlitzMax file?
 		if ( sourceFile && sourceFile.languageId == 'blitzmax' ) {
 
+			// It's a BlitzMax file, check if it's part of the workspace
 			const workspaceFolder = vscode.workspace.getWorkspaceFolder( sourceFile.uri )
 			rootName = workspaceFolder
 				? workspaceFolder.name.toUpperCase()
 				: 'File: ' + path.basename( sourceFile.uri.fsPath )
 			this.isForWorkspace = workspaceFolder ? true : false
 		} else {
+			
+			// It's not a BlitzMax file
+			// Let's use the first workspace with a .bmx file
 
-			if ( vscode.workspace && vscode.workspace.rootPath && vscode.workspace.name ) {
-				const files = fs.readdirSync( vscode.workspace.rootPath )
-				if ( files.length > 0 ) {
-					rootName = vscode.workspace.name.toUpperCase()
-					this.isForWorkspace = true
-				} else this.isForWorkspace = false
-			} else this.isForWorkspace = false
+			this.isForWorkspace = false
+
+			if ( !vscode.workspace || !vscode.workspace.workspaceFolders ) {
+				// There are no workspaces, abort mission!
+				return Promise.resolve( [] )
+			}
+
+			// Go through all workspaces
+			for ( let workspaceIndex = 0; workspaceIndex < vscode.workspace.workspaceFolders.length; workspaceIndex++ ) {
+				const workspace = vscode.workspace.workspaceFolders[workspaceIndex]
+
+				// Get all the files
+				const files = fs.readdirSync( workspace.uri.fsPath )
+
+				// Check for .bmx files
+				for ( let fileIndex = 0; fileIndex < files.length; fileIndex++ ) {
+					const file = files[fileIndex]
+
+					if ( file.toLowerCase().endsWith( '.bmx' ) ) {
+						this.isForWorkspace = true
+						rootName = workspace.name.toUpperCase()
+						break
+					}
+				}
+
+				if ( this.isForWorkspace ) break
+			}
 
 			if ( !this.isForWorkspace ) return Promise.resolve( [] )
 		}
@@ -174,8 +204,8 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 
 	generateAllBuildCategories(): Promise<vscode.TreeItem[]> {
 
-		let def = getBuildDefinitionFromWorkspace()
-		
+		const def = getBuildDefinitionFromWorkspace()
+
 		this.buildCategories = [
 			this.createChildItem(
 				// No category root items

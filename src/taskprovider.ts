@@ -7,19 +7,12 @@ import * as path from 'path'
 import * as os from 'os'
 
 let terminal: BmxBuildTaskTerminal | undefined
-export let internalBuildDefinition: BmxBuildTaskDefinition = {
-	type: 'bmx',
-	funcargcasting: 'warning',
-	make: 'application',
-	apptype: 'gui',
-	source: '${file}',
-	fullcompile: true,
-	quick: true,
-	hidpi: true,
-	architecture: os.arch(),
-	target: os.platform() == 'darwin' ? 'macos' : os.platform(),
-	debug: true
-}
+export let internalBuildDefinition: BmxBuildTaskDefinition = makeTaskDefinition(
+	'BlitzMax: Default',
+	'Automatically generated BlitzMax task',
+	'application',
+	'gui'
+)
 
 export interface BmxBuildOptions {
 	make: string
@@ -172,9 +165,10 @@ export class BmxBuildTaskProvider implements vscode.TaskProvider {
 		// Provide new tasks
 		this.tasks = []
 
-		this.tasks.push( makeSimpleTask( 'module', 'Build a module', 'module' ) )
-		this.tasks.push( makeSimpleTask( 'gui application', 'Build a GUI application', 'application', 'gui' ) )
-		this.tasks.push( makeSimpleTask( 'console application', 'Build a console application', 'application', 'console' ) )
+		this.tasks.push( makeSimpleTask( 'Module', 'Build a module', 'module' ) )
+		this.tasks.push( makeSimpleTask( 'Shared Library', 'Build a shared library', 'library' ) )
+		this.tasks.push( makeSimpleTask( 'GUI Application', 'Build a GUI application', 'application', 'gui' ) )
+		this.tasks.push( makeSimpleTask( 'Console Application', 'Build a console application', 'application', 'console' ) )
 
 		return this.tasks
 	}
@@ -184,11 +178,6 @@ export class BmxBuildTaskProvider implements vscode.TaskProvider {
 
 		return makeTask( definition )
 	}
-}
-
-export function makeSimpleTask( label: string, detail: string, make: string, apptype: string | undefined = undefined ): vscode.Task {
-	let definition = Object.assign( { label, detail, make, apptype }, internalBuildDefinition )
-	return makeTask( definition )
 }
 
 export function taskOutput( definition: vscode.TaskDefinition, workspace: vscode.WorkspaceFolder | undefined ): string {
@@ -206,6 +195,31 @@ export function taskOutput( definition: vscode.TaskDefinition, workspace: vscode
 	}
 
 	return outPath
+}
+
+export function makeSimpleTask( label: string, detail: string, make: string, apptype: string | undefined = undefined ): vscode.Task {
+	let definition: BmxBuildTaskDefinition = makeTaskDefinition( label, detail, make, apptype )
+	return makeTask( definition )
+}
+
+export function makeTaskDefinition( label: string, detail: string, make: string, apptype: string | undefined = undefined ): BmxBuildTaskDefinition {
+	let definition: BmxBuildTaskDefinition = {
+		type: 'bmx',
+		label: label,
+		detail: detail,
+		funcargcasting: 'warning',
+		make: make,
+		apptype: apptype,
+		source: '${file}',
+		fullcompile: true,
+		quick: true,
+		hidpi: true,
+		architecture: os.arch(),
+		target: os.platform() == 'darwin' ? 'macos' : os.platform(),
+		debug: true
+	}
+
+	return definition
 }
 
 export function makeTask( definition: BmxBuildTaskDefinition ): vscode.Task {

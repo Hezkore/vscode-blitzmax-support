@@ -1,3 +1,7 @@
+## 2.4.6
+* Fixed a build tree issue
+* Fixed a task provider issue
+
 ## 2.4.5
 * Updated webpack
 

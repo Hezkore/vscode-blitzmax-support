@@ -15,6 +15,7 @@ export let internalBuildDefinition: BmxBuildTaskDefinition = makeTaskDefinition(
 )
 
 export interface BmxBuildOptions {
+	legacy?: boolean
 	make: string
 	onlycompile?: boolean
 	source: string
@@ -272,7 +273,7 @@ export function makeTask( definition: BmxBuildTaskDefinition ): vscode.Task {
 
 		if ( resolvedDefinition.quick ) args.push( '-quick' )
 
-		if ( resolvedDefinition.funcargcasting == 'warning' ) args.push( '-w' )
+		if ( resolvedDefinition.legacy && resolvedDefinition.funcargcasting == 'warning' ) args.push( '-w' )
 
 		if ( resolvedDefinition.override ) args.push( '-override' )
 
@@ -296,7 +297,7 @@ export function makeTask( definition: BmxBuildTaskDefinition ): vscode.Task {
 
 		if ( resolvedDefinition.musl ) args.push( '-musl' )
 
-		if ( resolvedDefinition.nostrictupgrade ) args.push( '-nostrictupgrade' )
+		if ( resolvedDefinition.legacy && resolvedDefinition.nostrictupgrade ) args.push( '-nostrictupgrade' )
 
 		if ( resolvedDefinition.quiet ) args.push( '-q' )
 
@@ -392,6 +393,18 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 
 		for ( let index = 0; index < str.length; index++ ) {
 			const line = str[index].trim()
+
+			// Check if this a error message we need to process somehow
+			if ( line.toLowerCase().startsWith( 'command line error : invalid option' ) ) {
+
+				vscode.window.showErrorMessage( 'Error when passing flags to compiler.\nThis is usually a sign of an outdated compiler.', { modal: true }, 'Enable BlitzMax Legacy support', 'Download latest BlitzMax NG version' ).then( selection => {
+					if ( selection?.startsWith( 'Enable' ) ) {
+						vscode.commands.executeCommand( 'blitzmax.toggleBuildOption', 'legacy' )
+					} else if ( selection?.startsWith( 'Download' ) ) {
+						vscode.env.openExternal( vscode.Uri.parse( 'https://blitzmax.org/' ) )
+					}
+				} )
+			}
 
 			// Always update progress
 			if ( progressBar && line.startsWith( '[' ) && line[5] == ']' ) {

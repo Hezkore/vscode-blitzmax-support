@@ -292,6 +292,11 @@
 								"type": "string",
 								"markdownDescription": "Used defined bmk path `i.e. C:/BlitzMaxNG/bin/bmk`"
 							},
+							"legacy": {
+								"type": "boolean",
+								"description": "Enable BlitzMax Legacy support",
+								"default": false
+							},
 							"make": {
 								"type": "string",
 								"markdownDescription": "[Type of project](https://blitzmax.org/docs/en/tools/bmk/#makeapp)",
@@ -510,6 +515,11 @@
 					"bmk": {
 						"type": "string",
 						"markdownDescription": "Used defined bmk path `i.e. C:/BlitzMaxNG/bin/bmk`"
+					},
+					"legacy": {
+						"type": "boolean",
+						"description": "Enable BlitzMax Legacy support",
+						"default": false
 					},
 					"make": {
 						"type": "string",

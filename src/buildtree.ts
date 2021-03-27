@@ -162,7 +162,7 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 				: 'File: ' + path.basename( sourceFile.uri.fsPath )
 			this.isForWorkspace = workspaceFolder ? true : false
 		} else {
-			
+
 			// It's not a BlitzMax file
 			// Let's use the first workspace with a .bmx file
 
@@ -207,10 +207,9 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 		const def = getBuildDefinitionFromWorkspace()
 
 		this.buildCategories = [
-			this.createChildItem(
-				// No category root items
-				true, 'root_file', 'Source File', 'Absolute path to root source file', def.source ),
-
+			// No category root items
+			this.createChildItem( true, 'root_file', 'Source File', 'Absolute path to root source file', def.source ),
+			
 			{ id: 'build', label: 'Build Options', collapsibleState: vscode.TreeItemCollapsibleState.Expanded },
 			{ id: 'app', label: 'App Options', collapsibleState: vscode.TreeItemCollapsibleState.Expanded },
 			{ id: 'plat', label: 'Platform', collapsibleState: vscode.TreeItemCollapsibleState.Collapsed },
@@ -223,7 +222,9 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 				label: 'Advanced Options',
 				collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
 				iconPath: new vscode.ThemeIcon( 'beaker' )
-			}
+			},
+			
+			this.createChildItem( true, 'legacy', 'Legacy Mode', 'Enable BlitzMax Legacy suspport', def.legacy )
 		]
 
 		return Promise.resolve( this.buildCategories )
@@ -349,6 +350,10 @@ export async function toggleBuildOptions( definition: BmxBuildTaskDefinition | u
 	}
 
 	switch ( option ) {
+		case 'legacy':
+			definition.legacy = !definition.legacy
+			break
+
 		case 'root_file':
 			await vscode.window.showInputBox(
 				{

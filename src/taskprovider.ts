@@ -273,7 +273,7 @@ export function makeTask( definition: BmxBuildTaskDefinition ): vscode.Task {
 
 		if ( resolvedDefinition.quick ) args.push( '-quick' )
 
-		if ( resolvedDefinition.legacy && resolvedDefinition.funcargcasting == 'warning' ) args.push( '-w' )
+		if ( !resolvedDefinition.legacy && resolvedDefinition.funcargcasting == 'warning' ) args.push( '-w' )
 
 		if ( resolvedDefinition.override ) args.push( '-override' )
 
@@ -297,7 +297,7 @@ export function makeTask( definition: BmxBuildTaskDefinition ): vscode.Task {
 
 		if ( resolvedDefinition.musl ) args.push( '-musl' )
 
-		if ( resolvedDefinition.legacy && resolvedDefinition.nostrictupgrade ) args.push( '-nostrictupgrade' )
+		if ( !resolvedDefinition.legacy && resolvedDefinition.nostrictupgrade ) args.push( '-nostrictupgrade' )
 
 		if ( resolvedDefinition.quiet ) args.push( '-q' )
 

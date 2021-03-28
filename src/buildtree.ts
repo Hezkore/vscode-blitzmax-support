@@ -23,13 +23,13 @@ export function registerBuildTreeProvider( context: vscode.ExtensionContext ) {
 	} )
 
 	// Related commands
-	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.resetBuildOptions', ( option: any ) => {
+	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.resetBuildOptions', () => {
 		const definition = getBuildDefinitionFromWorkspace()
 		saveAsDefaultTaskDefinition( makeTaskDefinition( definition.label, definition.detail, 'application', 'console' ) )
 		if ( getBuildDefinitionFromWorkspace() === internalBuildDefinition ) bmxBuildTreeProvider.refresh()
 	} ) )
 
-	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.changeDefaultBuildTask', ( option: any ) => {
+	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.changeDefaultBuildTask', () => {
 		const document = vscode.window.activeTextEditor?.document
 		const partOfWorkspace = document ? vscode.workspace.getWorkspaceFolder( document.uri ) : undefined
 		if ( partOfWorkspace ) {

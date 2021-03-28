@@ -8,6 +8,7 @@ import { registerTerminalLinkProvider } from './linkprovider'
 import { registerHelperGuide } from './helper'
 import { registerBuildTreeProvider } from './buildtree'
 import { registerBreakpoints } from './breakpoints'
+import { registerDocsProvider } from './bmxdocs'
 
 export function activate( context: vscode.ExtensionContext ) {
 
@@ -15,6 +16,7 @@ export function activate( context: vscode.ExtensionContext ) {
 	registerDebugger( context )
 	registerBreakpoints( context )
 	registerHelperGuide( context )
+	registerDocsProvider( context )
 	registerTaskProvider( context )
 	registerBuildTreeProvider( context )
 	registerTerminalLinkProvider( context )

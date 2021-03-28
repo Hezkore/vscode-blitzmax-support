@@ -84,6 +84,14 @@
 				"path": "./snippets/blitzmax.json"
 			}
 		],
+		"keybindings": [
+      {
+        "command": "blitzmax.quickHelp",
+        "key": "f1",
+        "mac": "f1",
+        "when": "editorTextFocus && editorLangId == blitzmax"
+      }
+    ],
 		"configuration": {
 			"type": "object",
 			"title": "BlitzMax",
@@ -131,6 +139,11 @@
 			}
 		},
 		"commands": [
+			{
+				"command": "blitzmax.quickHelp",
+				"title": "Quick Help",
+				"category": "BlitzMax"
+			},
 			{
 				"command": "blitzmax.resetBuildOptions",
 				"title": "Reset BlitzMax build options to default settings",
@@ -231,6 +244,13 @@
 					"command": "blitzmax.changeDefaultBuildTask",
 					"when": "view == blitzmax-options && viewItem == workspaceRoot",
 					"group": "inline"
+				}
+			],
+			"editor/context" : [
+				{
+					"when": "editorLangId == blitzmax",
+					"command": "blitzmax.quickHelp",
+					"group": "navigation@0"
 				}
 			],
 			"editor/title": [

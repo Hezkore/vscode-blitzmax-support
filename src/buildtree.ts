@@ -55,7 +55,6 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 	private buildCategories: vscode.TreeItem[] = []
 
 	private mainTreeRoot: vscode.TreeItem
-	//private subTreeRoot: vscode.TreeItem
 
 	constructor( context: vscode.ExtensionContext ) {
 		vscode.window.onDidChangeActiveTextEditor( () => this.onActiveEditorChanged() )
@@ -100,49 +99,14 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 	}
 
 	getChildren( element?: vscode.TreeItem ): Thenable<vscode.TreeItem[]> {
-
 		if ( element ) {
-
 			if ( element == this.mainTreeRoot )
 				return this.generateAllBuildCategories()
 			else
 				return this.generateBuildCategory( element )
-
-			/* 			
-						
-							items.push( this.createChildItem( 'onlycompile', 'Compile sources only, no building of the application)', boolToString( def.onlycompile ) ) )
-							items.push( this.createChildItem( 'fullcompile', 'Recompiles all source/modules regardless of timestamp', boolToString( def.fullcompile ) ) )
-							items.push( this.createChildItem( 'appstub', 'Builds an app using a custom appstub', def.appstub ) )
-							items.push( this.createChildItem( 'architecture', 'Compiles to the specified architecture', def.architecture ) )
-							items.push( this.createChildItem( 'gdb', 'Generates line mappings suitable for GDB debugging', boolToString( def.gdb ) ) )
-							items.push( this.createChildItem( 'threaded', 'Builds multithreaded version)', boolToString( def.threaded ) ) )
-							items.push( this.createChildItem( 'universal', 'Creates a Universal build for supported platforms', boolToString( def.universal ) ) )
-							items.push( this.createChildItem( 'crosscompile', 'Cross-compiles to the specific target platform', def.crosscompile ) )
-							items.push( this.createChildItem( 'musl', 'Enables musl libc compatibility', boolToString( def.musl ) ) )
-							items.push( this.createChildItem( 'nostrictupgrade', 'Don\'t upgrade strict method void return types, if required', boolToString( def.nostrictupgrade ) ) )
-							items.push( this.createChildItem( 'output', 'Specifies the output file', def.output ) )
-							items.push( this.createChildItem( 'quiet', 'Quiet build', boolToString( def.quiet ) ) )
-							items.push( this.createChildItem( 'release', 'Builds a release version', boolToString( def.release ) ) )
-							items.push( this.createChildItem( 'standalone', 'Generate but do not compile into binary form', boolToString( def.standalone ) ) )
-							items.push( this.createChildItem( 'static', 'Statically link binary', boolToString( def.static ) ) )
-							//items.push(this.createChildItem('platform', 'Select platform to create code for', def.platform))
-							items.push( this.createChildItem( 'verbose', 'Verbose (noisy) build', boolToString( def.verbose ) ) )
-							items.push( this.createChildItem( 'funcargcasting', 'How to handle function argument casting issues', def.funcargcasting ) )
-							items.push( this.createChildItem( 'framework', 'Defines to use a specific module as framework', def.framework ) )
-							items.push( this.createChildItem( 'nomanifest', 'Do not generate a manifest file for the built application', boolToString( def.nomanifest ) ) )
-							items.push( this.createChildItem( 'single', 'Disabled multi threaded processing in a bmk built with thread support', boolToString( def.single ) ) )
-							items.push( this.createChildItem( 'nodef', 'Defines to not generate .def files useable by created DLLs/shared libraries', boolToString( def.nodef ) ) )
-							items.push( this.createChildItem( 'nohead', 'Defines to not generate header files useable by created DLLs/shared libraries', boolToString( def.nohead ) ) )
-			
-							items.push( this.createChildItem( 'no-pie', 'Do not generate PIE binaries', boolToString( def.nopie ) ) )
-							items.push( this.createChildItem( 'upx', 'Compress the created binary with UPX', boolToString( def.upx ) ) )
-							items.push( this.createChildItem( 'conditionals', 'User defined conditionals, usable via `?myconditional`', def.conditionals?.join( ', ' ) ) )
-							items.push( this.createChildItem( 'args', 'User defined arguments', def.args?.join( ', ' ) ) )
-						}
-						
-						return Promise.resolve( items ) */
-		} else
+		} else {
 			return this.generateWorkbenchRoot()
+		}
 	}
 
 	generateWorkbenchRoot(): Promise<vscode.TreeItem[]> {
@@ -209,7 +173,7 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 		this.buildCategories = [
 			// No category root items
 			this.createChildItem( true, 'root_file', 'Source File', 'Absolute path to root source file', def.source ),
-			
+
 			{ id: 'build', label: 'Build Options', collapsibleState: vscode.TreeItemCollapsibleState.Expanded },
 			{ id: 'app', label: 'App Options', collapsibleState: vscode.TreeItemCollapsibleState.Expanded },
 			{ id: 'plat', label: 'Platform', collapsibleState: vscode.TreeItemCollapsibleState.Collapsed },
@@ -223,7 +187,7 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 				collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
 				iconPath: new vscode.ThemeIcon( 'beaker' )
 			},
-			
+
 			this.createChildItem( true, 'legacy', 'Legacy Mode', 'Enable BlitzMax Legacy suspport', def.legacy )
 		]
 
@@ -240,11 +204,11 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 				items.push(
 					this.createChildItem( true, 'b_quick', 'Quick Build', 'Only recompile source/modules modified since the last build', !def.fullcompile ),
 					this.createChildItem( true, 'b_debug', 'Debug Build', 'Builds a debug version', def.debug ),
-					this.createChildItem( true, 'b_qscan', 'Quick Scan', 'Do not scan modules for changes', def.quick ),
-					this.createChildItem( true, 'b_overload', 'Overload Warnings', 'Defines missing override keywords in overridden methods and functions to be handled as error instead of warning', def.funcargcasting == 'warning' ),
-					this.createChildItem( true, 'b_override', 'Require \'Override\' declaration', 'Sets requirement for overriding methods and functions to append override to their definitions', def.override ),
-					this.createChildItem( def.override == true, 'b_raise', 'Raise \'override\' errors not warnings', 'Sets requirement for overriding methods and functions to append override to their definitions', def.overerr ),
-					this.createChildItem( def.make == 'application' && def.apptype == 'gui', 'b_dpi', 'High Resolution (HiDPI)', 'Specifies that the application supports high-resolution screens', def.hidpi )
+					this.createChildItem( !def.legacy, 'b_qscan', 'Quick Scan', 'Do not scan modules for changes', def.quick ),
+					this.createChildItem( !def.legacy, 'b_overload', 'Overload Warnings', 'Defines missing override keywords in overridden methods and functions to be handled as error instead of warning', def.funcargcasting == 'warning' ),
+					this.createChildItem( !def.legacy, 'b_override', 'Require \'Override\' declaration', 'Sets requirement for overriding methods and functions to append override to their definitions', def.override ),
+					this.createChildItem( !def.legacy && def.override == true, 'b_raise', 'Raise \'override\' errors not warnings', 'Sets requirement for overriding methods and functions to append override to their definitions', def.overerr ),
+					this.createChildItem( !def.legacy && def.make == 'application' && def.apptype == 'gui', 'b_dpi', 'High Resolution (HiDPI)', 'Specifies that the application supports high-resolution screens', def.hidpi )
 				)
 				break
 
@@ -258,13 +222,13 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 
 			case 'plat':
 				items.push(
-					this.createChildItem( true, 'plat_win32', 'Win32', '', def.target == 'win32' ),
-					this.createChildItem( true, 'plat_linux', 'Linux', '', def.target == 'linux' ),
-					this.createChildItem( os.platform() == 'darwin', 'plat_macos', 'MacOS', '', def.target == 'macos' ),
-					this.createChildItem( true, 'plat_raspberrypi', 'Raspberry Pi', '', def.target == 'raspberrypi' ),
-					this.createChildItem( true, 'plat_android', 'Android', '', def.target == 'android' ),
-					this.createChildItem( true, 'plat_nx', 'NX', '', def.target == 'nx' ),
-					this.createChildItem( true, 'plat_emscripten', 'Web', '', def.target == 'emscripten' )
+					this.createChildItem( !def.legacy, 'plat_win32', 'Win32', '', def.target == 'win32' ),
+					this.createChildItem( !def.legacy, 'plat_linux', 'Linux', '', def.target == 'linux' ),
+					this.createChildItem( !def.legacy && os.platform() == 'darwin', 'plat_macos', 'MacOS', '', def.target == 'macos' ),
+					this.createChildItem( !def.legacy, 'plat_raspberrypi', 'Raspberry Pi', '', def.target == 'raspberrypi' ),
+					this.createChildItem( !def.legacy, 'plat_android', 'Android', '', def.target == 'android' ),
+					this.createChildItem( !def.legacy, 'plat_nx', 'NX', '', def.target == 'nx' ),
+					this.createChildItem( !def.legacy, 'plat_emscripten', 'Web', '', def.target == 'emscripten' )
 				)
 				break
 
@@ -285,46 +249,57 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 				}
 
 				items.push(
-					this.createChildItem( archIndex <= 2, 'arch_x86', 'x86', '', def.architecture == 'x86' ),
-					this.createChildItem( archIndex <= 2, 'arch_x64', 'x64', '', def.architecture == 'x64' ),
-					this.createChildItem( archIndex >= 3, 'arch_ppc', 'PPC', '', def.architecture == 'ppc' ),
-					this.createChildItem( archIndex >= 3, 'arch_arm', 'ARM', '', def.architecture == 'arm' ),
-					this.createChildItem( archIndex >= 3, 'arch_armeabiv5', 'ARMeabi v5', '', def.architecture == 'armeabiv5' ),
-					this.createChildItem( archIndex >= 3, 'arch_armeabiv7a', 'ARMeabi v7a', '', def.architecture == 'armeabiv7a' ),
-					this.createChildItem( archIndex >= 3, 'arch_arm64v8a', 'ARM64 v8a', '', def.architecture == 'arm64v8a' ),
-					this.createChildItem( archIndex >= 3, 'arch_js', 'js', '', def.architecture == 'js' ),
-					this.createChildItem( archIndex >= 3, 'arch_armv7', 'ARMv7', '', def.architecture == 'armv7' ),
-					this.createChildItem( archIndex >= 3, 'arch_arm64', 'ARM64', '', def.architecture == 'arm64' )
+					this.createChildItem( !def.legacy && archIndex <= 2, 'arch_x86', 'x86', '', def.architecture == 'x86' ),
+					this.createChildItem( !def.legacy && archIndex <= 2, 'arch_x64', 'x64', '', def.architecture == 'x64' ),
+					this.createChildItem( !def.legacy && archIndex >= 3, 'arch_ppc', 'PPC', '', def.architecture == 'ppc' ),
+					this.createChildItem( !def.legacy && archIndex >= 3, 'arch_arm', 'ARM', '', def.architecture == 'arm' ),
+					this.createChildItem( !def.legacy && archIndex >= 3, 'arch_armeabiv5', 'ARMeabi v5', '', def.architecture == 'armeabiv5' ),
+					this.createChildItem( !def.legacy && archIndex >= 3, 'arch_armeabiv7a', 'ARMeabi v7a', '', def.architecture == 'armeabiv7a' ),
+					this.createChildItem( !def.legacy && archIndex >= 3, 'arch_arm64v8a', 'ARM64 v8a', '', def.architecture == 'arm64v8a' ),
+					this.createChildItem( !def.legacy && archIndex >= 3, 'arch_js', 'js', '', def.architecture == 'js' ),
+					this.createChildItem( !def.legacy && archIndex >= 3, 'arch_armv7', 'ARMv7', '', def.architecture == 'armv7' ),
+					this.createChildItem( !def.legacy && archIndex >= 3, 'arch_arm64', 'ARM64', '', def.architecture == 'arm64' )
 				)
 				break
 
 			case 'misc':
 				items.push(
-					this.createChildItem( true, 'misc_upx', 'Pack App with UPX', '', def.upx )
+					this.createChildItem( !def.legacy, 'misc_upx', 'Pack App with UPX', '', def.upx )
 				)
 				break
 				os.arch()
 			case 'stub':
 				// Hmm... do I really need to scan for app stubs? :S
 				items.push(
-					this.createChildItem( true, 'stub_brl.appstub', 'brl.appstub', '', def.appstub == 'brl.appstub' )
+					this.createChildItem( !def.legacy, 'stub_brl.appstub', 'brl.appstub', '', def.appstub == 'brl.appstub' )
 				)
 				break
 
 			case 'dev':
 				items.push(
-					this.createChildItem( true, 'dev_verbose', 'Verbose Build', '', def.verbose ),
-					this.createChildItem( true, 'dev_gdb', 'GDB Debug Generation', '', def.gdb ),
-					this.createChildItem( true, 'dev_gprof', 'GProf Profiling', 'Gprof is a performance analysis tool for Unix applications', def.gprof )
+					this.createChildItem( !def.legacy, 'dev_verbose', 'Verbose Build', '', def.verbose ),
+					this.createChildItem( !def.legacy, 'dev_gdb', 'GDB Debug Generation', '', def.gdb ),
+					this.createChildItem( !def.legacy, 'dev_gprof', 'GProf Profiling', 'Gprof is a performance analysis tool for Unix applications', def.gprof )
 				)
 				break
 
 			case 'adv':
 				items.push(
 					this.createChildItem( def.make == 'application', 'adv_output', 'Output file', 'Specifies the output file', def.output ),
-					this.createChildItem( true, 'adv_conditional', 'Conditionals', 'User defined conditionals', def.conditionals?.join( ', ' ) ),
+					this.createChildItem( !def.legacy, 'adv_conditional', 'Conditionals', 'User defined conditionals', def.conditionals?.join( ', ' ) ),
 					this.createChildItem( true, 'adv_threaded', 'Threaded', 'Builds multi-threaded version (NG always builds multi-threaded )', def.threaded ),
-					this.createChildItem( true, 'adv_musl', 'Musl libc', 'Enables musl libc compatibility (Linux NG only)', def.musl ),
+					this.createChildItem( (def.target == 'linux' || def.target == 'raspberrypi') && !def.legacy, 'adv_musl', 'Musl libc', 'Enables musl libc compatibility (Linux NG only)', def.musl ),
+					this.createChildItem( !def.legacy, 'adv_compileonly', 'Compile Only', 'Compile sources only, no building of the application', def.onlycompile ),
+					this.createChildItem( !def.legacy && def.target == 'macos', 'adv_universal', 'Universal Build', 'Creates a Universal build for supported platforms (Mac OS X and iOS)', def.universal ),
+					this.createChildItem( !def.legacy, 'adv_nostrictupgrade', 'No Strict Upgrade', 'Don\'t upgrade strict method void return types, if required', def.nostrictupgrade ),
+					this.createChildItem( !def.legacy, 'adv_quiet', 'Quiet build', 'Quiet build', def.quiet ),
+					this.createChildItem( !def.legacy, 'adv_standalone', 'Standalone', 'Generate but do not compile into binary form', def.standalone ),
+					this.createChildItem( (def.target == 'linux' || def.target == 'raspberrypi') && !def.legacy, 'adv_static', 'Static', 'Statically link binary (Linux NG only)', def.static ),
+					this.createChildItem( def.target == 'win32' && !def.legacy, 'adv_nomanifest', 'No Manifest', 'Do not generate a manifest file for the built application (Win32 only)', def.nomanifest ),
+					this.createChildItem( !def.legacy, 'adv_single', 'Single Thread Compile', 'Disabled multi-threaded processing in a bmk build with thread support', def.single ),
+					this.createChildItem( !def.legacy, 'adv_nodef', 'No Def Files', 'Do not generate .def files useable by created DLLs/shared libraries', def.nodef ),
+					this.createChildItem( !def.legacy, 'adv_nohead', 'No Header Files', 'Do not generate header files useable by created DLLs/shared libraries', def.nohead ),
+					this.createChildItem( (def.target == 'linux' || def.target == 'raspberrypi') && !def.legacy, 'adv_nopie', 'No PIE Binary', 'Do not generate PIE binaries (Linux only).', def.nopie ),
 				)
 				break
 
@@ -482,115 +457,57 @@ export async function toggleBuildOptions( definition: BmxBuildTaskDefinition | u
 			definition.musl = !definition.musl
 			break
 
+		case 'adv_compileonly':
+			definition.onlycompile = !definition.onlycompile
+			break
+
+		case 'adv_universal':
+			definition.universal = !definition.universal
+			break
+
+		case 'adv_nostrictupgrade':
+			definition.nostrictupgrade = !definition.nostrictupgrade
+			break
+
+		case 'adv_quiet':
+			definition.quiet = !definition.quiet
+			break
+
+		case 'adv_standalone':
+			definition.standalone = !definition.standalone
+			break
+
+		case 'adv_static':
+			definition.static = !definition.static
+			break
+
+		case 'adv_nomanifest':
+			definition.nomanifest = !definition.nomanifest
+			break
+
+		case 'adv_single':
+			definition.single = !definition.single
+			break
+
+		case 'adv_nodef':
+			definition.nodef = !definition.nodef
+			break
+
+		case 'adv_nohead':
+			definition.nohead = !definition.nohead
+			break
+
+		case 'adv_nopie':
+			definition.nopie = !definition.nopie
+			break
+
+
+		// Unknown
 		default:
 			console.log( 'Undefined build option - ' + option )
 			vscode.window.showErrorMessage( 'Unknown build option: ' + option )
 			break
 	}
-
-	/* switch (option) {
-			
-		case 'onlycompile':
-			definition.onlycompile = toggleBool(definition.onlycompile)
-			break
-			
-			
-		case 'fullcompile':
-			definition.fullcompile = toggleBool(definition.fullcompile)
-			break
-			
-
-			
-		case 'threaded':
-			definition.threaded = toggleBool(definition.threaded)
-			break
-			
-		case 'universal':
-			definition.universal = toggleBool(definition.universal)
-			break
-			
-		case 'crosscompile':
-			await vscode.window.showQuickPick(["win32", "linux", "macos", "ios", "android", "raspberrypi", "nx"], {canPickMany: false}).then((picked) => {
-				if (picked) definition.crosscompile = picked
-			})
-			break
-			
-		case 'musl':
-			definition.musl = toggleBool(definition.musl)
-			break
-			
-		case 'nostrictupgrade':
-			definition.nostrictupgrade = toggleBool(definition.nostrictupgrade)
-			break
-			
-		case 'quiet':
-			definition.quiet = toggleBool(definition.quiet)
-			break
-		
-			
-		case 'release':
-			definition.release = toggleBool(definition.release)
-			break
-			
-		case 'standalone':
-			definition.standalone = toggleBool(definition.standalone)
-			break
-			
-		case 'static':
-			definition.static = toggleBool(definition.static)
-			break
-		
-			
-		case 'funcargcasting':
-			await vscode.window.showQuickPick(["error", "warning"], {canPickMany: false}).then((picked) => {
-				if (picked) definition.funcargcasting = picked
-			})
-			break
-			
-		case 'framework':
-			await vscode.window.showInputBox({prompt: 'Module to use as framework'}).then((picked) => {
-				if (picked != undefined) definition.framework = picked
-			})
-			break
-			
-		case 'nomanifest':
-			definition.nomanifest = toggleBool(definition.nomanifest)
-			break
-			
-		case 'single':
-			definition.single = toggleBool(definition.single)
-			break
-			
-		case 'nodef':
-			definition.nodef = toggleBool(definition.nodef)
-			break
-			
-		case 'nohead':
-			definition.nohead = toggleBool(definition.nohead)
-			break
-			
-		case 'override':
-			definition.override = toggleBool(definition.override)
-			break
-			
-		case 'overerr':
-			definition.overerr = toggleBool(definition.overerr)
-			break
-			
-		case 'no-pie':
-			definition.nopie = toggleBool(definition.nopie)
-			break
-						
-		case 'args':
-			await vscode.window.showInputBox({prompt: 'User defined arguments (space as separator)', value: definition.args?.join(' ')}).then((picked) => {
-				if (picked != undefined) definition.args = picked.split(' ')
-			})
-			break
-			
-		default:
-			console.log(`Unknown build option ${option}`)
-			break
-	} */
 
 	return definition
 }

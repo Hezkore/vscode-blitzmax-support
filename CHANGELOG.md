@@ -1,3 +1,7 @@
+## 2.5.0
+* Added BlitzMax Legacy support
+* More advanced build options
+
 ## 2.4.6
 * Fixed a build tree issue
 * Fixed a task provider issue

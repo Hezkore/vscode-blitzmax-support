@@ -261,7 +261,11 @@ export function makeTask( definition: BmxBuildTaskDefinition ): vscode.Task {
 				args.push( 'makebootstrap' )
 				break
 			default:
-				args.push( 'makeapp' )
+				if ( !resolvedDefinition.legacy && resolvedDefinition.onlycompile ) {
+					args.push( 'compile' )
+				} else {
+					args.push( 'makeapp' )
+				}
 				break
 		}
 
@@ -294,8 +298,6 @@ export function makeTask( definition: BmxBuildTaskDefinition ): vscode.Task {
 
 			if ( resolvedDefinition.architecture ) args.push( '-g', resolvedDefinition.architecture )
 
-			if ( resolvedDefinition.onlycompile ) args.push( 'compile' )
-
 			if ( resolvedDefinition.appstub ) args.push( '-b', resolvedDefinition.appstub )
 
 			if ( resolvedDefinition.gdb ) args.push( '-gdb' )
@@ -306,7 +308,7 @@ export function makeTask( definition: BmxBuildTaskDefinition ): vscode.Task {
 
 			if ( resolvedDefinition.musl ) args.push( '-musl' )
 
-			if ( !resolvedDefinition.legacy && resolvedDefinition.nostrictupgrade ) args.push( '-nostrictupgrade' )
+			if ( resolvedDefinition.nostrictupgrade ) args.push( '-nostrictupgrade' )
 
 			if ( resolvedDefinition.quiet ) args.push( '-q' )
 

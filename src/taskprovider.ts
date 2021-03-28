@@ -265,72 +265,86 @@ export function makeTask( definition: BmxBuildTaskDefinition ): vscode.Task {
 				break
 		}
 
+		/* The only flag I could find for Legacy BlitzMax are:
+			-d	Build debug version. This is the default.
+			-r	Build release version. By default, the debug version is built.
+			-h	Build multithreaded version. By default, the single threaded version is built.
+			-a	Recompile all source files regardless of timestamp. By default, only files modified since the last makeapp are recompiled.
+			-o OutputFile	Specify output file. By default, the output file is placed into the same directory as the root source file.
+			-t AppType	Specify application type. Should be either 'console' or 'gui' (without single quote!).
+		*/
+
 		args.push( resolvedDefinition.debug ? '-d' : '-r' )
 
 		if ( resolvedDefinition.fullcompile ) args.push( '-a' )
 
-		if ( resolvedDefinition.verbose ) args.push( '-v' )
+		if ( !resolvedDefinition.legacy ) {
+			// NG specific flags
+			if ( resolvedDefinition.verbose ) args.push( '-v' )
 
-		if ( resolvedDefinition.quick ) args.push( '-quick' )
+			if ( resolvedDefinition.quick ) args.push( '-quick' )
 
-		if ( !resolvedDefinition.legacy && resolvedDefinition.funcargcasting == 'warning' ) args.push( '-w' )
+			if ( resolvedDefinition.funcargcasting == 'warning' ) args.push( '-w' )
 
-		if ( resolvedDefinition.override ) args.push( '-override' )
+			if ( resolvedDefinition.override ) args.push( '-override' )
 
-		if ( resolvedDefinition.override && resolvedDefinition.overerr ) args.push( '-overerr' )
+			if ( resolvedDefinition.override && resolvedDefinition.overerr ) args.push( '-overerr' )
 
-		if ( resolvedDefinition.target ) args.push( '-l', resolvedDefinition.target )
+			if ( resolvedDefinition.target ) args.push( '-l', resolvedDefinition.target )
 
-		if ( resolvedDefinition.architecture ) args.push( '-g', resolvedDefinition.architecture )
+			if ( resolvedDefinition.architecture ) args.push( '-g', resolvedDefinition.architecture )
 
-		if ( resolvedDefinition.onlycompile ) args.push( 'compile' )
+			if ( resolvedDefinition.onlycompile ) args.push( 'compile' )
 
-		if ( resolvedDefinition.appstub ) args.push( '-b', resolvedDefinition.appstub )
+			if ( resolvedDefinition.appstub ) args.push( '-b', resolvedDefinition.appstub )
 
-		if ( resolvedDefinition.gdb ) args.push( '-gdb' )
+			if ( resolvedDefinition.gdb ) args.push( '-gdb' )
 
-		if ( resolvedDefinition.gprof ) args.push( '-gprof' )
+			if ( resolvedDefinition.gprof ) args.push( '-gprof' )
+
+			if ( resolvedDefinition.universal ) args.push( '-i' )
+
+			if ( resolvedDefinition.musl ) args.push( '-musl' )
+
+			if ( !resolvedDefinition.legacy && resolvedDefinition.nostrictupgrade ) args.push( '-nostrictupgrade' )
+
+			if ( resolvedDefinition.quiet ) args.push( '-q' )
+
+			if ( resolvedDefinition.standalone ) args.push( '-standalone' )
+
+			if ( resolvedDefinition.static ) args.push( '-static' )
+
+			if ( resolvedDefinition.apptype == 'gui' && resolvedDefinition.hidpi ) args.push( '-hi' )
+
+			if ( resolvedDefinition.framework ) args.push( '-f', resolvedDefinition.framework )
+
+			if ( resolvedDefinition.nomanifest ) args.push( '-nomanifest' )
+
+			if ( resolvedDefinition.single ) args.push( '-single' )
+
+			if ( resolvedDefinition.nodef ) args.push( '-nodef' )
+
+			if ( resolvedDefinition.nohead ) args.push( '-nohead' )
+
+			if ( resolvedDefinition.nopie ) args.push( '-no-pie' )
+
+			if ( resolvedDefinition.upx ) args.push( '-upx' )
+
+			const conditionals = resolvedDefinition.conditionals
+			if ( conditionals ) {
+				args.push( '-ud' )
+				args.push( conditionals.toString().trim().replace( ' ', '' ) )
+			}
+		}
+
+		if ( resolvedDefinition.apptype ) args.push( '-t', resolvedDefinition.apptype )
 
 		if ( resolvedDefinition.threaded ) args.push( '-h' )
 
-		if ( resolvedDefinition.universal ) args.push( '-i' )
-
-		if ( resolvedDefinition.musl ) args.push( '-musl' )
-
-		if ( !resolvedDefinition.legacy && resolvedDefinition.nostrictupgrade ) args.push( '-nostrictupgrade' )
-
-		if ( resolvedDefinition.quiet ) args.push( '-q' )
-
-		if ( resolvedDefinition.standalone ) args.push( '-standalone' )
-
-		if ( resolvedDefinition.static ) args.push( '-static' )
-
-		if ( resolvedDefinition.apptype !== 'console' ) args.push( '-t', resolvedDefinition.apptype )
-
-		if ( resolvedDefinition.apptype == 'gui' && resolvedDefinition.hidpi ) args.push( '-hi' )
-
-		if ( resolvedDefinition.framework ) args.push( '-f', resolvedDefinition.framework )
-
-		if ( resolvedDefinition.nomanifest ) args.push( '-nomanifest' )
-
-		if ( resolvedDefinition.single ) args.push( '-single' )
-
-		if ( resolvedDefinition.nodef ) args.push( '-nodef' )
-
-		if ( resolvedDefinition.nohead ) args.push( '-nohead' )
-
-		if ( resolvedDefinition.nopie ) args.push( '-no-pie' )
-
-		if ( resolvedDefinition.upx ) args.push( '-upx' )
-
-		const conditionals = resolvedDefinition.conditionals
-		if ( conditionals ) {
-			args.push( '-ud' )
-			args.push( conditionals.toString().trim().replace( ' ', '' ) )
-		}
-
 		if ( resolvedDefinition.args ) args = args.concat( resolvedDefinition.args )
 
+		// Figure out output
+		// Which will either be user defined, or <source>/<source>.debug
 		if ( resolvedDefinition.make == 'application' ) args.push( '-o', taskOutput( resolvedDefinition, workspace ) )
 
 		args.push( resolvedDefinition.source )

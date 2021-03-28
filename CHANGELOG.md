@@ -1,3 +1,8 @@
+## 2.6.0
+* Added option to reset build options
+* Added option to edit task JSON
+* Build tree now shows task in use
+
 ## 2.5.0
 * Added BlitzMax Legacy support
 * More advanced build options

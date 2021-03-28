@@ -8,7 +8,8 @@ import {
 	getBuildDefinitionFromWorkspace,
 	saveAsDefaultTaskDefinition,
 	internalBuildDefinition,
-	BmxBuildTaskDefinition
+	BmxBuildTaskDefinition,
+	makeTaskDefinition
 } from './taskprovider'
 
 
@@ -22,7 +23,39 @@ export function registerBuildTreeProvider( context: vscode.ExtensionContext ) {
 	} )
 
 	// Related commands
+	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.resetBuildOptions', ( option: any ) => {
+		const definition = getBuildDefinitionFromWorkspace()
+		saveAsDefaultTaskDefinition( makeTaskDefinition( definition.label, definition.detail, 'application', 'console' ) )
+		if ( getBuildDefinitionFromWorkspace() === internalBuildDefinition ) bmxBuildTreeProvider.refresh()
+	} ) )
+
+	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.openBuildOptionsJSON', ( option: any ) => {
+		const document = vscode.window.activeTextEditor?.document
+		const partOfWorkspace = document ? vscode.workspace.getWorkspaceFolder( document.uri ) : undefined
+		if ( partOfWorkspace ) {
+			const definition = getBuildDefinitionFromWorkspace()
+			if ( definition === internalBuildDefinition ) saveAsDefaultTaskDefinition( definition )
+			vscode.commands.executeCommand( 'workbench.action.tasks.configureDefaultBuildTask' )
+		} else {
+			vscode.window.showInformationMessage( 'File is not part of a workspace.\nOpen the folder containing this file to edit your custom build tasks.', { modal: true } )
+		}
+	} ) )
+
+	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.setSourceFile', ( document: vscode.Uri ) => {
+		const path = document ? document.fsPath : vscode.window.activeTextEditor?.document.uri.fsPath
+		if ( !path ) return
+		const definition = getBuildDefinitionFromWorkspace()
+		definition.source = path
+		saveAsDefaultTaskDefinition( definition )
+	} ) )
+
 	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.toggleBuildOption', async ( option: any ) => {
+		// Just highlight the options view if no option was specified	
+		if ( !option ) {
+			vscode.commands.executeCommand( 'blitzmax-options.focus' )
+			return
+		}
+
 		// Make sure we're getting a string
 		if ( typeof option !== "string" ) {
 			const treeItem: vscode.TreeItem = option
@@ -109,22 +142,32 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 		}
 	}
 
+	cleanWorkbenchRootTaskName( taskName: string ): string {
+		if ( taskName.toLowerCase().startsWith( 'blitzmax:' ) )
+			taskName = taskName.slice( 9 )
+
+		return taskName.trim()
+	}
+
 	generateWorkbenchRoot(): Promise<vscode.TreeItem[]> {
 
 		//const def = getBuildDefinitionFromWorkspace()
 		const sourceFile = vscode.window.activeTextEditor?.document
 
 		let rootName: string = 'Unknown'
+		let taskName: string = 'Internal'
 
 		// Is the file even a BlitzMax file?
 		if ( sourceFile && sourceFile.languageId == 'blitzmax' ) {
 
 			// It's a BlitzMax file, check if it's part of the workspace
-			const workspaceFolder = vscode.workspace.getWorkspaceFolder( sourceFile.uri )
-			rootName = workspaceFolder
-				? workspaceFolder.name.toUpperCase()
+			const workspace = vscode.workspace.getWorkspaceFolder( sourceFile.uri )
+			if ( workspace )
+				taskName = this.cleanWorkbenchRootTaskName( getBuildDefinitionFromWorkspace( workspace ).label )
+			rootName = workspace
+				? workspace.name.toUpperCase()
 				: 'File: ' + path.basename( sourceFile.uri.fsPath )
-			this.isForWorkspace = workspaceFolder ? true : false
+			this.isForWorkspace = workspace ? true : false
 		} else {
 
 			// It's not a BlitzMax file
@@ -150,6 +193,7 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 
 					if ( file.toLowerCase().endsWith( '.bmx' ) ) {
 						this.isForWorkspace = true
+						taskName = this.cleanWorkbenchRootTaskName( getBuildDefinitionFromWorkspace( workspace ).label )
 						rootName = workspace.name.toUpperCase()
 						break
 					}
@@ -161,8 +205,9 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 			if ( !this.isForWorkspace ) return Promise.resolve( [] )
 		}
 
-		this.mainTreeRoot = new vscode.TreeItem( rootName, vscode.TreeItemCollapsibleState.Expanded )
+		this.mainTreeRoot = new vscode.TreeItem( rootName + ' (' + taskName + ')', vscode.TreeItemCollapsibleState.Expanded )
 		this.mainTreeRoot.iconPath = new vscode.ThemeIcon( 'rocket' )
+		this.mainTreeRoot.tooltip = 'Workspace: ' + rootName + '\nTask: ' + taskName
 		return Promise.resolve( [this.mainTreeRoot] )
 	}
 
@@ -288,18 +333,18 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 					this.createChildItem( def.make == 'application', 'adv_output', 'Output file', 'Specifies the output file', def.output ),
 					this.createChildItem( !def.legacy, 'adv_conditional', 'Conditionals', 'User defined conditionals', def.conditionals?.join( ', ' ) ),
 					this.createChildItem( true, 'adv_threaded', 'Threaded', 'Builds multi-threaded version (NG always builds multi-threaded )', def.threaded ),
-					this.createChildItem( (def.target == 'linux' || def.target == 'raspberrypi') && !def.legacy, 'adv_musl', 'Musl libc', 'Enables musl libc compatibility (Linux NG only)', def.musl ),
+					this.createChildItem( ( def.target == 'linux' || def.target == 'raspberrypi' ) && !def.legacy, 'adv_musl', 'Musl libc', 'Enables musl libc compatibility (Linux NG only)', def.musl ),
 					this.createChildItem( !def.legacy, 'adv_compileonly', 'Compile Only', 'Compile sources only, no building of the application', def.onlycompile ),
 					this.createChildItem( !def.legacy && def.target == 'macos', 'adv_universal', 'Universal Build', 'Creates a Universal build for supported platforms (Mac OS X and iOS)', def.universal ),
 					this.createChildItem( !def.legacy, 'adv_nostrictupgrade', 'No Strict Upgrade', 'Don\'t upgrade strict method void return types, if required', def.nostrictupgrade ),
 					this.createChildItem( !def.legacy, 'adv_quiet', 'Quiet build', 'Quiet build', def.quiet ),
 					this.createChildItem( !def.legacy, 'adv_standalone', 'Standalone', 'Generate but do not compile into binary form', def.standalone ),
-					this.createChildItem( (def.target == 'linux' || def.target == 'raspberrypi') && !def.legacy, 'adv_static', 'Static', 'Statically link binary (Linux NG only)', def.static ),
+					this.createChildItem( ( def.target == 'linux' || def.target == 'raspberrypi' ) && !def.legacy, 'adv_static', 'Static', 'Statically link binary (Linux NG only)', def.static ),
 					this.createChildItem( def.target == 'win32' && !def.legacy, 'adv_nomanifest', 'No Manifest', 'Do not generate a manifest file for the built application (Win32 only)', def.nomanifest ),
 					this.createChildItem( !def.legacy, 'adv_single', 'Single Thread Compile', 'Disabled multi-threaded processing in a bmk build with thread support', def.single ),
 					this.createChildItem( !def.legacy, 'adv_nodef', 'No Def Files', 'Do not generate .def files useable by created DLLs/shared libraries', def.nodef ),
 					this.createChildItem( !def.legacy, 'adv_nohead', 'No Header Files', 'Do not generate header files useable by created DLLs/shared libraries', def.nohead ),
-					this.createChildItem( (def.target == 'linux' || def.target == 'raspberrypi') && !def.legacy, 'adv_nopie', 'No PIE Binary', 'Do not generate PIE binaries (Linux only).', def.nopie ),
+					this.createChildItem( ( def.target == 'linux' || def.target == 'raspberrypi' ) && !def.legacy, 'adv_nopie', 'No PIE Binary', 'Do not generate PIE binaries (Linux only).', def.nopie ),
 				)
 				break
 

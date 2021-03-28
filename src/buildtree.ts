@@ -29,7 +29,7 @@ export function registerBuildTreeProvider( context: vscode.ExtensionContext ) {
 		if ( getBuildDefinitionFromWorkspace() === internalBuildDefinition ) bmxBuildTreeProvider.refresh()
 	} ) )
 
-	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.openBuildOptionsJSON', ( option: any ) => {
+	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.changeDefaultBuildTask', ( option: any ) => {
 		const document = vscode.window.activeTextEditor?.document
 		const partOfWorkspace = document ? vscode.workspace.getWorkspaceFolder( document.uri ) : undefined
 		if ( partOfWorkspace ) {
@@ -208,6 +208,7 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 		this.mainTreeRoot = new vscode.TreeItem( rootName + ' (' + taskName + ')', vscode.TreeItemCollapsibleState.Expanded )
 		this.mainTreeRoot.iconPath = new vscode.ThemeIcon( 'rocket' )
 		this.mainTreeRoot.tooltip = 'Workspace: ' + rootName + '\nTask: ' + taskName
+		this.mainTreeRoot.contextValue = 'workspaceRoot'
 		return Promise.resolve( [this.mainTreeRoot] )
 	}
 

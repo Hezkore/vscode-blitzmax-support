@@ -1,6 +1,6 @@
 {
 	"name": "blitzmax",
-	"version": "2.6.0",
+	"version": "2.6.1",
 	"publisher": "Hezkore",
 	"displayName": "BlitzMax",
 	"description": "BlitzMax for Visual Studio Code.",
@@ -137,9 +137,10 @@
 				"category": "BlitzMax"
 			},
 			{
-				"command": "blitzmax.openBuildOptionsJSON",
-				"title": "Open Build Options (JSON)",
-				"category": "BlitzMax"
+				"command": "blitzmax.changeDefaultBuildTask",
+				"title": "Select Default Build Task",
+				"category": "BlitzMax",
+				"icon": "$(gear)"
 			},
 			{
 				"command": "blitzmax.toggleBuildOption",
@@ -212,20 +213,23 @@
 		"menus": {
 			"view/title": [
 				{
-					"command": "blitzmax.openBuildOptionsJSON",
-					"when": "view == blitzmax-options",
-					"group": ""
+					"command": "blitzmax.changeDefaultBuildTask",
+					"when": "view == blitzmax-options"
 				},
 				{
 					"command": "blitzmax.resetBuildOptions",
-					"when": "view == blitzmax-options",
-					"group": "inline"
+					"when": "view == blitzmax-options"
 				}
 			],
 			"view/item/context": [
 				{
 					"command": "blitzmax.toggleBuildOption",
 					"when": "view == blitzmax-options && viewItem == option",
+					"group": "inline"
+				},
+				{
+					"command": "blitzmax.changeDefaultBuildTask",
+					"when": "view == blitzmax-options && viewItem == workspaceRoot",
 					"group": "inline"
 				}
 			],

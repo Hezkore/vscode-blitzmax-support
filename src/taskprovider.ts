@@ -160,8 +160,8 @@ export class BmxBuildTaskProvider implements vscode.TaskProvider {
 
 		this.tasks.push( makeSimpleTask( 'Module', 'Build a module', 'module' ) )
 		this.tasks.push( makeSimpleTask( 'Shared Library', 'Build a shared library', 'library' ) )
-		this.tasks.push( makeSimpleTask( 'GUI Application', 'Build a GUI application', 'application', 'gui' ) )
-		this.tasks.push( makeSimpleTask( 'Console Application', 'Build a console application', 'application', 'console' ) )
+		this.tasks.push( makeSimpleTask( 'GUI', 'Build a GUI application', 'application', 'gui' ) )
+		this.tasks.push( makeSimpleTask( 'Console', 'Build a console application', 'application', 'console' ) )
 
 		return this.tasks
 	}

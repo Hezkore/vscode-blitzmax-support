@@ -1,6 +1,9 @@
+## 2.6.1
+* Fixed a build task bug
+
 ## 2.6.0
 * Added option to reset build options
-* Added option to edit task JSON
+* Added option to change build task
 * Build tree now shows task in use
 
 ## 2.5.0

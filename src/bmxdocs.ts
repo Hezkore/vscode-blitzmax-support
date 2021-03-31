@@ -3,31 +3,109 @@
 import * as fs from 'fs'
 import { EOL } from 'os'
 import * as vscode from 'vscode'
+import { getCurrentDocumentWord } from './common'
 
-let commandsList: BmxCommand[]
+let _commandsList: BmxCommand[]
 
 export function registerDocsProvider( context: vscode.ExtensionContext ) {
-
 	// Related commands
 	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.quickHelp', ( word: any ) => {
-		// If not word was specified, we look at the word under the cursor
-		if ( !word || typeof word !== "string" ) {
-			const wordPos = vscode.window.activeTextEditor?.document.getWordRangeAtPosition(
-				vscode.window.activeTextEditor.selection.active
-			)
-			const curWord = vscode.window.activeTextEditor?.document.getText( wordPos )
-			if ( !curWord ) return
-			word = curWord
-		}
-
+		// If no word was specified, we look at the word under the cursor
+		if ( !word || typeof word !== "string" ) word = getCurrentDocumentWord()
 		showQuickHelp( word )
 	} ) )
 }
 
 export async function showQuickHelp( command: string ) {
-	if ( !commandsList || commandsList.length <= 0 ) {
-		await cacheCommands()
-		if ( !commandsList || commandsList.length <= 0 ) {
+	cacheCommandsIfEmpty( true )
+	let commands = getCommand( command, { hasMarkdown: true } )
+
+	// Multi match
+	if ( commands.length > 1 ) {
+		let pickOptions: vscode.QuickPickItem[] = []
+		commands.forEach( match => {
+			pickOptions.push( { label: match.realName, detail: match.module } )
+		} )
+
+		const result = await vscode.window.showQuickPick( pickOptions ).then( selection => {
+
+		} )
+		console.log( 'PCIEDK: ' + result )
+		return
+	}
+
+	// Single match
+	if ( commands.length == 1 ) {
+		generateQuickHelp( commands[0] )
+		return
+	}
+
+	// No match
+	vscode.window.showErrorMessage( 'No help available for "' + command + '"' )
+	return
+}
+
+function generateQuickHelp( command: BmxCommand ) {
+	if ( !command || !command.description ) return
+
+	vscode.window.showInformationMessage( command.description )
+}
+
+// Fetch all commands matching a string
+interface GetCommandFilter {
+	hasDescription?: boolean
+	hasMarkdown?: boolean
+}
+export function getCommand( command: string, filter: GetCommandFilter | undefined = undefined ): BmxCommand[] {
+	// Cache commands if needed
+	cacheCommandsIfEmpty( false )
+
+	// Find the command
+	command = command.toLowerCase()
+	let matches: BmxCommand[] = []
+
+	for ( let index = 0; index < _commandsList.length; index++ ) {
+		const cmd = _commandsList[index]
+		if ( cmd.searchName == command ) {
+
+			// Filter out some matches
+			if ( filter ) {
+				if ( filter.hasDescription && !cmd.description ) continue
+				if ( filter.hasMarkdown && !cmd.markdownString ) continue
+			}
+
+			matches.push( cmd )
+		}
+	}
+
+	return matches
+}
+
+function cacheCommandsIfEmpty( showPopup: boolean ): boolean {
+	if ( !_commandsList || _commandsList.length <= 0 ) cacheCommands( showPopup )
+	return _commandsList ? _commandsList.length >= 0 : false
+}
+
+// Read commands.txt and then add the command (addCommand)
+function cacheCommands( showPopup: boolean ): boolean {
+	console.log( 'Caching BlitzMax commands' )
+
+	const globalBmxPath = vscode.workspace.getConfiguration( 'blitzmax' ).inspect( 'base.path' )?.globalValue
+	const relativePath = '/docs/html/Modules/commands.txt'
+	const absolutePath = vscode.Uri.file( globalBmxPath + relativePath ).fsPath
+
+	try {
+		const data = fs.readFileSync( absolutePath, 'utf8' )
+		_commandsList = []
+		addCommand( data )
+	} catch ( err ) {
+		//console.error( 'Couldn\'t open commands.txt:' )
+		//console.error( err )
+	}
+
+	// Did we add any commands?
+	if ( showPopup ) {
+		if ( !_commandsList || _commandsList.length <= 0 ) {
 			// Notify about building docs
 			vscode.window.showErrorMessage( 'Could not find BlitzMax documentations.\nMake sure you\'ve built documentations.',
 				'Build Docs' ).then( ( selection ) => {
@@ -35,89 +113,40 @@ export async function showQuickHelp( command: string ) {
 						vscode.commands.executeCommand( 'blitzmax.buildDocs' )
 					}
 				} )
-			return
 		}
 	}
 
-	command = command.toLowerCase()
-	console.log( 'Finding help for: ' + command )
-	let matches: BmxCommand[] = []
-
-	commandsList.forEach( cmd => {
-		if ( cmd.searchName == command ) matches.push( cmd )
-	} )
-
-	console.log( 'Matches: ' + matches.length )
-
-	if ( matches.length > 1 ) {
-		let pickOptions: vscode.QuickPickItem[] = []
-		matches.forEach(match => {
-			pickOptions.push({label: match.realName, detail: match.module})
-		})
-		
-		const result = await vscode.window.showQuickPick( pickOptions )
-		
-		return
-	} else if ( matches.length = 1 ) {
-		vscode.window.showInformationMessage( matches[0].description )
-		return
-	}
-
-	// Did we find something?
-	if ( matches.length <= 0 ) {
-		vscode.window.showErrorMessage( 'No help available for "' + command + '"' )
-		return
-	}
+	return _commandsList ? _commandsList.length >= 0 : false
 }
 
-function cacheCommands() {
-	return new Promise<void>( ( resolve ) => {
-		console.log( 'Caching BlitzMax commands' )
-
-		const globalBmxPath = vscode.workspace.getConfiguration( 'blitzmax' ).inspect( 'base.path' )?.globalValue
-		const relativePath = '/docs/html/Modules/commands.txt'
-		const absolutePath = vscode.Uri.file( globalBmxPath + relativePath ).fsPath
-
-		try {
-			const data = fs.readFileSync( absolutePath, 'utf8' )
-			commandsList = []
-			processCommandsData( data )
-		} catch ( err ) {
-			console.log( 'Couldn\'t open commands.txt' )
-			//console.error( err )
-		}
-
-		return resolve()
-	} )
-}
-
-function processCommandsData( data: string ) {
+// Process a line/lines from commands.txt
+function addCommand( data: string ) {
 	const lines = data.split( EOL )
 	lines.forEach( line => {
 		if ( line ) {
-			
+
 			const lineSplit = line.split( '|' )
 			const command: BmxCommand = {
-				realName: 'Undefined', description: 'No description', isFunction: false, returns: 'Int'
+				realName: 'No Name', searchName: 'no name', isFunction: false, returns: 'Int'
 			}
 			let leftSide = lineSplit[0]
 			let rightSide = lineSplit[lineSplit.length - 1]
-			
+
 			// Figure out URL
 			if ( rightSide.includes( '#' ) ) {
-				command.urlLocation = rightSide.substr(rightSide.indexOf('#'))
-				command.url = rightSide.slice(0, -command.urlLocation.length)
+				command.urlLocation = rightSide.substr( rightSide.indexOf( '#' ) )
+				command.url = rightSide.slice( 0, -command.urlLocation.length )
 			} else {
 				command.url = rightSide
 			}
-			
+
 			// Track down module
 			if ( command.url ) {
 				const pathSplits = command.url.split( '/' )
-				
+
 				if ( pathSplits[1].toLowerCase() == 'docs' ) {
 					command.module = pathSplits[4] + '/' + pathSplits[5]
-				} else if (pathSplits[1].toLowerCase() == 'mod') {
+				} else if ( pathSplits[1].toLowerCase() == 'mod' ) {
 					command.module = pathSplits[2] + '/' + pathSplits[3]
 				}
 			}
@@ -130,8 +159,9 @@ function processCommandsData( data: string ) {
 
 			// Figure out if this is a function
 			if ( leftSide.includes( '(' ) ) {
-				const funcParams = leftSide.substr( leftSide.indexOf( '(' ) + 1 ).slice( 0, -1 )
-				leftSide = leftSide.slice( 0, -funcParams.length - 2 )
+				command.paramsRaw = leftSide.substr( leftSide.indexOf( '(' ) + 1 ).slice( 0, -1 )
+				leftSide = leftSide.slice( 0, -command.paramsRaw.length - 2 )
+				command.paramsRaw = command.paramsRaw.trim()
 				command.isFunction = true
 
 				// TODO: Parse parameters
@@ -147,27 +177,47 @@ function processCommandsData( data: string ) {
 			command.realName = leftSide
 			command.searchName = command.realName.toLowerCase()
 
-			commandsList.push( command )
+			// Make a pretty markdown description of this command
+			if ( command.description || command.paramsRaw ) {
+				command.markdownString = new vscode.MarkdownString( undefined, true)
+
+				if ( command.paramsRaw )
+					command.markdownString.appendCodeblock(
+						command.realName + '( ' + command.paramsRaw + ' )'
+						, 'blitzmax'
+					)
+
+				if ( command.description )
+					command.markdownString.appendText( command.description + '\n' )
+
+				if ( command.module )
+					command.markdownString.appendMarkdown( '$(package) _'  +command.module + '_\n' )
+			}
+
+			_commandsList.push( command )
 		}
 	} )
 }
 
 interface BmxCommand {
 	realName: string,
-	searchName?: string
-	description: string,
+	searchName: string
+	description?: string,
+	markdownString?: vscode.MarkdownString
 
 	isFunction: boolean
 	returns: string,
 	params?: BmxCommandParam[],
+	paramsRaw?: string,
 
 	url?: string,
 	urlLocation?: string
-	
+
 	module?: string
 }
 
 interface BmxCommandParam {
 	name: string,
-	type: string
+	type: string,
+	default: string
 }

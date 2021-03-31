@@ -9,6 +9,7 @@ import { registerHelperGuide } from './helper'
 import { registerBuildTreeProvider } from './buildtree'
 import { registerBreakpoints } from './breakpoints'
 import { registerDocsProvider } from './bmxdocs'
+import { registerHoverProvider } from './hoverprovider'
 
 export function activate( context: vscode.ExtensionContext ) {
 
@@ -18,6 +19,7 @@ export function activate( context: vscode.ExtensionContext ) {
 	registerHelperGuide( context )
 	registerDocsProvider( context )
 	registerTaskProvider( context )
+	registerHoverProvider( context )
 	registerBuildTreeProvider( context )
 	registerTerminalLinkProvider( context )
 }

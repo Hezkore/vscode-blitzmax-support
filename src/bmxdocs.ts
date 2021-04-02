@@ -18,12 +18,12 @@ export function registerDocsProvider( context: vscode.ExtensionContext ) {
 		showQuickHelp( word )
 	} ) )
 
-	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.rebuildDocs', _ => {
+	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.rebuildDoc', _ => {
 		if ( !BlitzMaxPath ) return
 
 		vscode.window.withProgress( {
 			location: vscode.ProgressLocation.Notification,
-			title: 'Rebuilding Documentations',
+			title: 'Rebuilding Documentation',
 			cancellable: true
 		}, async ( progress, token ) => {
 			if ( !BlitzMaxPath ) return
@@ -33,6 +33,7 @@ export function registerDocsProvider( context: vscode.ExtensionContext ) {
 			token.onCancellationRequested( () => {
 				if ( docProcess ) {
 					docProcess.kill( 'SIGINT' )
+					docProcess.kill( 'SIGKILL' )
 					busy.notify()
 				}
 			} )
@@ -44,7 +45,7 @@ export function registerDocsProvider( context: vscode.ExtensionContext ) {
 				const str: string[] = data.toString().split( EOL )
 				for ( let index = 0; index < str.length; index++ ) {
 					const line = str[index].trim()
-					progress.report( { message: line } )
+					if ( line.length > 1 ) progress.report( { message: line } )
 				}
 			}
 
@@ -58,7 +59,7 @@ export function registerDocsProvider( context: vscode.ExtensionContext ) {
 
 			docProcess.on( 'error', ( error ) => {
 				console.error( error.message )
-				vscode.window.showErrorMessage( 'Error rebuilding documentations: ' + error.message )
+				vscode.window.showErrorMessage( 'Error rebuilding documentation: ' + error.message )
 			} )
 
 			docProcess.on( 'close', ( code ) => {
@@ -77,7 +78,7 @@ export function registerDocsProvider( context: vscode.ExtensionContext ) {
 export async function showQuickHelp( command: string ) {
 	cacheCommandsIfEmpty( true )
 	if ( !_commandsList ) return
-	let commands = getCommand( command, { hasMarkdown: true } )
+	let commands = getCommand( command, { hasDescription: true } )
 
 	// Multi match
 	if ( commands.length > 1 ) {
@@ -86,10 +87,15 @@ export async function showQuickHelp( command: string ) {
 			pickOptions.push( { label: match.realName, detail: match.module } )
 		} )
 
-		const result = await vscode.window.showQuickPick( pickOptions ).then( selection => {
-
+		vscode.window.showQuickPick( pickOptions ).then( selection => {
+			for ( let index = 0; index < pickOptions.length; index++ ) {
+				const pickItem = pickOptions[index];
+				if ( pickItem === selection ) {
+					generateQuickHelp( commands[index] )
+					return
+				}
+			}
 		} )
-		console.log( 'PCIEDK: ' + result )
 		return
 	}
 
@@ -105,9 +111,14 @@ export async function showQuickHelp( command: string ) {
 }
 
 function generateQuickHelp( command: BmxCommand ) {
-	if ( !command || !command.description ) return
+	if ( !command ) return
 
-	vscode.window.showInformationMessage( command.description )
+	if ( command.description ) {
+		// TODO make a big fancy page showing for description display
+		vscode.window.showInformationMessage( command.description )
+	} else {
+		vscode.window.showErrorMessage( ' "' + command.realName + '" has no help section' )
+	}
 }
 
 // Fetch all commands matching a string
@@ -143,7 +154,7 @@ export function getCommand( command: string | undefined = undefined, filter: Get
 	return matches
 }
 
-function cacheCommandsIfEmpty( showPopup: boolean ): boolean {
+export function cacheCommandsIfEmpty( showPopup: boolean ): boolean {
 	if ( !_commandsList || _commandsList.length <= 0 ) cacheCommands( showPopup )
 	return _commandsList ? _commandsList.length >= 0 : false
 }
@@ -169,9 +180,10 @@ function cacheCommands( showPopup: boolean ): boolean {
 	if ( BlitzMaxPath && showPopup ) {
 		if ( !_commandsList || _commandsList.length <= 0 ) {
 			// Notify about building docs
-			vscode.window.showErrorMessage( 'Could not find BlitzMax documentations.\nMake sure you\'ve built documentations.',
-				'Rebuild Docs' ).then( ( selection ) => {
-					if ( selection ) vscode.commands.executeCommand( 'blitzmax.rebuildDocs' )
+			vscode.window.showWarningMessage( 'Documentation not found.\nWould you like to rebuild documentation now?',
+				'No', 'Yes' ).then( ( selection ) => {
+					if ( selection && selection.toLowerCase() == 'yes' )
+						vscode.commands.executeCommand( 'blitzmax.rebuildDoc' )
 				} )
 		}
 	}

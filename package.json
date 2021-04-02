@@ -140,7 +140,7 @@
 		},
 		"commands": [
 			{
-				"command": "blitzmax.rebuildDocs",
+				"command": "blitzmax.rebuildDoc",
 				"title": "Rebuild Documentations",
 				"category": "BlitzMax"
 			},

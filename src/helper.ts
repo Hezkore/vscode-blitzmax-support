@@ -3,6 +3,7 @@
 import * as vscode from 'vscode'
 import * as path from 'path'
 import { existsSync } from './common'
+import { cacheCommandsIfEmpty } from './bmxdocs'
 
 export let BlitzMaxPath: string | undefined
 const bmxNoPathMessage = `No BlitzMax path configured!
@@ -75,6 +76,9 @@ function triggerHelpGuides() {
 					vscode.commands.executeCommand( 'blitzmax.pickBlitzMaxPath' )
 				}
 			} )
+		} else {
+			
+			cacheCommandsIfEmpty( true )
 		}
 	}
 }

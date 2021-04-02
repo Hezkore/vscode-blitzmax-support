@@ -85,13 +85,13 @@
 			}
 		],
 		"keybindings": [
-      {
-        "command": "blitzmax.quickHelp",
-        "key": "f1",
-        "mac": "f1",
-        "when": "editorTextFocus && editorLangId == blitzmax"
-      }
-    ],
+			{
+				"command": "blitzmax.quickHelp",
+				"key": "f1",
+				"mac": "f1",
+				"when": "editorTextFocus && editorLangId == blitzmax"
+			}
+		],
 		"configuration": {
 			"type": "object",
 			"title": "BlitzMax",
@@ -139,6 +139,11 @@
 			}
 		},
 		"commands": [
+			{
+				"command": "blitzmax.rebuildDocs",
+				"title": "Rebuild Documentations",
+				"category": "BlitzMax"
+			},
 			{
 				"command": "blitzmax.quickHelp",
 				"title": "Quick Help",
@@ -246,7 +251,7 @@
 					"group": "inline"
 				}
 			],
-			"editor/context" : [
+			"editor/context": [
 				{
 					"when": "editorLangId == blitzmax",
 					"command": "blitzmax.quickHelp",

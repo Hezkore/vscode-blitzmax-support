@@ -6,12 +6,12 @@ import { getCommand } from './bmxdocs'
 export function registerCompletionProvider( context: vscode.ExtensionContext ) {
 
 	vscode.languages.registerCompletionItemProvider( 'blitzmax', {
-		provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext) {
-			
+		provideCompletionItems( document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext ) {
+
 			// Get all commands I guess?
 			const commands = getCommand()
 			const completionItems: vscode.CompletionItem[] = []
-			
+
 			commands.forEach( cmd => {
 				// Construct and push the completion item
 				completionItems.push( {
@@ -20,10 +20,10 @@ export function registerCompletionProvider( context: vscode.ExtensionContext ) {
 					detail: cmd.returns,
 					documentation: cmd.markdownString,
 					insertText: cmd.insertText,
-					command: {title: 'Signature Help', command: 'editor.action.triggerParameterHints'}
-				})
-			})
-			
+					command: { title: 'Signature Help', command: 'editor.action.triggerParameterHints' }
+				} )
+			} )
+
 			return completionItems
 		}
 	} )

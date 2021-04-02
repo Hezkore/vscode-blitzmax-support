@@ -15,7 +15,7 @@ export function registerSignatureHelpProvider( context: vscode.ExtensionContext 
 			const funcName = fileContents.slice( document.offsetAt( funcRange.start ), document.offsetAt( funcRange.end ) )
 			const paramIndex = call.commas.length
 
-			const commands = getCommand( funcName, {hasParameters: true} )
+			const commands = getCommand( funcName, { hasParameters: true } )
 			if ( !commands || commands.length <= 0 ) return null
 
 			const sigStack = new vscode.SignatureHelp()
@@ -24,8 +24,8 @@ export function registerSignatureHelpProvider( context: vscode.ExtensionContext 
 			let cmdPreview: string = ''
 			let paramPreview: string
 
-			for ( var ci = 0; ci < commands.length; ci++ ) {
-				const cmd = commands[ci]
+			for ( let index = 0; index < commands.length; index++ ) {
+				const cmd = commands[index]
 				const params = cmd.params
 				if ( !params ) continue
 				if ( params.length - 1 < paramIndex ) continue
@@ -59,12 +59,11 @@ export function registerSignatureHelpProvider( context: vscode.ExtensionContext 
 	}, '(', ',', ' ', '"' )
 }
 
-
 function previousTokenPosition( document: vscode.TextDocument, position: vscode.Position ): any {
 
 	while ( position.character > 0 ) {
 
-		let word = document.getWordRangeAtPosition( position )
+		const word = document.getWordRangeAtPosition( position )
 		if ( word ) return word
 		position = position.translate( 0, -1 )
 	}
@@ -79,6 +78,7 @@ function findStart( document: vscode.TextDocument, position: vscode.Position ): 
 	let commas: vscode.Position[] = []
 
 	for ( let char = position.character; char >= 0; char-- ) {
+
 		switch ( currentLine[char] ) {
 			case '(':
 				parenBalance--
@@ -99,6 +99,7 @@ function findStart( document: vscode.TextDocument, position: vscode.Position ): 
 					commas.push( new vscode.Position( position.line, char ) )
 				}
 		}
+
 	}
 
 	return null

@@ -3,7 +3,10 @@
 import * as fs from 'fs'
 import { EOL } from 'os'
 import * as vscode from 'vscode'
+import * as cp from 'child_process'
+import { BlitzMaxPath } from './helper'
 import { getCurrentDocumentWord } from './common'
+import * as awaitNotify from 'await-notify'
 
 let _commandsList: BmxCommand[]
 
@@ -14,10 +17,66 @@ export function registerDocsProvider( context: vscode.ExtensionContext ) {
 		if ( !word || typeof word !== "string" ) word = getCurrentDocumentWord()
 		showQuickHelp( word )
 	} ) )
+
+	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.rebuildDocs', _ => {
+		if ( !BlitzMaxPath ) return
+
+		vscode.window.withProgress( {
+			location: vscode.ProgressLocation.Notification,
+			title: 'Rebuilding Documentations',
+			cancellable: true
+		}, async ( progress, token ) => {
+			if ( !BlitzMaxPath ) return
+
+			let busy = new awaitNotify.Subject()
+
+			token.onCancellationRequested( () => {
+				if ( docProcess ) {
+					docProcess.kill( 'SIGINT' )
+					busy.notify()
+				}
+			} )
+
+			const procStart = process.hrtime()
+			let docProcess = cp.spawn( BlitzMaxPath + '/bin/makedocs' )
+
+			function reportProgress( data: any ) {
+				const str: string[] = data.toString().split( EOL )
+				for ( let index = 0; index < str.length; index++ ) {
+					const line = str[index].trim()
+					progress.report( { message: line } )
+				}
+			}
+
+			docProcess.stdout.on( 'data', ( data ) => {
+				reportProgress( data )
+			} )
+
+			docProcess.stderr.on( 'data', ( data ) => {
+				reportProgress( data )
+			} )
+
+			docProcess.on( 'error', ( error ) => {
+				console.error( error.message )
+				vscode.window.showErrorMessage( 'Error rebuilding documentations: ' + error.message )
+			} )
+
+			docProcess.on( 'close', ( code ) => {
+				const procEnd = process.hrtime( procStart )
+
+				console.log( `Rebuild documentation time: ${procEnd[0]}s ${procEnd[1] / 1000000}ms\r\n\r\n` )
+				busy.notify()
+			} )
+
+			await busy.wait()
+			return
+		} )
+	} ) )
 }
 
 export async function showQuickHelp( command: string ) {
 	cacheCommandsIfEmpty( true )
+	if ( !_commandsList ) return
 	let commands = getCommand( command, { hasMarkdown: true } )
 
 	// Multi match
@@ -60,6 +119,7 @@ interface GetCommandFilter {
 export function getCommand( command: string | undefined = undefined, filter: GetCommandFilter | undefined = undefined ): BmxCommand[] {
 	// Cache commands if needed
 	cacheCommandsIfEmpty( false )
+	if ( !_commandsList ) return []
 
 	// Find the command
 	if ( command ) command = command.toLowerCase()
@@ -73,7 +133,7 @@ export function getCommand( command: string | undefined = undefined, filter: Get
 			if ( filter ) {
 				if ( filter.hasDescription && !cmd.description ) continue
 				if ( filter.hasMarkdown && !cmd.markdownString ) continue
-				if (filter.hasParameters && (!cmd.params || cmd.params.length <= 0)) continue
+				if ( filter.hasParameters && ( !cmd.params || cmd.params.length <= 0 ) ) continue
 			}
 
 			matches.push( cmd )
@@ -106,14 +166,12 @@ function cacheCommands( showPopup: boolean ): boolean {
 	}
 
 	// Did we add any commands?
-	if ( showPopup ) {
+	if ( BlitzMaxPath && showPopup ) {
 		if ( !_commandsList || _commandsList.length <= 0 ) {
 			// Notify about building docs
 			vscode.window.showErrorMessage( 'Could not find BlitzMax documentations.\nMake sure you\'ve built documentations.',
-				'Build Docs' ).then( ( selection ) => {
-					if ( selection?.startsWith( 'Build' ) ) {
-						vscode.commands.executeCommand( 'blitzmax.buildDocs' )
-					}
+				'Rebuild Docs' ).then( ( selection ) => {
+					if ( selection ) vscode.commands.executeCommand( 'blitzmax.rebuildDocs' )
 				} )
 		}
 	}
@@ -193,17 +251,17 @@ function addCommand( data: string ) {
 					command.markdownString.appendCodeblock( codeBlock, 'blitzmax'
 					)
 				}
-				
+
 				if ( command.description ) {
 					command.markdownString.appendText( command.description + '\n' )
 					command.shortMarkdownString.appendText( command.description + '\n' )
 				}
-				
+
 				if ( command.module ) {
 					command.markdownString.appendMarkdown( '$(package) _' + command.module + '_\n' )
 					command.shortMarkdownString.appendMarkdown( '$(package) _' + command.module + '_\n' )
 				}
-				
+
 			}
 
 			// Make pretty insertion text
@@ -226,7 +284,7 @@ function addCommand( data: string ) {
 				}
 				command.insertText.appendText( ')' )
 			}
-			
+
 			// Done!
 			_commandsList.push( command )
 		}

@@ -10,6 +10,8 @@ import { registerBuildTreeProvider } from './buildtree'
 import { registerBreakpoints } from './breakpoints'
 import { registerDocsProvider } from './bmxdocs'
 import { registerHoverProvider } from './hoverprovider'
+import { registerCompletionProvider } from './completionprovider'
+import { registerSignatureHelpProvider } from './signaturehelpprovider'
 
 export function activate( context: vscode.ExtensionContext ) {
 
@@ -21,7 +23,9 @@ export function activate( context: vscode.ExtensionContext ) {
 	registerTaskProvider( context )
 	registerHoverProvider( context )
 	registerBuildTreeProvider( context )
+	registerCompletionProvider( context )
 	registerTerminalLinkProvider( context )
+	registerSignatureHelpProvider( context )
 }
 
 export function deactivate() {

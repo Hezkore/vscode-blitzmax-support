@@ -55,23 +55,25 @@ function generateQuickHelp( command: BmxCommand ) {
 interface GetCommandFilter {
 	hasDescription?: boolean
 	hasMarkdown?: boolean
+	hasParameters?: boolean
 }
-export function getCommand( command: string, filter: GetCommandFilter | undefined = undefined ): BmxCommand[] {
+export function getCommand( command: string | undefined = undefined, filter: GetCommandFilter | undefined = undefined ): BmxCommand[] {
 	// Cache commands if needed
 	cacheCommandsIfEmpty( false )
 
 	// Find the command
-	command = command.toLowerCase()
+	if ( command ) command = command.toLowerCase()
 	let matches: BmxCommand[] = []
 
 	for ( let index = 0; index < _commandsList.length; index++ ) {
 		const cmd = _commandsList[index]
-		if ( cmd.searchName == command ) {
+		if ( !command || ( command && cmd.searchName == command ) ) {
 
 			// Filter out some matches
 			if ( filter ) {
 				if ( filter.hasDescription && !cmd.description ) continue
 				if ( filter.hasMarkdown && !cmd.markdownString ) continue
+				if (filter.hasParameters && (!cmd.params || cmd.params.length <= 0)) continue
 			}
 
 			matches.push( cmd )
@@ -177,29 +179,58 @@ function addCommand( data: string ) {
 
 			// Make a pretty markdown description of this command
 			if ( command.description || command.paramsPretty ) {
+				command.shortMarkdownString = new vscode.MarkdownString( undefined, true )
 				command.markdownString = new vscode.MarkdownString( undefined, true )
 
 				if ( command.paramsPretty ) {
 					let codeBlock = command.realName
-					
+
 					// Construct code block
-					if (command.returns) codeBlock += ':' + command.returns
+					if ( command.returns ) codeBlock += ':' + command.returns
 					codeBlock += '( ' + command.paramsPretty + ' )'
-					
+
 					// Append
-					command.markdownString.appendCodeblock(codeBlock, 'blitzmax'
+					command.markdownString.appendCodeblock( codeBlock, 'blitzmax'
 					)
 				}
 				
-				if ( command.description )
+				if ( command.description ) {
 					command.markdownString.appendText( command.description + '\n' )
-
-				if ( command.module )
+					command.shortMarkdownString.appendText( command.description + '\n' )
+				}
+				
+				if ( command.module ) {
 					command.markdownString.appendMarkdown( '$(package) _' + command.module + '_\n' )
+					command.shortMarkdownString.appendMarkdown( '$(package) _' + command.module + '_\n' )
+				}
+				
 			}
 
+			// Make pretty insertion text
+			if ( command.isFunction ) {
+				command.insertText = new vscode.SnippetString( command.realName )
+				command.insertText.appendText( '(' )
+				if ( command.params ) {
+					command.insertText.appendText( ' ' )
+					for ( let index = 0; index < command.params.length; index++ ) {
+						const param = command.params[index]
+
+						if ( param.default ) {
+							command.insertText.appendPlaceholder( param.default )
+						} else {
+							command.insertText.appendPlaceholder( param.name + ':' + param.type )
+						}
+						if ( index < command.params.length - 1 ) command.insertText.appendText( ', ' )
+					}
+					command.insertText.appendText( ' ' )
+				}
+				command.insertText.appendText( ')' )
+			}
+			
+			// Done!
 			_commandsList.push( command )
 		}
+
 	} )
 }
 
@@ -248,12 +279,12 @@ function parseCommandParams( cmd: BmxCommand ) {
 						param.type = ''
 						parse = parsePart.type
 						break
-					
+
 					// Assume Int type and move to default value
 					case '=':
 						parse = parsePart.default
 						break
-					
+
 					// Assume Int type and move to new value
 					case ',':
 						// Reset
@@ -284,7 +315,7 @@ function parseCommandParams( cmd: BmxCommand ) {
 
 					// Okay NOW add to the name
 					default:
-						if (chr != ' ') param.name += chr
+						if ( chr != ' ' ) param.name += chr
 						break
 				}
 				break
@@ -303,14 +334,14 @@ function parseCommandParams( cmd: BmxCommand ) {
 						break
 
 					default:
-						if (chr != ' ') param.type += chr
+						if ( chr != ' ' ) param.type += chr
 						break
 				}
 				break
 
 			case parsePart.default:
 				// The default value of this parameter
-				
+
 				if ( inString ) {
 					param.default += chr
 				} else {
@@ -318,26 +349,26 @@ function parseCommandParams( cmd: BmxCommand ) {
 						// Reset
 						createNewParam = true
 						parse = parsePart.name
-						
+
 					} else {
-						if (chr != ' ') param.default += chr
+						if ( chr != ' ' ) param.default += chr
 					}
 				}
-				
+
 				if ( chr == '"' ) inString = !inString
 				break
 		}
 	}
-	
+
 	// Make things pretty!
 	cmd.paramsPretty = ''
-	
-	for (let index = 0; index < cmd.params.length; index++) {
+
+	for ( let index = 0; index < cmd.params.length; index++ ) {
 		const param = cmd.params[index]
-		
+
 		cmd.paramsPretty += param.name + ':' + param.type
 		if ( param.default.length > 0 ) cmd.paramsPretty += ' = ' + param.default
-		
+
 		if ( index < cmd.params.length - 1 ) cmd.paramsPretty += ', '
 	}
 }
@@ -346,6 +377,7 @@ interface BmxCommand {
 	realName: string,
 	searchName: string
 	description?: string,
+	shortMarkdownString?: vscode.MarkdownString
 	markdownString?: vscode.MarkdownString
 
 	isFunction: boolean
@@ -358,6 +390,8 @@ interface BmxCommand {
 	urlLocation?: string
 
 	module?: string
+
+	insertText?: vscode.SnippetString
 }
 
 interface BmxCommandParam {

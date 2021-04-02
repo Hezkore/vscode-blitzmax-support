@@ -127,7 +127,7 @@ function addCommand( data: string ) {
 
 			const lineSplit = line.split( '|' )
 			const command: BmxCommand = {
-				realName: 'No Name', searchName: 'no name', isFunction: false, returns: 'Int'
+				realName: 'No Name', searchName: 'no name', isFunction: false, returns: undefined
 			}
 			let leftSide = lineSplit[0]
 			let rightSide = lineSplit[lineSplit.length - 1]
@@ -161,10 +161,8 @@ function addCommand( data: string ) {
 			if ( leftSide.includes( '(' ) ) {
 				command.paramsRaw = leftSide.substr( leftSide.indexOf( '(' ) + 1 ).slice( 0, -1 )
 				leftSide = leftSide.slice( 0, -command.paramsRaw.length - 2 )
-				command.paramsRaw = command.paramsRaw.trim()
+				parseCommandParams( command )
 				command.isFunction = true
-
-				// TODO: Parse parameters
 			}
 
 			// Returns?
@@ -178,25 +176,170 @@ function addCommand( data: string ) {
 			command.searchName = command.realName.toLowerCase()
 
 			// Make a pretty markdown description of this command
-			if ( command.description || command.paramsRaw ) {
-				command.markdownString = new vscode.MarkdownString( undefined, true)
+			if ( command.description || command.paramsPretty ) {
+				command.markdownString = new vscode.MarkdownString( undefined, true )
 
-				if ( command.paramsRaw )
-					command.markdownString.appendCodeblock(
-						command.realName + '( ' + command.paramsRaw + ' )'
-						, 'blitzmax'
+				if ( command.paramsPretty ) {
+					let codeBlock = command.realName
+					
+					// Construct code block
+					if (command.returns) codeBlock += ':' + command.returns
+					codeBlock += '( ' + command.paramsPretty + ' )'
+					
+					// Append
+					command.markdownString.appendCodeblock(codeBlock, 'blitzmax'
 					)
-
+				}
+				
 				if ( command.description )
 					command.markdownString.appendText( command.description + '\n' )
 
 				if ( command.module )
-					command.markdownString.appendMarkdown( '$(package) _'  +command.module + '_\n' )
+					command.markdownString.appendMarkdown( '$(package) _' + command.module + '_\n' )
 			}
 
 			_commandsList.push( command )
 		}
 	} )
+}
+
+function parseCommandParams( cmd: BmxCommand ) {
+
+	// Make sure there's actually something to parse
+	if ( !cmd.paramsRaw ) return
+	cmd.paramsRaw = cmd.paramsRaw.trim()
+	if ( !cmd.paramsRaw ) return
+
+	// Reset//create the parameter array
+	cmd.params = []
+
+	// Make sure we have at least one parameter to work with
+	let createNewParam: boolean = true
+
+	// Current step of parsing
+	enum parsePart {
+		name,
+		type,
+		default
+	}
+	let parse: parsePart = parsePart.name
+
+	// Currently parsing inside a string?
+	let inString: boolean = false
+
+	// Go through parameters, letter by letter
+	for ( let index = 0; index < cmd.paramsRaw.length; index++ ) {
+		const chr = cmd.paramsRaw[index]
+
+		if ( createNewParam ) {
+			createNewParam = false
+			cmd.params.push( { name: '', type: 'Int', default: '' } )
+		}
+
+		const param = cmd.params[cmd.params.length - 1]
+
+		switch ( parse ) {
+			case parsePart.name:
+				// Add character to the parameters name
+				switch ( chr ) {
+
+					// Move onto type parsing
+					case ':':
+						param.type = ''
+						parse = parsePart.type
+						break
+					
+					// Assume Int type and move to default value
+					case '=':
+						parse = parsePart.default
+						break
+					
+					// Assume Int type and move to new value
+					case ',':
+						// Reset
+						createNewParam = true
+						parse = parsePart.name
+						break
+
+					// Ugh I hate these old BASIC type shortcuts!
+					case '%':
+						param.type = 'Int'
+						parse = parsePart.type
+						break
+
+					case '#':
+						param.type = 'Float'
+						parse = parsePart.type
+						break
+
+					case '!':
+						param.type = 'Double'
+						parse = parsePart.type
+						break
+
+					case '$':
+						param.type = 'String'
+						parse = parsePart.type
+						break
+
+					// Okay NOW add to the name
+					default:
+						if (chr != ' ') param.name += chr
+						break
+				}
+				break
+
+			case parsePart.type:
+				// The type of this parameter
+				switch ( chr ) {
+					case ',':
+						// Reset
+						createNewParam = true
+						parse = parsePart.name
+						break
+
+					case '=':
+						parse = parsePart.default
+						break
+
+					default:
+						if (chr != ' ') param.type += chr
+						break
+				}
+				break
+
+			case parsePart.default:
+				// The default value of this parameter
+				
+				if ( inString ) {
+					param.default += chr
+				} else {
+					if ( chr == ',' ) {
+						// Reset
+						createNewParam = true
+						parse = parsePart.name
+						
+					} else {
+						if (chr != ' ') param.default += chr
+					}
+				}
+				
+				if ( chr == '"' ) inString = !inString
+				break
+		}
+	}
+	
+	// Make things pretty!
+	cmd.paramsPretty = ''
+	
+	for (let index = 0; index < cmd.params.length; index++) {
+		const param = cmd.params[index]
+		
+		cmd.paramsPretty += param.name + ':' + param.type
+		if ( param.default.length > 0 ) cmd.paramsPretty += ' = ' + param.default
+		
+		if ( index < cmd.params.length - 1 ) cmd.paramsPretty += ', '
+	}
 }
 
 interface BmxCommand {
@@ -206,9 +349,10 @@ interface BmxCommand {
 	markdownString?: vscode.MarkdownString
 
 	isFunction: boolean
-	returns: string,
+	returns?: string,
 	params?: BmxCommandParam[],
 	paramsRaw?: string,
+	paramsPretty?: string
 
 	url?: string,
 	urlLocation?: string

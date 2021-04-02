@@ -19,7 +19,8 @@ export function registerCompletionProvider( context: vscode.ExtensionContext ) {
 					kind: cmd.isFunction ? vscode.CompletionItemKind.Function : vscode.CompletionItemKind.Keyword,
 					detail: cmd.returns,
 					documentation: cmd.markdownString,
-					insertText: cmd.insertText
+					insertText: cmd.insertText,
+					command: {title: 'Signature Help', command: 'editor.action.triggerParameterHints'}
 				})
 			})
 			

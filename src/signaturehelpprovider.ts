@@ -56,7 +56,7 @@ export function registerSignatureHelpProvider( context: vscode.ExtensionContext 
 
 			return sigStack
 		}
-	} )
+	}, '(', ',', ' ', '"' )
 }
 
 

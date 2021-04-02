@@ -1,3 +1,11 @@
+## 2.7.0
+* Support for BlitzMax 'commands.txt' file
+* Press F1 on words to get information
+* Hover over words to get information
+* Auto complete support
+* Signature helper support
+* Added 'Rebuild Documentation' command
+
 ## 2.6.1
 * Fixed a build task bug
 

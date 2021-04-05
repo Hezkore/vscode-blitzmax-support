@@ -1,3 +1,6 @@
+## 2.8.0
+* Added BlitzMax documentation webview
+
 ## 2.7.0
 * Support for BlitzMax 'commands.txt' file
 * Press F1 on words to get information

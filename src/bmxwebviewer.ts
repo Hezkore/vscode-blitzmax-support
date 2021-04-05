@@ -119,27 +119,25 @@ function convertBmxWeb( url: string ): Promise<BmxConvertedHtmlSource> {
 			let htmlSource = await readFile( url )
 
 			progress.report( { message: 'Converting HTML', increment: 25 } )
-			let insertScript: boolean = true
+
 			let replaceCSS: boolean = true
 			let title: string | undefined
 			const htmlLines = htmlSource.split( EOL )
+
 			for ( let index = 0; index < htmlLines.length; index++ ) {
 				const line = htmlLines[index]
 
+				// Find the module name
 				if ( !title && line.includes( '<b>' ) ) {
-					title = line.substring( line.lastIndexOf( '<b>' ) + 3, line.lastIndexOf( '</b>' ) - 1 )
-				}
-
-				// Inject script
-				if ( insertScript && line.toLowerCase().trim().startsWith( '</head><body>' ) ) {
 					progress.report( { increment: 25 } )
-					htmlSource = htmlSource.replace( line, script )
-					insertScript = false
+					title = line.substring( line.lastIndexOf( '<b>' ) + 3, line.lastIndexOf( '</b>' ) - 1 )
 				}
 
 				// Replace CSS
 				if ( replaceCSS && line.toLowerCase().trim().startsWith( '<link rel=stylesheet' ) ) {
 					progress.report( { increment: 25 } )
+
+					// Replace with custom or original?
 					if ( vscode.workspace.getConfiguration( 'blitzmax' ).get( 'help.customStyle' ) ) {
 						htmlSource = htmlSource.replace( line, `<style>${customCSS}</style>` )
 						replaceCSS = false
@@ -152,28 +150,17 @@ function convertBmxWeb( url: string ): Promise<BmxConvertedHtmlSource> {
 
 						if ( cssFile ) replaceCSS = false
 					}
+
 				}
 
 				// Break free if we're all done
-				if ( !insertScript && !replaceCSS && title ) break
-			}
-
-			// Did we inject our script?
-			if ( insertScript ) {
-				vscode.window.showErrorMessage( 'Error while injecting JavaScript' )
+				if ( !replaceCSS && title ) break
 			}
 
 			// Did we replace CSS?
-			if ( replaceCSS ) {
-				vscode.window.showErrorMessage( 'Error while replacing CSS' )
-			}
+			if ( replaceCSS ) vscode.window.showErrorMessage( 'Error while replacing CSS' )
 
-			return resolve(
-				{
-					source: htmlSource,
-					title: title ? title : 'No Title'
-				}
-			)
+			return resolve( { source: script + htmlSource, title: title ? title : 'No Title' } )
 		} )
 	} )
 }
@@ -325,7 +312,6 @@ div.entries{
 }`
 
 const script = `<script>
-
 const vscode = acquireVsCodeApi();
 
 document.addEventListener('click', event => {
@@ -358,5 +344,4 @@ window.addEventListener('message', event => {
 					break;
 		}
 });
-
-</script></head><body>`
+</script>`

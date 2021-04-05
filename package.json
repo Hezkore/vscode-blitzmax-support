@@ -135,6 +135,11 @@
 					"type": "boolean",
 					"default": false,
 					"description": "Restart LSP if changes to the LSP binary are detected."
+				},
+				"blitzmax.help.customStyle": {
+					"type": "boolean",
+					"default": true,
+					"description": "Use custom CSS style for help documentation."
 				}
 			}
 		},

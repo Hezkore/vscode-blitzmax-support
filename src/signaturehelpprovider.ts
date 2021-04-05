@@ -1,7 +1,7 @@
 'use strict'
 
 import * as vscode from 'vscode'
-import { getCommand } from './bmxdocs'
+import { getCommand } from './bmxcommands'
 
 export function registerSignatureHelpProvider( context: vscode.ExtensionContext ) {
 	vscode.languages.registerSignatureHelpProvider( 'blitzmax', {

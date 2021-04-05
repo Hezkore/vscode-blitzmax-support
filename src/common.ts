@@ -5,6 +5,21 @@ import * as os from 'os'
 import * as fs from 'fs'
 import * as path from 'path'
 
+export function debugDelay( ms: number ) {
+	return new Promise( resolve => setTimeout( resolve, ms ) )
+}
+
+export async function readFile( filename: string ): Promise<string> {
+	return new Promise( function ( resolve, reject ) {
+		fs.readFile( filename, function ( err, data ) {
+			if ( err )
+				reject( err )
+			else
+				resolve( data.toString() )
+		} )
+	} )
+}
+
 export function getCurrentDocumentWord( position: vscode.Position | undefined = undefined, document: vscode.TextDocument | undefined = undefined, editor: vscode.TextEditor | undefined = undefined ): string | undefined {
 
 	// Use the current active editor if no editor was specified
@@ -20,7 +35,7 @@ export function getCurrentDocumentWord( position: vscode.Position | undefined = 
 	if ( !document ) return
 
 	let wordRange = document.getWordRangeAtPosition( position )
-	if ( !wordRange ) return 
+	if ( !wordRange ) return
 
 	let word = document.getText( wordRange )
 	return word

@@ -1,7 +1,7 @@
 'use strict'
 
 import * as vscode from 'vscode'
-import { getCommand } from './bmxdocs'
+import { getCommand } from './bmxcommands'
 import { getCurrentDocumentWord } from './common'
 
 export function registerHoverProvider( context: vscode.ExtensionContext ) {

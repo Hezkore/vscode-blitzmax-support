@@ -5,6 +5,7 @@ import { EOL } from 'os'
 import * as vscode from 'vscode'
 import * as cp from 'child_process'
 import { BlitzMaxPath } from './helper'
+import { showBmxDocs } from './bmxwebviewer'
 import { getCurrentDocumentWord } from './common'
 import * as awaitNotify from 'await-notify'
 
@@ -78,7 +79,7 @@ export function registerDocsProvider( context: vscode.ExtensionContext ) {
 export async function showQuickHelp( command: string ) {
 	cacheCommandsIfEmpty( true )
 	if ( !_commandsList ) return
-	let commands = getCommand( command, { hasDescription: true } )
+	let commands = getCommand( command )//, { hasDescription: true } )
 
 	// Multi match
 	if ( commands.length > 1 ) {
@@ -91,7 +92,7 @@ export async function showQuickHelp( command: string ) {
 			for ( let index = 0; index < pickOptions.length; index++ ) {
 				const pickItem = pickOptions[index];
 				if ( pickItem === selection ) {
-					generateQuickHelp( commands[index] )
+					showBmxDocs( vscode.Uri.file( BlitzMaxPath + '/' + commands[index].url ).fsPath, commands[index].urlLocation )
 					return
 				}
 			}
@@ -101,24 +102,13 @@ export async function showQuickHelp( command: string ) {
 
 	// Single match
 	if ( commands.length == 1 ) {
-		generateQuickHelp( commands[0] )
+		showBmxDocs( vscode.Uri.file( BlitzMaxPath + '/' + commands[0].url ).fsPath, commands[0].urlLocation )
 		return
 	}
 
 	// No match
 	vscode.window.showErrorMessage( 'No help available for "' + command + '"' )
 	return
-}
-
-function generateQuickHelp( command: BmxCommand ) {
-	if ( !command ) return
-
-	if ( command.description ) {
-		// TODO make a big fancy page showing for description display
-		vscode.window.showInformationMessage( command.description )
-	} else {
-		vscode.window.showErrorMessage( ' "' + command.realName + '" has no help section' )
-	}
 }
 
 // Fetch all commands matching a string
@@ -208,6 +198,7 @@ function addCommand( data: string ) {
 			if ( rightSide.includes( '#' ) ) {
 				command.urlLocation = rightSide.substr( rightSide.indexOf( '#' ) )
 				command.url = rightSide.slice( 0, -command.urlLocation.length )
+				command.urlLocation = command.urlLocation.slice( 1 ).trim()
 			} else {
 				command.url = rightSide
 			}
@@ -443,7 +434,7 @@ function parseCommandParams( cmd: BmxCommand ) {
 	}
 }
 
-interface BmxCommand {
+export interface BmxCommand {
 	realName: string,
 	searchName: string
 	description?: string,

@@ -1,3 +1,6 @@
+## 2.8.2
+* Error messages are now correctly displayed in debug mode
+
 ## 2.8.1
 * 'Unhandled Exceptions' are now handled correctly
 

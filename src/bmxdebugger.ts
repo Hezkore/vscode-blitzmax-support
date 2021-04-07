@@ -1,7 +1,8 @@
 'use strict'
 
 import {
-	StackFrame, Scope, Variable, StoppedEvent, ContinuedEvent
+	StackFrame, Scope, Variable,
+	StoppedEvent, ContinuedEvent, OutputEvent
 } from 'vscode-debugadapter'
 import { DebugProtocol } from 'vscode-debugprotocol'
 import { BmxDebugSession } from './bmxruntime'
@@ -60,34 +61,35 @@ export class BmxDebugger {
 			const line = output.split( EOL )[i]
 			if ( line.length <= 0 ) continue
 			//console.log('D: ' + line)
+			
+			// Is this relevant to the debugger?
+			if ( line.startsWith( '~>' ) ) {
+				// Does the current event have a name?
+				// This will create a new event
+				if ( !this.currentEvent || !this.currentEvent.name ) {
+					if ( line.length > 2 ) {
 
-			// Does the current event have a name?
-			// This will create a new event
-			if ( !this.currentEvent || !this.currentEvent.name ) {
-				if ( line.startsWith( '~>' ) && line.length > 2 ) {
-
-					if ( line.includes( ':' ) ) {
-						this.currentEvent = {
-							name: line.slice( 2, line.lastIndexOf( ':' ) - line.length ),
-							extra: line.substr( line.lastIndexOf( ':' ) + 1 ),
-							data: []
+						if ( line.includes( ':' ) ) {
+							this.currentEvent = {
+								name: line.slice( 2, line.lastIndexOf( ':' ) - line.length ),
+								extra: line.substr( line.lastIndexOf( ':' ) + 1 ),
+								data: []
+							}
+						} else if ( line.includes( '@' ) ) {
+							this.currentEvent = {
+								name: line.slice( 2, line.lastIndexOf( '@' ) - line.length ),
+								extra: line.substr( line.lastIndexOf( '@' ) + 1 ),
+								data: []
+							}
+						} else {
+							this.currentEvent = { name: line.slice( 2 ), data: [] }
 						}
-					} else if ( line.includes( '@' ) ) {
-						this.currentEvent = {
-							name: line.slice( 2, line.lastIndexOf( '@' ) - line.length ),
-							extra: line.substr( line.lastIndexOf( '@' ) + 1 ),
-							data: []
-						}
-					} else {
-						this.currentEvent = { name: line.slice( 2 ), data: [] }
 					}
+
+					continue
 				}
 
-				continue
-			}
-
-			// Data and end of event
-			if ( line.startsWith( '~>' ) ) {
+				// Data and end of event
 				if ( line.length > 2 ) {
 					// Add to data
 					if ( line.length > 3 ) {
@@ -118,6 +120,9 @@ export class BmxDebugger {
 					// Reset
 					this.currentEvent = { name: '', data: [] }
 				}
+			} else {
+				// This is not debug related, output to stderr
+				this.session.sendEvent( new OutputEvent( line, 'stderr' ) )
 			}
 		}
 	}
@@ -135,7 +140,7 @@ export class BmxDebugger {
 				if ( event.name == 'Unhandled Exception' && event.extra )
 					vscode.window.showErrorMessage(
 						event.name + ': ' +
-						event.extra.replace( '.', '.\n' ).replace( '\n\n', '\n' ) ,
+						event.extra.replace( '.', '.\n' ).replace( '\n\n', '\n' ),
 						{ modal: true }
 					)
 				return true

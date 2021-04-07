@@ -1,3 +1,6 @@
+## 2.8.1
+* 'Unhandled Exceptions' are now handled correctly
+
 ## 2.8.0
 * Added BlitzMax documentation webview
 

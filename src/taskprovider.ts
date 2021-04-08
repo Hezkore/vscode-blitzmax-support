@@ -528,11 +528,27 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 
 						// Is this too hacky?
 						setTimeout( () => {
-							if ( vscode.workspace.getConfiguration( 'blitzmax' ).get( 'pref.jumpToProblemOnBuildError' ) )
-								vscode.commands.executeCommand( 'editor.action.marker.nextInFiles' )
 
-							if ( vscode.workspace.getConfiguration( 'blitzmax' ).get( 'pref.showProblemsOnBuildError' ) )
-								vscode.commands.executeCommand( 'workbench.actions.view.problems' )
+							// Make sure there are BlitzMax problems available
+							let bmxDiag: vscode.Diagnostic[] = []
+							const diag = vscode.languages.getDiagnostics()
+							diag.forEach( e => {
+								if ( e.length >= 1 && e[1][0] && e[1][0].source == 'BlitzMax' )
+									bmxDiag.push( e[1][0] )
+							} )
+
+							// Show BlitzMax problems
+							if ( bmxDiag.length > 0 ) {
+								if ( vscode.workspace.getConfiguration( 'blitzmax' ).get( 'pref.jumpToProblemOnBuildError' ) )
+									vscode.commands.executeCommand( 'editor.action.marker.nextInFiles' )
+
+								if ( vscode.workspace.getConfiguration( 'blitzmax' ).get( 'pref.showProblemsOnBuildError' ) )
+									vscode.commands.executeCommand( 'workbench.actions.view.problems' )
+							} else {
+								// Just show terminal output is no problems exist
+								if ( vscode.workspace.getConfiguration( 'blitzmax' ).get( 'pref.showProblemsOnBuildError' ) )
+									vscode.commands.executeCommand( 'workbench.action.terminal.focus' )
+							}
 						}, 500 )
 					} else {
 						this.writeEmitter.fire( `\r\n== COMPLETE  ==\r\n\r\n` )

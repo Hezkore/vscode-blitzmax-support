@@ -1,3 +1,6 @@
+## 2.8.3
+* Problems view will no longer be focused when there are no problems to display
+
 ## 2.8.2
 * Error messages are now correctly displayed in debug mode
 

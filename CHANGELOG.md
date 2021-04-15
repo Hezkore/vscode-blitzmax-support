@@ -1,3 +1,7 @@
+## 2.8.4
+* Fixed a build problem when the user had no workspace
+* More extension activation rules
+
 ## 2.8.3
 * Problems view will no longer be focused when there are no problems to display
 

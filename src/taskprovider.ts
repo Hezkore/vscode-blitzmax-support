@@ -62,7 +62,7 @@ export function registerTaskProvider( context: vscode.ExtensionContext ) {
 		vscode.tasks.registerTaskProvider( 'bmx', new BmxBuildTaskProvider )
 	)
 
-	// Related commands	
+	// Related commands
 	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.build', () => {
 		vscode.tasks.executeTask( makeTask( getBuildDefinitionFromWorkspace( undefined ) ) )
 	} ) )
@@ -352,10 +352,15 @@ export function makeTask( definition: BmxBuildTaskDefinition ): vscode.Task {
 	// Make sure label exists!
 	if ( !definition.label ) definition.label = 'blitzmax'
 
+	
+	// Define problem matchers
+	let problemMatchers = ['$blitzmax'] // Always use the BlitzMax problem matcher
+	// Include the GCC problem matcher for glue code (if using workspace, otherwise cpp complains)
+	if ( vscode.workspace.workspaceFolders ) problemMatchers.push( '$gcc' )
+	
 	// Create the task
-	//
 	let task = new vscode.Task( definition, vscode.TaskScope.Workspace, definition.label, 'BlitzMax', exec,
-		['$blitzmax', '$gcc'] ) // Include the GCC problem matcher for glue code
+		problemMatchers )
 
 	// Setup task MaxIDE like
 	task.presentationOptions.echo = false

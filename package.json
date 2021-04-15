@@ -1,6 +1,6 @@
 {
 	"name": "blitzmax",
-	"version": "2.8.3",
+	"version": "2.8.4",
 	"publisher": "Hezkore",
 	"displayName": "BlitzMax",
 	"description": "BlitzMax for Visual Studio Code.",
@@ -69,8 +69,20 @@
 	},
 	"main": "./out/extension",
 	"activationEvents": [
+		"workspaceContains:/.bmx",
+		"onLanguage:blitzmax",
+		"onDebugResolve:bmx",
 		"onDebugDynamicConfigurations:bmx",
-		"onLanguage:blitzmax"
+		"onCommand:blitzmax.rebuildDoc",
+		"onCommand:blitzmax.quickHelp",
+		"onCommand:blitzmax.resetBuildOptions",
+		"onCommand:blitzmax.changeDefaultBuildTask",
+		"onCommand:blitzmax.toggleBuildOption",
+		"onCommand:blitzmax.pickBlitzMaxPath",
+		"onCommand:blitzmax.setSourceFile",
+		"onCommand:blitzmax.build",
+		"onCommand:blitzmax.buildAndRun",
+		"onCommand:blitzmax.buildAndDebug"
 	],
 	"contributes": {
 		"breakpoints": [

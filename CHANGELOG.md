@@ -1,3 +1,6 @@
+## 2.9.0
+* Added support for external code formatters
+
 ## 2.8.4
 * Fixed a build problem when the user had no workspace
 * More extension activation rules

@@ -1,3 +1,8 @@
+## 2.9.1
+* Fixed an issue where the code formatter could get stuck forever
+* Added code formatter argument options
+* Added helper guide for selecting code formatter path
+
 ## 2.9.0
 * Added support for external code formatters
 

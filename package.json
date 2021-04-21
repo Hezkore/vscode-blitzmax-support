@@ -1,6 +1,6 @@
 {
 	"name": "blitzmax",
-	"version": "2.9.0",
+	"version": "2.9.1",
 	"publisher": "Hezkore",
 	"displayName": "BlitzMax",
 	"description": "BlitzMax for Visual Studio Code.",
@@ -141,7 +141,7 @@
 				},
 				"blitzmax.lsp.args": {
 					"type": "array",
-					"description": "LSP specfics arguments."
+					"description": "LSP specfic arguments."
 				},
 				"blitzmax.lsp.hotReload": {
 					"type": "boolean",
@@ -156,8 +156,33 @@
 				"blitzmax.formatter.path": {
 					"type": "string",
 					"description": "Relative or absolute path to formatter.",
-					"default": "./bin/bmf",
+					"default": "./bin/formatter",
 					"scope": "machine-overridable"
+				},
+				"blitzmax.formatter.args": {
+					"type": "array",
+					"description": "Formatter specfic arguments.",
+					"default": ["-stdin", "-stdout"]
+				},
+				"blitzmax.formatter.onType": {
+					"type": "array",
+					"description": "Formatter arguments when using `Format On Type`.",
+					"default": ["-quick"]
+				},
+				"blitzmax.formatter.useRange": {
+					"type": "boolean",
+					"description": "Use range arguments instead of sending text selection when formatting.",
+					"default": true
+				},
+				"blitzmax.formatter.range.start": {
+					"type": "string",
+					"description": "Formatter arguments for start of format range.",
+					"default": "-start"
+				},
+				"blitzmax.formatter.range.end": {
+					"type": "string",
+					"description": "Formatter arguments for end of format range.",
+					"default": "-end"
 				}
 			}
 		},
@@ -192,6 +217,11 @@
 			{
 				"command": "blitzmax.pickBlitzMaxPath",
 				"title": "Pick your BlitzMax path",
+				"category": "BlitzMax"
+			},
+			{
+				"command": "blitzmax.pickBlitzMaxFormatterPath",
+				"title": "Pick your BlitzMax formatter path",
 				"category": "BlitzMax"
 			},
 			{

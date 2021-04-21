@@ -20,7 +20,7 @@ export function registerHelperGuide( context: vscode.ExtensionContext ) {
 	vscode.workspace.onDidChangeConfiguration( ( event ) => {
 		if ( event.affectsConfiguration( 'blitzmax.base.path' ) ) {
 			BlitzMaxPath = vscode.workspace.getConfiguration( 'blitzmax' ).get( 'base.path' )
-			triggerHelpGuides()
+			triggerBmxInstallHelp()
 		}
 	} )
 
@@ -54,10 +54,51 @@ export function registerHelperGuide( context: vscode.ExtensionContext ) {
 		} )
 	} ) )
 
-	triggerHelpGuides()
+	// Quick command to picking the BlitzMax formatter path
+	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.pickBlitzMaxFormatterPath', () => {
+		vscode.window.showOpenDialog( {
+			title: 'Select your BlitzMax formatter executable', openLabel: 'Select',
+			canSelectFiles: true, canSelectFolders: false, canSelectMany: false
+		} ).then( async ( picked: vscode.Uri[] | undefined ) => {
+			if ( picked && picked[0] ) {
+
+				await vscode.workspace.getConfiguration( 'blitzmax' ).update( 'formatter.path', picked[0].fsPath, true )
+				vscode.window.showInformationMessage( 'BlitzMax formatter path set' )
+			}
+		} )
+	} ) )
+
+	triggerBmxInstallHelp()
 }
 
-function triggerHelpGuides() {
+// Help with BlitzMax external formatter
+export function triggerBmxFormatterHelp() {
+
+	// What to look for on GitHub (BlitzMax + Formatter)
+	const gitHubTopics: string = 'topic%3ABlitzMax+topic%3Aformatter'
+
+	vscode.window.showWarningMessage(
+		'No BlitzMax formatter found.',
+		'Select Path',
+		'Download'
+	).then( selection => {
+		if ( selection ) {
+			if ( selection.toLowerCase() == 'download' ) {
+
+				// Download
+				vscode.env.openExternal( vscode.Uri.parse( 'https://github.com/search?q=' + gitHubTopics ) )
+			} else {
+
+				// Pick path
+				vscode.commands.executeCommand( 'workbench.action.openSettings', '@ext:hezkore.blitzmax formatter' )
+				vscode.commands.executeCommand( 'blitzmax.pickBlitzMaxFormatterPath' )
+			}
+		}
+	} )
+}
+
+// Help with BlitzMax install
+function triggerBmxInstallHelp() {
 	// Notify that no BlitzMax path is set
 	if ( !BlitzMaxPath ) {
 		vscode.window.showWarningMessage( bmxNoPathMessage, { modal: true }, 'Select path' ).then( picked => {
@@ -77,7 +118,7 @@ function triggerHelpGuides() {
 				}
 			} )
 		} else {
-			
+
 			cacheCommandsIfEmpty( true )
 		}
 	}

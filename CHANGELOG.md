@@ -1,3 +1,6 @@
+## 2.9.2
+* Fixed an issue with the code formatter and 'Format On Type'
+
 ## 2.9.1
 * Fixed an issue where the code formatter could get stuck forever
 * Added code formatter argument options

@@ -175,7 +175,7 @@ async function format( text: string, onType: boolean, range: vscode.Range | unde
 
 			await formatterBusy.wait()
 
-			return resolve( text.trimEnd() )
+			return resolve( text )
 
 		} catch ( err ) {
 

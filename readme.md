@@ -22,6 +22,7 @@ We hang out in the **#vscode-extension** channel!
 
 ### **Get started writing BlitzMax code in VS Code**
 ---
+* [Step by step guide](https://github.com/Hezkore/vscode-blitzmax-support/discussions/10) - A guide to installing and compiling your first application.
 * [Extension FAQ](#faq) - Make sure you read this first.
 * [BlitzMax NG](https://blitzmax.org/docs/en/setup/get_started/) - Everything you need to start using BlitzMax NG.
 * [VS Code Introduction](https://code.visualstudio.com/docs/getstarted/introvideos) - Videos on how to get started with VS Code.

@@ -70,9 +70,12 @@ The extension will guide you through this process on the first format.
 
 * **Q**. How do I _`<do this or that>`_ in VS Code?\
 	_(aka. I need more help)_
-	* **A**. For general questions or VS Code related help you have two options:
-		1. Use our [GitHub Discussions board](https://github.com/Hezkore/vscode-blitzmax-support/discussions).
-		2. Visit our **#vscode-extension** channel on Discord: [![Discord Chat](https://img.shields.io/discord/613699895139762176.svg?logo=discord&style=social)](https://discord.gg/yF6PMaY5aE)
+	* **A**. For general questions or VS Code related help you have few options:
+		
+		1. Read [Get started writing BlitzMax code in VS Code](#get-started-writing-blitzmax-code-in-vs-code).
+		
+		2. Use our [GitHub Discussions board](https://github.com/Hezkore/vscode-blitzmax-support/discussions).
+		3. Visit our **#vscode-extension** channel on Discord: [![Discord Chat](https://img.shields.io/discord/613699895139762176.svg?logo=discord&style=social)](https://discord.gg/yF6PMaY5aE)
 
 ### **Credits**
 ---

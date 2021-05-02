@@ -29,6 +29,7 @@ We hang out in the **#vscode-extension** channel!
 * [Basics Editing](https://code.visualstudio.com/docs/editor/codebasics) - Learn about highly productive source code editing.
 * [Debugging](https://code.visualstudio.com/docs/editor/debugging) - All you need to know about debugging.
 * [Tasks](https://code.visualstudio.com/docs/editor/tasks) - Get things done quicker with tasks.
+* [Guide to tasks](https://github.com/Hezkore/vscode-blitzmax-support/discussions/12) - A guide to using tasks specifically with BlitzMax NG.
 
 ### **Changelog**
 ---

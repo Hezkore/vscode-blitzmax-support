@@ -1,7 +1,6 @@
 'use strict'
 
 import * as fs from 'fs'
-import { EOL } from 'os'
 import * as vscode from 'vscode'
 import * as cp from 'child_process'
 import { BlitzMaxPath } from './helper'
@@ -10,6 +9,7 @@ import { getCurrentDocumentWord } from './common'
 import * as awaitNotify from 'await-notify'
 
 let _commandsList: BmxCommand[]
+let _modulesList: BmxModule[]
 
 export function registerDocsProvider( context: vscode.ExtensionContext ) {
 	// Related commands
@@ -43,7 +43,7 @@ export function registerDocsProvider( context: vscode.ExtensionContext ) {
 			let docProcess = cp.spawn( BlitzMaxPath + '/bin/makedocs' )
 
 			function reportProgress( data: any ) {
-				const str: string[] = data.toString().split( EOL )
+				const str: string[] = data.toString().split( '\n' )
 				for ( let index = 0; index < str.length; index++ ) {
 					const line = str[index].trim()
 					if ( line.length > 1 ) progress.report( { message: line } )
@@ -77,7 +77,7 @@ export function registerDocsProvider( context: vscode.ExtensionContext ) {
 }
 
 export async function showQuickHelp( command: string ) {
-	cacheCommandsIfEmpty( true )
+	cacheCommandsAndModulesIfEmpty( true )
 	if ( !_commandsList ) return
 	let commands = getCommand( command )//, { hasDescription: true } )
 
@@ -119,7 +119,7 @@ interface GetCommandFilter {
 }
 export function getCommand( command: string | undefined = undefined, filter: GetCommandFilter | undefined = undefined ): BmxCommand[] {
 	// Cache commands if needed
-	cacheCommandsIfEmpty( false )
+	cacheCommandsAndModulesIfEmpty( false )
 	if ( !_commandsList ) return []
 
 	// Find the command
@@ -144,9 +144,72 @@ export function getCommand( command: string | undefined = undefined, filter: Get
 	return matches
 }
 
-export function cacheCommandsIfEmpty( showPopup: boolean ): boolean {
-	if ( !_commandsList || _commandsList.length <= 0 ) cacheCommands( showPopup )
+export function getModule( module: string | undefined = undefined ): BmxModule[] {
+	// Find the module
+	if ( module ) module = module.toLowerCase()
+	let matches: BmxModule[] = []
+
+	for ( let index = 0; index < _modulesList.length; index++ ) {
+		const mod = _modulesList[index]
+		if ( !module || ( module && mod.match.startsWith( module ) ) ) matches.push( mod )
+	}
+
+	return matches
+}
+
+export function cacheCommandsAndModulesIfEmpty( showPopup: boolean ): boolean {
+	if ( !_commandsList || _commandsList.length <= 0 ) {
+		cacheCommands( showPopup )
+		cacheModules()
+	}
 	return _commandsList ? _commandsList.length >= 0 : false
+}
+
+// Scan modules folder and store folder names
+function cacheModules() {
+	console.log( 'Caching BlitzMax module paths' )
+
+	const globalBmxPath = vscode.workspace.getConfiguration( 'blitzmax' ).inspect( 'base.path' )?.globalValue
+	const relativePath = '/mod/'
+	const absolutePath = vscode.Uri.file( globalBmxPath + relativePath ).fsPath
+	let parentPath: string | undefined
+	let totalPath: string | undefined
+
+	try {
+
+		_modulesList = []
+
+		// Look for parent module folders
+		fs.readdirSync( absolutePath ).forEach( parent => {
+			// MUST have the .mod extension
+			if ( parent.toLowerCase().endsWith( '.mod' ) ) {
+				parentPath = vscode.Uri.file( globalBmxPath + relativePath + '/' + parent ).fsPath
+				
+				fs.readdirSync( parentPath ).forEach( child => {
+
+					if ( child.toLowerCase().endsWith( '.mod' ) ) {
+						totalPath = vscode.Uri.file( parentPath + '/' + child ).fsPath
+						
+						// Make sure the source file exists
+						fs.readdirSync( totalPath ).forEach( source => {
+							if (source.toLowerCase().endsWith('.bmx') &&
+								source.toLowerCase().slice(0,-4) == child.toLowerCase().slice(0,-4)) {
+								
+								_modulesList.push( {
+									path: totalPath ? totalPath : 'undefined',
+									parent: parent.slice(0,-4),
+									child: child.slice(0,-4),
+									name: parent.slice(0,-4) + '.' + child.slice(0,-4),
+									match: parent.slice(0,-4).toLowerCase() + '.' + child.slice(0,-4).toLowerCase(),
+								} )
+							}
+						})
+					}
+				} )
+			}
+		} )
+	} catch ( err ) {
+	}
 }
 
 // Read commands.txt and then add the command (addCommand)
@@ -183,9 +246,12 @@ function cacheCommands( showPopup: boolean ): boolean {
 
 // Process a line/lines from commands.txt
 function addCommand( data: string ) {
-	const lines = data.split( EOL )
+	const lines = data.split( '\n' )
 	lines.forEach( line => {
 		if ( line ) {
+
+			// Trim ugly lines
+			line = line.trimEnd()
 
 			const lineSplit = line.split( '|' )
 			const command: BmxCommand = {
@@ -208,10 +274,14 @@ function addCommand( data: string ) {
 				const pathSplits = command.url.split( '/' )
 
 				if ( pathSplits[1].toLowerCase() == 'docs' ) {
-					command.module = pathSplits[4] + '/' + pathSplits[5]
+					command.moduleParent = pathSplits[4]
+					command.moduleChild = pathSplits[5]
 				} else if ( pathSplits[1].toLowerCase() == 'mod' ) {
-					command.module = pathSplits[2] + '/' + pathSplits[3]
+					command.moduleParent = pathSplits[2]
+					command.moduleChild = pathSplits[3]
 				}
+
+				command.module = command.moduleParent + '/' + command.moduleChild
 			}
 
 			// Take care of the description
@@ -434,6 +504,14 @@ function parseCommandParams( cmd: BmxCommand ) {
 	}
 }
 
+export interface BmxModule {
+	path: string,
+	name: string,
+	parent: string,
+	child: string,
+	match: string
+}
+
 export interface BmxCommand {
 	realName: string,
 	searchName: string
@@ -451,6 +529,8 @@ export interface BmxCommand {
 	urlLocation?: string
 
 	module?: string
+	moduleParent?: string
+	moduleChild?: string
 
 	insertText?: vscode.SnippetString
 }

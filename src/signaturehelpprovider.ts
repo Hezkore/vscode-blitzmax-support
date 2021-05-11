@@ -2,6 +2,7 @@
 
 import * as vscode from 'vscode'
 import { getCommand } from './bmxcommands'
+import { previousTokenPosition } from './common'
 
 export function registerSignatureHelpProvider( context: vscode.ExtensionContext ) {
 	vscode.languages.registerSignatureHelpProvider( 'blitzmax', {
@@ -57,18 +58,6 @@ export function registerSignatureHelpProvider( context: vscode.ExtensionContext 
 			return sigStack
 		}
 	}, '(', ',', ' ', '"' )
-}
-
-function previousTokenPosition( document: vscode.TextDocument, position: vscode.Position ): any {
-
-	while ( position.character > 0 ) {
-
-		const word = document.getWordRangeAtPosition( position )
-		if ( word ) return word
-		position = position.translate( 0, -1 )
-	}
-
-	return null
 }
 
 function findStart( document: vscode.TextDocument, position: vscode.Position ): any {

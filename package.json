@@ -42,30 +42,30 @@
 		"publish": "vsce publish"
 	},
 	"engines": {
-		"vscode": "^1.51.0"
+		"vscode": "^1.55.0"
 	},
 	"dependencies": {
 		"await-notify": "1.0.1",
-		"vscode-debugadapter": "^1.45.0-pre.0",
+		"vscode-debugadapter": "^1.47.0",
 		"vscode-languageclient": "7.0.0"
 	},
 	"devDependencies": {
 		"@types/glob": "^7.1.3",
-		"@types/mocha": "^8.0.4",
-		"@types/node": "^14.14.7",
-		"@types/vscode": "^1.51.0",
-		"@typescript-eslint/eslint-plugin": "^4.7.0",
-		"@typescript-eslint/parser": "4.15.0",
-		"eslint": "7.19.0",
-		"glob": "^7.1.6",
-		"mocha": "^8.2.1",
-		"ts-loader": "8.0.18",
-		"typescript": "^4.0.5",
-		"vsce": "1.85.0",
-		"vscode-debugadapter-testsupport": "^1.45.0-pre.0",
-		"vscode-test": "1.5.0",
-		"webpack": "5.27.2",
-		"webpack-cli": "4.5.0"
+		"@types/mocha": "^8.2.2",
+		"@types/node": "^15.0.2",
+		"@types/vscode": "^1.55.0",
+		"@typescript-eslint/eslint-plugin": "^4.22.1",
+		"@typescript-eslint/parser": "4.22.1",
+		"eslint": "7.26.0",
+		"glob": "^7.1.7",
+		"mocha": "^8.4.0",
+		"ts-loader": "9.1.2",
+		"typescript": "^4.2.4",
+		"vsce": "1.88.0",
+		"vscode-debugadapter-testsupport": "^1.47.0",
+		"vscode-test": "1.5.2",
+		"webpack": "5.36.2",
+		"webpack-cli": "4.7.0"
 	},
 	"main": "./out/extension",
 	"activationEvents": [
@@ -135,18 +135,18 @@
 				},
 				"blitzmax.lsp.path": {
 					"type": "string",
-					"description": "Relative or absolute path to LSP.",
+					"markdownDescription": "Relative or absolute path to [LSP](https://github.com/search?q=topic%3ABlitzMax+topic%3Alsp).",
 					"default": "./bin/lsp",
 					"scope": "machine-overridable"
 				},
 				"blitzmax.lsp.args": {
 					"type": "array",
-					"description": "LSP specfic arguments."
+					"markdownDescription": "[LSP](https://github.com/search?q=topic%3ABlitzMax+topic%3Alsp) specfic arguments."
 				},
 				"blitzmax.lsp.hotReload": {
 					"type": "boolean",
 					"default": false,
-					"description": "Restart LSP if changes to the LSP binary are detected."
+					"markdownDescription": "Restart [LSP](https://github.com/search?q=topic%3ABlitzMax+topic%3Alsp) if changes to the [LSP](https://github.com/search?q=topic%3ABlitzMax+topic%3Alsp) binary are detected."
 				},
 				"blitzmax.help.customStyle": {
 					"type": "boolean",
@@ -155,33 +155,38 @@
 				},
 				"blitzmax.formatter.path": {
 					"type": "string",
-					"description": "Relative or absolute path to formatter.",
+					"markdownDescription": "Relative or absolute path to external [code formatter](https://github.com/search?q=topic%3ABlitzMax+topic%3Aformatter).",
 					"default": "./bin/formatter",
 					"scope": "machine-overridable"
 				},
 				"blitzmax.formatter.args": {
 					"type": "array",
-					"description": "Formatter specfic arguments.",
-					"default": ["-stdin", "-stdout"]
+					"markdownDescription": "[Code formatter](https://github.com/search?q=topic%3ABlitzMax+topic%3Aformatter) specfic arguments.",
+					"default": [
+						"-stdin",
+						"-stdout"
+					]
 				},
 				"blitzmax.formatter.onType": {
 					"type": "array",
-					"description": "Formatter arguments when using `Format On Type`.",
-					"default": ["-quick"]
+					"markdownDescription": "[Code formatter](https://github.com/search?q=topic%3ABlitzMax+topic%3Aformatter) arguments when using VS Code option `Format On Type`.",
+					"default": [
+						"-quick"
+					]
 				},
 				"blitzmax.formatter.useRange": {
 					"type": "boolean",
-					"description": "Use range arguments instead of sending text selection when formatting.",
+					"markdownDescription": "Use range arguments instead of sending text selection when [formatting code](https://github.com/search?q=topic%3ABlitzMax+topic%3Aformatter).",
 					"default": true
 				},
 				"blitzmax.formatter.range.start": {
 					"type": "string",
-					"description": "Formatter arguments for start of format range.",
+					"markdownDescription": "[Code formatter](https://github.com/search?q=topic%3ABlitzMax+topic%3Aformatter) arguments for start of format range.",
 					"default": "-start"
 				},
 				"blitzmax.formatter.range.end": {
 					"type": "string",
-					"description": "Formatter arguments for end of format range.",
+					"markdownDescription": "[Code formatter](https://github.com/search?q=topic%3ABlitzMax+topic%3Aformatter) arguments for end of format range.",
 					"default": "-end"
 				}
 			}

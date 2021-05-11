@@ -1,6 +1,5 @@
 'use strict'
 
-import { EOL } from 'os'
 import * as path from 'path'
 import * as vscode from 'vscode'
 import { readFile } from './common'
@@ -122,7 +121,7 @@ function convertBmxWeb( url: string ): Promise<BmxConvertedHtmlSource> {
 
 			let replaceCSS: boolean = true
 			let title: string | undefined
-			const htmlLines = htmlSource.split( EOL )
+			const htmlLines = htmlSource.split( '\n' )
 
 			for ( let index = 0; index < htmlLines.length; index++ ) {
 				const line = htmlLines[index]

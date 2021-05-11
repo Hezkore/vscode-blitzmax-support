@@ -20,6 +20,18 @@ export async function readFile( filename: string ): Promise<string> {
 	} )
 }
 
+export function previousTokenPosition( document: vscode.TextDocument, position: vscode.Position ): any {
+
+	while ( position.character > 0 ) {
+
+		const word = document.getWordRangeAtPosition( position )
+		if ( word ) return word
+		position = position.translate( 0, -1 )
+	}
+
+	return null
+}
+
 export function getCurrentDocumentWord( position: vscode.Position | undefined = undefined, document: vscode.TextDocument | undefined = undefined, editor: vscode.TextEditor | undefined = undefined ): string | undefined {
 
 	// Use the current active editor if no editor was specified
@@ -34,11 +46,40 @@ export function getCurrentDocumentWord( position: vscode.Position | undefined = 
 	if ( !document ) document = editor.document
 	if ( !document ) return
 
+	
+	// Fetch the word at this position
 	let wordRange = document.getWordRangeAtPosition( position )
 	if ( !wordRange ) return
+	
+	// Join two words togther if needed
+	let word = jointBmxWord( document, wordRange )
 
-	let word = document.getText( wordRange )
+	//let word = document.getText( wordRange )
 	return word
+}
+
+export function jointBmxWord( document: vscode.TextDocument, wordRange: vscode.Range ): string | undefined {
+	
+	// Setup
+	const startChr = wordRange.start.character <= 0 ? undefined : document.getText( new vscode.Range( wordRange.start.translate( 0, -1), wordRange.start ) )
+	const endChr = wordRange.start.character > document.getText().length ? undefined : document.getText( new vscode.Range( wordRange.start, wordRange.start.translate( 0, 1) ) )
+	
+	let joinStartWord: boolean = false
+	let joinEndWord: boolean = false
+	
+	
+	// Do we need to join these two words?
+	if (startChr == '.') joinStartWord = true
+	
+	
+	// Join together words
+	let joinedWord: string = ''
+	if (joinStartWord) joinedWord += document.getText( previousTokenPosition( document, wordRange.start.translate( 0, -1) ) ) + startChr
+	joinedWord += document.getText( wordRange )
+	if (joinEndWord) joinedWord += document.getText( previousTokenPosition( document, wordRange.start.translate( 0, 1) ) ) + endChr
+	
+	// Send off our new complete word
+	return joinedWord
 }
 
 export function workspaceOrGlobalConfig( workspace: vscode.WorkspaceFolder | undefined, section: string ): unknown {

@@ -345,19 +345,19 @@ export function makeTask( definition: BmxBuildTaskDefinition ): vscode.Task {
 
 		// Terminal setup
 		if ( !terminal ) terminal = new BmxBuildTaskTerminal
-		terminal.prepare( bmkPath.fsPath, args, workspace?.uri.fsPath )
+		terminal.configure( bmkPath.fsPath, args, workspace?.uri.fsPath )
 		return terminal
 	} )
 
 	// Make sure label exists!
 	if ( !definition.label ) definition.label = 'blitzmax'
 
-	
+
 	// Define problem matchers
 	let problemMatchers = ['$blitzmax'] // Always use the BlitzMax problem matcher
 	// Include the GCC problem matcher for glue code (if using workspace, otherwise cpp complains)
 	if ( vscode.workspace.workspaceFolders ) problemMatchers.push( '$gcc' )
-	
+
 	// Create the task
 	let task = new vscode.Task( definition, vscode.TaskScope.Workspace, definition.label, 'BlitzMax', exec,
 		problemMatchers )
@@ -388,7 +388,7 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 	percent: number
 	colorReset: boolean
 
-	prepare( cmd: string, args: string[] | undefined, cwd: string | undefined ) {
+	configure( cmd: string, args: string[] | undefined, cwd: string | undefined ) {
 		this.cmd = cmd
 		this.args = args
 		this.cwd = cwd
@@ -406,6 +406,7 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 
 		for ( let index = 0; index < str.length; index++ ) {
 			const line = str[index].trim()
+			if ( !line.length ) continue
 
 			// Check if this a error message we need to process somehow
 			if ( line.toLowerCase().startsWith( 'command line error : invalid option' ) ) {
@@ -425,12 +426,17 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 				progressBar.report( { message: ` ${this.percent}%`, increment: this.percent - this.lastPercent } )
 				this.lastPercent = this.percent
 			}
-
+			
 			// Print output and potentially add colors
 			if ( colorOuput ) {
 				this.colorBmkOutput( line )
 			} else {
 				this.writeEmitter.fire( line + '\r\n' )
+			}
+
+			// Spacing
+			if ( line.startsWith( '[' ) && line.endsWith( ']' ) ) {
+				this.writeEmitter.fire( '\r\n' )
 			}
 		}
 	}

@@ -1,3 +1,9 @@
+## 2.10.0 "The Windows Update"
+* Fixed multiple Windows related issues
+* Module suggestions in auto complete list
+* Selected text is now used for quick help
+* Better settings descriptions
+
 ## 2.9.2
 * Fixed an issue with the code formatter and 'Format On Type'
 

@@ -32,25 +32,30 @@ export function previousTokenPosition( document: vscode.TextDocument, position: 
 	return null
 }
 
-export function getCurrentDocumentWord( position: vscode.Position | undefined = undefined, document: vscode.TextDocument | undefined = undefined, editor: vscode.TextEditor | undefined = undefined ): string | undefined {
+export function getCurrentDocumentWord( position: vscode.Position | undefined = undefined, document: vscode.TextDocument | undefined = undefined, editor: vscode.TextEditor | undefined = undefined, allowSelection: boolean, trimSelectionSpaces: boolean = true ): string | undefined {
 
 	// Use the current active editor if no editor was specified
 	if ( !editor ) editor = vscode.window.activeTextEditor
 	if ( !editor ) return
 
-	// Use the cursor position if no position was specified
-	if ( !position ) position = editor.selection.start
-	if ( !position ) return
-
 	// Use the editor document if no document was specified
 	if ( !document ) document = editor.document
 	if ( !document ) return
 
-	
+	// Return selection if available and allowed
+	if ( allowSelection && editor.selection.start.compareTo( editor.selection.end ) ) {
+		if ( trimSelectionSpaces ) return document.getText( editor.selection ).replace( ' ', '' )
+		return document.getText( editor.selection )
+	}
+
+	// Use the cursor position if no position was specified
+	if ( !position ) position = editor.selection.start
+	if ( !position ) return
+
 	// Fetch the word at this position
 	let wordRange = document.getWordRangeAtPosition( position )
 	if ( !wordRange ) return
-	
+
 	// Join two words togther if needed
 	let word = jointBmxWord( document, wordRange )
 
@@ -59,27 +64,33 @@ export function getCurrentDocumentWord( position: vscode.Position | undefined = 
 }
 
 export function jointBmxWord( document: vscode.TextDocument, wordRange: vscode.Range ): string | undefined {
-	
+
 	// Setup
-	const startChr = wordRange.start.character <= 0 ? undefined : document.getText( new vscode.Range( wordRange.start.translate( 0, -1), wordRange.start ) )
-	const endChr = wordRange.start.character > document.getText().length ? undefined : document.getText( new vscode.Range( wordRange.start, wordRange.start.translate( 0, 1) ) )
+	const startChr = wordRange.start.character <= 0 ? undefined : document.getText( new vscode.Range( wordRange.start.translate( 0, -1 ), wordRange.start ) )
+	const endChr = wordRange.start.character > document.getText().length ? undefined : document.getText( new vscode.Range( wordRange.end, wordRange.end.translate( 0, 1 ) ) )
+	const startWord = startChr ? document.getText( previousTokenPosition( document, wordRange.start.translate( 0, -1 ) ) ) : undefined
+	const endWord = endChr ? document.getText( previousTokenPosition( document, wordRange.end.translate( 0, 1 ) ) ) : undefined
+	const curWord = document.getText( wordRange )
 	
 	let joinStartWord: boolean = false
 	let joinEndWord: boolean = false
-	
-	
+	let trimSpaces: boolean = false
+
 	// Do we need to join these two words?
-	if (startChr == '.') joinStartWord = true
-	
-	
+	if ( startChr == '.' ) joinStartWord = true
+	if ( startWord && startChr == ' ' && startWord.toLowerCase() == 'end' ) joinStartWord = true; trimSpaces = true
+
+	if ( endChr == '.' ) joinEndWord = true
+	if ( endWord && endChr == ' ' && curWord.toLowerCase() == 'end' ) joinEndWord = true; trimSpaces = true
+
 	// Join together words
 	let joinedWord: string = ''
-	if (joinStartWord) joinedWord += document.getText( previousTokenPosition( document, wordRange.start.translate( 0, -1) ) ) + startChr
-	joinedWord += document.getText( wordRange )
-	if (joinEndWord) joinedWord += document.getText( previousTokenPosition( document, wordRange.start.translate( 0, 1) ) ) + endChr
-	
+	if ( joinStartWord && startWord ) joinedWord += startWord + startChr
+	joinedWord += curWord
+	if ( joinEndWord && endChr ) joinedWord += endChr + endWord
+
 	// Send off our new complete word
-	return joinedWord
+	return trimSpaces ? joinedWord.replace( ' ', '' ) : joinedWord
 }
 
 export function workspaceOrGlobalConfig( workspace: vscode.WorkspaceFolder | undefined, section: string ): unknown {

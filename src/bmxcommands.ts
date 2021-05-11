@@ -15,7 +15,7 @@ export function registerDocsProvider( context: vscode.ExtensionContext ) {
 	// Related commands
 	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.quickHelp', ( word: any ) => {
 		// If no word was specified, we look at the word under the cursor
-		if ( !word || typeof word !== "string" ) word = getCurrentDocumentWord()
+		if ( !word || typeof word !== "string" ) word = getCurrentDocumentWord( undefined, undefined, undefined, true, false )
 		showQuickHelp( word )
 	} ) )
 
@@ -106,6 +106,12 @@ export async function showQuickHelp( command: string ) {
 		return
 	}
 
+	// No matches, attempt search for command with trimmed spaces
+	if ( command.includes( ' ' ) ) {
+		showQuickHelp( command.replace( ' ', '' ) )
+		return
+	}
+
 	// No match
 	vscode.window.showErrorMessage( 'No help available for "' + command + '"' )
 	return
@@ -184,26 +190,26 @@ function cacheModules() {
 			// MUST have the .mod extension
 			if ( parent.toLowerCase().endsWith( '.mod' ) ) {
 				parentPath = vscode.Uri.file( globalBmxPath + relativePath + '/' + parent ).fsPath
-				
+
 				fs.readdirSync( parentPath ).forEach( child => {
 
 					if ( child.toLowerCase().endsWith( '.mod' ) ) {
 						totalPath = vscode.Uri.file( parentPath + '/' + child ).fsPath
-						
+
 						// Make sure the source file exists
 						fs.readdirSync( totalPath ).forEach( source => {
-							if (source.toLowerCase().endsWith('.bmx') &&
-								source.toLowerCase().slice(0,-4) == child.toLowerCase().slice(0,-4)) {
-								
+							if ( source.toLowerCase().endsWith( '.bmx' ) &&
+								source.toLowerCase().slice( 0, -4 ) == child.toLowerCase().slice( 0, -4 ) ) {
+
 								_modulesList.push( {
 									path: totalPath ? totalPath : 'undefined',
-									parent: parent.slice(0,-4),
-									child: child.slice(0,-4),
-									name: parent.slice(0,-4) + '.' + child.slice(0,-4),
-									match: parent.slice(0,-4).toLowerCase() + '.' + child.slice(0,-4).toLowerCase(),
+									parent: parent.slice( 0, -4 ),
+									child: child.slice( 0, -4 ),
+									name: parent.slice( 0, -4 ) + '.' + child.slice( 0, -4 ),
+									match: parent.slice( 0, -4 ).toLowerCase() + '.' + child.slice( 0, -4 ).toLowerCase(),
 								} )
 							}
-						})
+						} )
 					}
 				} )
 			}

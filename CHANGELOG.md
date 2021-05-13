@@ -1,3 +1,7 @@
+## 2.10.1
+* Fixed an issue with Rebuilding Documentations
+* Setting task source file will now try to use a relative path
+
 ## 2.10.0 "The Windows Update"
 * Fixed multiple Windows related issues
 * Module suggestions in auto complete list

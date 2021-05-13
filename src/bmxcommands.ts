@@ -22,12 +22,15 @@ export function registerDocsProvider( context: vscode.ExtensionContext ) {
 	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.rebuildDoc', _ => {
 		if ( !BlitzMaxPath ) return
 
+		// Reset old commands and modules
+		_commandsList = []
+		_commandsList = []
+
 		vscode.window.withProgress( {
 			location: vscode.ProgressLocation.Notification,
 			title: 'Rebuilding Documentation',
 			cancellable: true
 		}, async ( progress, token ) => {
-			if ( !BlitzMaxPath ) return
 
 			let busy = new awaitNotify.Subject()
 

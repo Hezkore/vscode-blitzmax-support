@@ -42,10 +42,24 @@ export function registerBuildTreeProvider( context: vscode.ExtensionContext ) {
 	} ) )
 
 	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.setSourceFile', ( document: vscode.Uri ) => {
-		const path = document ? document.fsPath : vscode.window.activeTextEditor?.document.uri.fsPath
-		if ( !path ) return
+		// Figure source path
+		let sourcePath = document ? document.fsPath : vscode.window.activeTextEditor?.document.uri.fsPath
+		if ( !sourcePath ) return
+
+		// Figure out workspace
+		let workspace: vscode.WorkspaceFolder | undefined
+		if ( document )
+			workspace = vscode.workspace.getWorkspaceFolder( document )
+		else if ( vscode.window.activeTextEditor )
+			workspace = vscode.workspace.getWorkspaceFolder( vscode.window.activeTextEditor.document.uri )
+
+		// Figure out relative path if we have a workspace
+		if ( workspace ) // we could use path.join here, but I think / looks better in json
+			sourcePath = '${workspaceFolder}' + '/' + path.relative( workspace.uri.fsPath, sourcePath )
+
+		// Update task
 		const definition = getBuildDefinitionFromWorkspace()
-		definition.source = path
+		definition.source = sourcePath
 		saveAsDefaultTaskDefinition( definition )
 	} ) )
 

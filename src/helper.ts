@@ -23,6 +23,17 @@ export function registerHelperGuide( context: vscode.ExtensionContext ) {
 			triggerBmxInstallHelp()
 		}
 	} )
+	
+	
+	// Open BlitzMax settings
+	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.settings', () => {
+		vscode.commands.executeCommand( 'workbench.action.openSettings', '@ext:hezkore.blitzmax' )
+	} ) )
+	
+	// Visit BlitzMax.org command
+	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.homepage', () => {
+		vscode.env.openExternal( vscode.Uri.parse( 'https://blitzmax.org/') )
+	} ) )
 
 	// Quick command to picking a BlitzMax path
 	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.pickBlitzMaxPath', () => {

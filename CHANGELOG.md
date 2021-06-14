@@ -1,3 +1,7 @@
+## 2.11.0
+* Added custom BlitzMax 'Getting Started' walkthrough
+* Changed default build options
+
 ## 2.10.1
 * Fixed an issue with Rebuilding Documentations
 * Setting task source file will now try to use a relative path

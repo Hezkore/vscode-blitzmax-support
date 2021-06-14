@@ -64,7 +64,7 @@ export function registerBuildTreeProvider( context: vscode.ExtensionContext ) {
 	} ) )
 
 	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.toggleBuildOption', async ( option: any ) => {
-		// Just highlight the options view if no option was specified	
+		// Just highlight the options view if no option was specified
 		if ( !option ) {
 			vscode.commands.executeCommand( 'blitzmax-options.focus' )
 			return

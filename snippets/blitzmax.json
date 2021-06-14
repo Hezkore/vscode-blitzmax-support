@@ -25,7 +25,7 @@
 	
 	"For" : {
 		"prefix" : "For",
-		"body" : [ "For Local ${1:IndexVariable} = 0 Until ${2:LastValue}", "\t", "\t$0", "Next" ],
+		"body" : [ "For Local ${1:IndexVariable} = 0 ${2|Until,To,EachIn|} ${3:LastValue}", "\t", "\t$0", "Next" ],
 		"description" : "For Loop"
 	},
 	

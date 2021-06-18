@@ -1,6 +1,6 @@
 {
 	"name": "blitzmax",
-	"version": "2.11.0",
+	"version": "2.11.1",
 	"publisher": "Hezkore",
 	"displayName": "BlitzMax",
 	"description": "BlitzMax for Visual Studio Code.",
@@ -42,7 +42,7 @@
 		"publish": "vsce publish"
 	},
 	"engines": {
-		"vscode": "^1.55.0"
+		"vscode": "^1.57.0"
 	},
 	"dependencies": {
 		"await-notify": "1.0.1",
@@ -53,7 +53,7 @@
 		"@types/glob": "^7.1.3",
 		"@types/mocha": "^8.2.2",
 		"@types/node": "^15.0.2",
-		"@types/vscode": "^1.55.0",
+		"@types/vscode": "^1.57.0",
 		"@typescript-eslint/eslint-plugin": "^4.22.1",
 		"@typescript-eslint/parser": "4.22.1",
 		"eslint": "7.26.0",
@@ -98,80 +98,114 @@
 						"title": "Installing BlitzMax for MacOS",
 						"description": "Visit blitzmax.org to download BlitzMax NG.\n[Download BlitzMax NG](command:blitzmax.homepage)",
 						"when": "isMac",
-						"media": { "markdown": "walkthroughs/install_macos.md"},
-						"completionEvents": ["onCommand:blitzmax.homepage"]
+						"media": {
+							"markdown": "walkthroughs/install_macos.md"
+						},
+						"completionEvents": [
+							"onCommand:blitzmax.homepage"
+						]
 					},
 					{
 						"id": "install windows",
 						"title": "Installing BlitzMax for Windows",
 						"description": "Visit blitzmax.org to download BlitzMax NG.\n[Download BlitzMax NG](command:blitzmax.homepage)",
 						"when": "isWindows",
-						"media": { "markdown": "walkthroughs/install_windows.md" },
-						"completionEvents": ["onCommand:blitzmax.homepage"]
+						"media": {
+							"markdown": "walkthroughs/install_windows.md"
+						},
+						"completionEvents": [
+							"onCommand:blitzmax.homepage"
+						]
 					},
 					{
 						"id": "install linux",
 						"title": "Installing BlitzMax for Linux",
 						"description": "Visit blitzmax.org to download BlitzMax NG.\n[Download BlitzMax NG](command:blitzmax.homepage)",
 						"when": "isLinux",
-						"media": { "markdown": "walkthroughs/install_linux.md" },
-						"completionEvents": ["onCommand:blitzmax.homepage"]
+						"media": {
+							"markdown": "walkthroughs/install_linux.md"
+						},
+						"completionEvents": [
+							"onCommand:blitzmax.homepage"
+						]
 					},
 					{
 						"id": "set path",
 						"title": "BlitzMax Path",
 						"description": "Selecting your BlitzMax path.\n[Select Path](command:blitzmax.pickBlitzMaxPath)",
-						"media": { "markdown": "walkthroughs/path.md" },
-						"completionEvents": ["onSettingChanged:blitzmax.base.path"]
+						"media": {
+							"markdown": "walkthroughs/path.md"
+						},
+						"completionEvents": [
+							"onSettingChanged:blitzmax.base.path"
+						]
 					},
 					{
 						"id": "build options",
 						"title": "Build Options",
 						"description": "Viewing your BlitzMax build options.\n[View Build Options](command:blitzmax-options.focus)",
-						"media": { "markdown": "walkthroughs/buildoptions.md" },
-						"completionEvents": ["onView:blitzmax-options"]
+						"media": {
+							"markdown": "walkthroughs/buildoptions.md"
+						},
+						"completionEvents": [
+							"onView:blitzmax-options"
+						]
 					},
 					{
 						"id": "building",
 						"title": "Building",
 						"description": "Building your application.",
-						"media": { "markdown": "walkthroughs/build.md" }
+						"media": {
+							"markdown": "walkthroughs/build.md"
+						}
 					},
 					{
 						"id": "debugging",
 						"title": "Debugging",
 						"description": "Debugging your application.",
-						"media": { "markdown": "walkthroughs/debug.md" }
+						"media": {
+							"markdown": "walkthroughs/debug.md"
+						}
 					},
 					{
 						"id": "docs",
 						"title": "Documentation",
 						"description": "Accessing the BlitzMax documentation.",
-						"media": { "markdown": "walkthroughs/docs.md" }
+						"media": {
+							"markdown": "walkthroughs/docs.md"
+						}
 					},
 					{
 						"id": "projects",
 						"title": "Folders & Workspaces",
 						"description": "How to manage your project.",
-						"media": { "markdown": "walkthroughs/projects.md" }
+						"media": {
+							"markdown": "walkthroughs/projects.md"
+						}
 					},
 					{
 						"id": "optional",
 						"title": "Optional Features",
 						"description": "Installing optional features.",
-						"media": { "markdown": "walkthroughs/optional.md" }
+						"media": {
+							"markdown": "walkthroughs/optional.md"
+						}
 					},
 					{
 						"id": "tips",
 						"title": "Tips & Tricks",
 						"description": "Work efficiently.",
-						"media": { "markdown": "walkthroughs/tips.md" }
+						"media": {
+							"markdown": "walkthroughs/tips.md"
+						}
 					},
 					{
 						"id": "faq",
 						"title": "FAQ & Troubleshooting",
 						"description": "",
-						"media": { "markdown": "walkthroughs/faq.md" }
+						"media": {
+							"markdown": "walkthroughs/faq.md"
+						}
 					}
 				]
 			}
@@ -385,6 +419,10 @@
 				"view": "blitzmax-options",
 				"contents": "Open a BlitzMax file or folder to edit your BlitzMax build options here.\n[Open File](command:workbench.action.files.openFile)\n[Open Folder](command:vscode.openFolder)\nTo learn more about BlitzMax [visit our homepage](https://blitzmax.org/).",
 				"when": "editorLangId != blitzmax"
+			},
+			{
+				"view": "debug",
+				"contents": "[Run Without Debugging](command:workbench.action.debug.run)"
 			}
 		],
 		"menus": {

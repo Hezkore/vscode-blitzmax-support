@@ -9,6 +9,7 @@ import { BmxDebugSession } from './bmxruntime'
 import { EOL } from 'os'
 import * as vscode from 'vscode'
 import * as path from 'path'
+import { waitFor } from './common'
 import * as awaitNotify from 'await-notify'
 
 enum BmxDebuggerState {
@@ -28,6 +29,8 @@ export interface BmxDebugScope extends Scope {
 }
 
 export interface BmxDebugVariable extends Variable {
+	fuzzyNames: string[]
+	defineType: string
 }
 
 interface BmxCachedDump {
@@ -43,10 +46,12 @@ export class BmxDebugger {
 	currentEvent: BmxDebuggerEvent
 	eventQueue: BmxDebuggerEvent[] = []
 	private eventProcess = new awaitNotify.Subject()
+	private processingVariables: boolean
 	private nextReferenceId: number
 	scopes: BmxDebugScope[]
 	cachedDumpForReference: BmxCachedDump[]
 	referenceVariables: BmxDebugVariable[]
+	variableMap: Map<string, BmxDebugVariable>
 
 	constructor( session: BmxDebugSession ) {
 		this.session = session
@@ -61,7 +66,7 @@ export class BmxDebugger {
 			const line = output.split( EOL )[i]
 			if ( line.length <= 0 ) continue
 			//console.log('D: ' + line)
-			
+
 			// Is this relevant to the debugger?
 			if ( line.startsWith( '~>' ) ) {
 				// Does the current event have a name?
@@ -187,8 +192,13 @@ export class BmxDebugger {
 		}
 
 		let variable = {
-			name: name, value: value,
-			variablesReference: 0
+			name: name, value: value, defineType: name.substr( 0, name.indexOf( ' ' ) ),
+			variablesReference: 0,
+			fuzzyNames: [
+				name.toLowerCase(),
+				name.substring( name.indexOf( ' ' ) + 1, name.lastIndexOf( ':' ) ).toLowerCase(),
+				name.slice( name.indexOf( ' ' ) + 1 ).toLowerCase()
+			]
 		}
 
 		// Do we need to reference this variable in the future?
@@ -200,12 +210,46 @@ export class BmxDebugger {
 		return variable
 	}
 
-
 	// From runtime
 	//
+	restartRequest() {
+		this.variableMap = new Map()
+	}
+
+	async evaluateRequest( response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments, request?: DebugProtocol.Request ): Promise<DebugProtocol.EvaluateResponse> {
+		return new Promise( async ( resolve, reject ) => {
+
+			// Wait if variables are currently being processed
+			await waitFor( () => !this.processingVariables )
+
+			args.expression = args.expression.toLowerCase()
+
+			let varMatch: BmxDebugVariable | undefined = undefined
+
+			for ( let variable of this.variableMap.entries() ) {
+				if ( variable[1].fuzzyNames.includes( args.expression ) ) {
+					varMatch = variable[1]
+					break
+				}
+			}
+
+			if ( varMatch )
+				response.body = {
+					result: varMatch.value,
+					type: varMatch.defineType,
+					variablesReference: varMatch.variablesReference
+				}
+
+			return resolve( response )
+		} )
+	}
+
 	async onStackTraceRequest( response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments ): Promise<DebugProtocol.StackTraceResponse> {
 		return new Promise( async ( resolve, reject ) => {
+			this.processingVariables = true
+
 			this.resetReferenceId()
+			if ( !this.variableMap ) this.variableMap = new Map()
 			this.scopes = []
 			this.referenceVariables = []
 
@@ -296,19 +340,25 @@ export class BmxDebugger {
 
 	async onVariablesRequest( response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments ): Promise<DebugProtocol.VariablesResponse> {
 		return new Promise( async ( resolve, reject ) => {
+			this.processingVariables = true
 
 			// Prepare the reponse body
 			response.body = { variables: [] }
 
+			let convertedVariable: BmxDebugVariable
+
 			if ( this.cachedDumpForReference[args.variablesReference] ) {
 				// Use the cached response (from initial stack call)
 				this.cachedDumpForReference[args.variablesReference].data.forEach( line => {
-					response.body.variables.push( this.convertToVariable( line ) )
+					convertedVariable = this.convertToVariable( line )
+					response.body.variables.push( convertedVariable )
+					this.variableMap.set( convertedVariable.name, convertedVariable )
 				} )
 			} else {
 				// Is this a root scope that got no variables from initial call stack?
 				if ( this.isRootScopeReference( args.variablesReference ) ) {
 					response.body.variables.push( { name: 'no variables', value: '', variablesReference: 0 } )
+					this.processingVariables = false
 					return resolve( response )
 				}
 
@@ -324,7 +374,10 @@ export class BmxDebugger {
 				}
 
 				// Did we find a reference?
-				if ( !variable ) return resolve( response )
+				if ( !variable ) {
+					this.processingVariables = false
+					return resolve( response )
+				}
 
 				// Send dump request to debugger
 				this.sendInputToDebugger( 'd' + variable.value.slice( 1 ) )
@@ -334,23 +387,30 @@ export class BmxDebugger {
 
 				// Capture event
 				const event = this.getNextEvent()
-				if ( !event || !event.data ) return resolve( response )
+				if ( !event || !event.data ) {
+					this.processingVariables = false
+					return resolve( response )
+				}
 
 				// Use event data
 				for ( let i = 0; i < event.data.length; i++ ) {
 					const line = event.data[i]
-					response.body.variables.push( this.convertToVariable( line ) )
+					convertedVariable = this.convertToVariable( line )
+					response.body.variables.push( convertedVariable )
+					this.variableMap.set( convertedVariable.name, convertedVariable )
 				}
 
 				// Remove this reference variable
 				this.referenceVariables.splice( variableIndex, 1 )
 			}
 
+			this.processingVariables = false
 			return resolve( response )
 		} )
 	}
 
 	async continueRequest( response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments ): Promise<DebugProtocol.ContinueResponse> {
+		this.variableMap = new Map()
 		this.session.isDebugging = false
 		this.session.sendEvent( new ContinuedEvent( BmxDebugSession.THREAD_ID ) )
 		this.sendInputToDebugger( 'r' )

@@ -26,7 +26,6 @@ export function registerDebugger( context: vscode.ExtensionContext ) {
 
 	let factory: vscode.DebugAdapterDescriptorFactory = new BmxInlineDebugAdapterFactory()
 	context.subscriptions.push( vscode.debug.registerDebugAdapterDescriptorFactory( 'bmx', factory ) )
-	if ( 'dispose' in factory ) context.subscriptions.push( factory )
 
 	// Related commands
 	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.buildAndDebug', () => {
@@ -131,6 +130,7 @@ export class BmxDebugSession extends LoggingDebugSession {
 		response.body.supportsInstructionBreakpoints = false
 		response.body.supportsBreakpointLocationsRequest = false
 		response.body.supportsDataBreakpoints = false
+		response.body.supportsEvaluateForHovers = true
 
 		this.sendResponse( response )
 
@@ -263,7 +263,7 @@ export class BmxDebugSession extends LoggingDebugSession {
 
 		this.sendResponse( response )
 	}
-
+	
 	protected pauseRequest( response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments, request?: DebugProtocol.Request ) {
 		response.message = 'Pause is not supported'
 		response.success = false
@@ -271,6 +271,7 @@ export class BmxDebugSession extends LoggingDebugSession {
 	}
 
 	protected restartRequest( response: DebugProtocol.RestartResponse, args: DebugProtocol.RestartArguments, request?: DebugProtocol.Request ) {
+		this.debugParser.restartRequest()
 		this._isRestart = true
 		this.startRuntime()
 		this.sendResponse( response )
@@ -279,6 +280,11 @@ export class BmxDebugSession extends LoggingDebugSession {
 	protected threadsRequest( response: DebugProtocol.ThreadsResponse ) {
 		// No threads! Just return a default thread
 		response.body = { threads: [new Thread( BmxDebugSession.THREAD_ID, "thread 1" )] }
+		this.sendResponse( response )
+	}
+	
+	protected async evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments, request?: DebugProtocol.Request) {
+		response = await this.debugParser.evaluateRequest( response, args )
 		this.sendResponse( response )
 	}
 

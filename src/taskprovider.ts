@@ -209,7 +209,7 @@ export function makeTaskDefinition( label: string, detail: string, make: string,
 		hidpi: true,
 		architecture: os.arch(),
 		target: os.platform() == 'darwin' ? 'macos' : os.platform(),
-		debug: true
+		debug: false
 	}
 
 	return definition

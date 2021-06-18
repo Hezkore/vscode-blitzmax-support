@@ -20,6 +20,6 @@ Simply press the "Run and Debug" button to start debugging.
 
 The internal VS Code debugger is used for debugging.
 
-![Debug Interface](../media/debug_interface.png)
+![Debug Interface](../media/debug_interface.gif)
 
 You can read more about the VS Code debugger [here](https://code.visualstudio.com/docs/editor/debugging).

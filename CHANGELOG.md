@@ -1,3 +1,8 @@
+## 2.11.1
+* Added 'Run Without Debugging' button in debug menu
+* Added debug stack variable hover
+* Changed default build options
+
 ## 2.11.0
 * Added custom BlitzMax 'Getting Started' walkthrough
 * Changed default build options

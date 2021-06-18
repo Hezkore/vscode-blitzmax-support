@@ -5,6 +5,20 @@ import * as os from 'os'
 import * as fs from 'fs'
 import * as path from 'path'
 
+export const waitFor = async (condFunc: () => boolean) => {
+	return new Promise<void>((resolve) => {
+	  if (condFunc()) {
+		 resolve();
+	  }
+	  else {
+		 setTimeout(async () => {
+			await waitFor(condFunc);
+			resolve();
+		 }, 100);
+	  }
+	});
+ };
+
 export function debugDelay( ms: number ) {
 	return new Promise( resolve => setTimeout( resolve, ms ) )
 }
@@ -71,7 +85,7 @@ export function jointBmxWord( document: vscode.TextDocument, wordRange: vscode.R
 	const startWord = startChr ? document.getText( previousTokenPosition( document, wordRange.start.translate( 0, -1 ) ) ) : undefined
 	const endWord = endChr ? document.getText( previousTokenPosition( document, wordRange.end.translate( 0, 1 ) ) ) : undefined
 	const curWord = document.getText( wordRange )
-	
+
 	let joinStartWord: boolean = false
 	let joinEndWord: boolean = false
 	let trimSpaces: boolean = false

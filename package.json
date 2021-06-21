@@ -1,6 +1,6 @@
 {
 	"name": "blitzmax",
-	"version": "2.11.1",
+	"version": "2.11.2",
 	"publisher": "Hezkore",
 	"displayName": "BlitzMax",
 	"description": "BlitzMax for Visual Studio Code.",
@@ -89,7 +89,7 @@
 	"contributes": {
 		"walkthroughs": [
 			{
-				"id": "sample",
+				"id": "config bmx",
 				"title": "Configuring BlitzMax",
 				"description": "Get started with BlitzMax.",
 				"steps": [
@@ -131,7 +131,7 @@
 					},
 					{
 						"id": "set path",
-						"title": "BlitzMax Path",
+						"title": "Selecting Your BlitzMax Path",
 						"description": "Selecting your BlitzMax path.\n[Select Path](command:blitzmax.pickBlitzMaxPath)",
 						"media": {
 							"markdown": "walkthroughs/path.md"
@@ -142,10 +142,10 @@
 					},
 					{
 						"id": "build options",
-						"title": "Build Options",
-						"description": "Viewing your BlitzMax build options.\n[View Build Options](command:blitzmax-options.focus)",
+						"title": "Changing Build Options",
+						"description": "Changing your BlitzMax build options.\n[View Build Options](command:blitzmax-options.focus)",
 						"media": {
-							"markdown": "walkthroughs/buildoptions.md"
+							"markdown": "walkthroughs/build_options.md"
 						},
 						"completionEvents": [
 							"onView:blitzmax-options"
@@ -153,18 +153,18 @@
 					},
 					{
 						"id": "building",
-						"title": "Building",
+						"title": "Building & Tasks",
 						"description": "Building your application.",
 						"media": {
-							"markdown": "walkthroughs/build.md"
+							"markdown": "walkthroughs/build_tasks.md"
 						}
 					},
 					{
-						"id": "debugging",
-						"title": "Debugging",
-						"description": "Debugging your application.",
+						"id": "debug and run",
+						"title": "Debug & Run Without Debug",
+						"description": "Debugging and running your application.",
 						"media": {
-							"markdown": "walkthroughs/debug.md"
+							"markdown": "walkthroughs/debug_run.md"
 						}
 					},
 					{
@@ -205,6 +205,14 @@
 						"description": "",
 						"media": {
 							"markdown": "walkthroughs/faq.md"
+						}
+					},
+					{
+						"id": "maxide",
+						"title": "Switch from MaxIDE / BLide",
+						"description": "Making the switch",
+						"media": {
+							"markdown": "walkthroughs/maxide.md"
 						}
 					}
 				]

@@ -1,13 +1,13 @@
 ![BlitzMax Logo](../media/blitzmax_title.svg)
 
 ## FAQ & Troubleshooting
-
+---
 * What languages are supported?
 	* Only [BlitzMax NG](https://blitzmax.org/) is officially supported.\
 	You can enable the *'Legacy Mode'* build option for basic BlitzMax Vanilla/Legacy build support.\
 	_(I highly recommend you upgrade to [BlitzMax NG](https://blitzmax.org/))_
 
-* Why is the [outlines](https://code.visualstudio.com/docs/getstarted/userinterface#_outline-view) view and [breadcrumbs](https://code.visualstudio.com/docs/editor/editingevolved#_breadcrumbs) not working?
+* Why is the "[outline view](https://code.visualstudio.com/docs/getstarted/userinterface#_outline-view)" and [breadcrumbs](https://code.visualstudio.com/docs/editor/editingevolved#_breadcrumbs) not working?
 	* These features are provided by the [LSP](#note-about-using-the-language-server-protocol) server.\
 	Make sure your current [LSP](#note-about-using-the-language-server-protocol) supports these features.
 
@@ -15,7 +15,7 @@
 	* Is the issue or request already listed at [GitHub Issues](https://github.com/Hezkore/vscode-blitzmax-support/issues)?\
 	If not, you can open up a new [GitHub issue here](https://github.com/Hezkore/vscode-blitzmax-support/issues/new).
 
-* How do I _`<do this or that>`_ in VS Code?\
+* How do I _xxx_ in VS Code?\
 	_(aka. I need more help)_
 	* For general questions or VS Code related help you have few options:
 		

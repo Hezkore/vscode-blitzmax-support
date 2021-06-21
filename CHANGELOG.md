@@ -1,3 +1,8 @@
+## 2.11.2
+* Fixed an issue with the debugger not stopping correctly
+* The build options view now sets task group to 'build'
+* Updated walkthrough with new steps and information
+
 ## 2.11.1
 * Added 'Run Without Debugging' button in debug menu
 * Added debug stack variable hover

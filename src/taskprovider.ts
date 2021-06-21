@@ -87,10 +87,10 @@ export function getBuildDefinitionFromWorkspace( workspace: vscode.WorkspaceFold
 		for ( let i = 0; i < tasks.length; i++ ) {
 			const task: BmxBuildTaskDefinition = tasks[i]
 			if ( !task || task.type != 'bmx' ) continue
-			if ( !firstBmxTask ) firstBmxTask = task
-			if ( task.group && task.group.isDefault ) return task
+			if ( !firstBmxTask ) firstBmxTask = task // Store the first bmx task
+			if ( task.group && task.group.isDefault ) return task // We found a build task, use it!
 		}
-		if ( firstBmxTask ) return firstBmxTask
+		if ( firstBmxTask ) return firstBmxTask // Okay, just use the first bmx task..
 	}
 
 	// Something went wrong, return default
@@ -101,6 +101,9 @@ export function saveAsDefaultTaskDefinition( newDef: BmxBuildTaskDefinition | un
 
 	if ( !newDef ) return false
 
+	// Make sure we're dealing with a build task!
+	newDef.group = { kind: 'build', isDefault: true }
+
 	const doc = vscode.window.activeTextEditor?.document
 	let workspace: vscode.WorkspaceFolder | undefined
 	if ( doc ) workspace = vscode.workspace.getWorkspaceFolder( doc.uri )
@@ -109,43 +112,47 @@ export function saveAsDefaultTaskDefinition( newDef: BmxBuildTaskDefinition | un
 		return true
 	}
 
-	// Try to update the actual default task
-	const config = vscode.workspace.getConfiguration( 'tasks' )
-	const tasks: BmxBuildTaskDefinition[] | undefined = config.get( 'tasks' )
-	if ( tasks ) {
+	// Try to update the task with the same label
+	const tasksFile = vscode.workspace.getConfiguration( 'tasks' )
+	const tasksList: BmxBuildTaskDefinition[] | undefined = tasksFile.get( 'tasks' )
+	console.log( tasksList )
+	if ( tasksList ) {
 
-		let updatedTasks: BmxBuildTaskDefinition[] = []
-		let foundDefault: boolean = false
+		let newTasksList: BmxBuildTaskDefinition[] = []
+		let replacedTask: boolean = false
 		let firstBmxTaskAtIndex: number = -1
-		for ( let i = 0; i < tasks.length; i++ ) {
-			const oldDef: BmxBuildTaskDefinition = tasks[i]
+		for ( let i = 0; i < tasksList.length; i++ ) {
+
+			const oldDef: BmxBuildTaskDefinition = tasksList[i]
 			if ( !oldDef ) continue
-			if ( firstBmxTaskAtIndex < 0 && oldDef.type == 'bmx' ) firstBmxTaskAtIndex = i
 
-			if ( oldDef.group && oldDef.group.isDefault ) {
+			// Store the location of the first found bmx task
+			if ( oldDef.type == 'bmx' ) firstBmxTaskAtIndex = i
 
-				updatedTasks.push( newDef )
-				foundDefault = true
-			} else updatedTasks.push( oldDef )
+			if ( oldDef.label == newDef.label ) {
+				newTasksList.push( newDef )
+				replacedTask = true
+			} else newTasksList.push( oldDef ) // Store the old one
 		}
 
-		if ( foundDefault ) {
-			config.update( 'tasks', updatedTasks )
+		if ( replacedTask ) {
+			tasksFile.update( 'tasks', newTasksList  )
 			return true
 		} else {
 			if ( firstBmxTaskAtIndex >= 0 ) {
-				updatedTasks[firstBmxTaskAtIndex] = newDef
-				config.update( 'tasks', updatedTasks )
+				newTasksList[firstBmxTaskAtIndex] = newDef
+				tasksFile.update( 'tasks', newTasksList  )
 				return true
 			} else {
-				updatedTasks.push( newDef )
-				config.update( 'tasks', updatedTasks )
+				newTasksList.push( newDef )
+				tasksFile.update( 'tasks', newTasksList  )
 				return true
 			}
 		}
+
 	}
 
-	config.update( 'tasks', [newDef] )
+	tasksFile.update( 'tasks', [newDef]  )
 	return true
 }
 
@@ -426,7 +433,7 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 				progressBar.report( { message: ` ${this.percent}%`, increment: this.percent - this.lastPercent } )
 				this.lastPercent = this.percent
 			}
-			
+
 			// Print output and potentially add colors
 			if ( colorOuput ) {
 				this.colorBmkOutput( line )

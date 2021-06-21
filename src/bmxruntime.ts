@@ -49,7 +49,7 @@ export class BmxDebugConfigurationProvider implements vscode.DebugConfigurationP
 	}
 
 	resolveDebugConfiguration( workspace: vscode.WorkspaceFolder | undefined, config: vscode.DebugConfiguration | undefined, token?: vscode.CancellationToken ): vscode.ProviderResult<vscode.DebugConfiguration> {
-
+		
 		const doc = vscode.window.activeTextEditor?.document
 		if ( doc ) workspace = vscode.workspace.getWorkspaceFolder( doc.uri )
 
@@ -118,7 +118,7 @@ export class BmxDebugSession extends LoggingDebugSession {
 
 	protected initializeRequest( response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments ): void {
 
-		// Build and return capabilities
+		// Return capabilities
 		response.body = response.body || {}
 		response.body.supportsStepInTargetsRequest = true
 		response.body.supportsReadMemoryRequest = true
@@ -144,7 +144,7 @@ export class BmxDebugSession extends LoggingDebugSession {
 	protected async launchRequest( response: DebugProtocol.LaunchResponse, args: BmxLaunchRequestArguments ) {
 		// Setup a build task definition based on our launch arguments
 		let debuggerTaskDefinition: BmxBuildTaskDefinition = <BmxBuildTaskDefinition>( args )
-
+		
 		debuggerTaskDefinition.debug = !!!args.noDebug
 
 		if ( debuggerTaskDefinition.debug ) this.debugParser = new BmxDebugger( this )
@@ -198,8 +198,6 @@ export class BmxDebugSession extends LoggingDebugSession {
 	}
 
 	startRuntime() {
-		// Reset some stuff
-		this.isDebugging = false
 
 		// Make sure we have a path
 		if ( !this._bmxProcessPath ) return
@@ -214,6 +212,9 @@ export class BmxDebugSession extends LoggingDebugSession {
 				this.bmxProcess.kill( this._killSignal )
 			}
 		}
+		
+		// Reset some stuff
+		this.isDebugging = false
 
 		this.bmxProcess = process.spawn( this._bmxProcessPath )
 

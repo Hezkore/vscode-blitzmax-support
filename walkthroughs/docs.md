@@ -1,7 +1,7 @@
 ![BlitzMax Logo](../media/blitzmax_title.svg)
 
-## Accessing the BlitzMax documentation
----
+# Accessing the BlitzMax documentation
+
 Right click any known keyword and select "Quick Help" _(F1)_ to display the default BlitzMax documentation.
 
 ![Quick Help](../media/quick_help.gif)

@@ -1,3 +1,6 @@
+## 2.11.3
+* Walkthrough now has direct comparisons with MaxIDE
+
 ## 2.11.2
 * Fixed an issue with the debugger not stopping correctly
 * The build options view now sets task group to 'build'

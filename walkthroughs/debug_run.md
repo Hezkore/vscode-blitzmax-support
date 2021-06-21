@@ -1,7 +1,7 @@
 ![BlitzMax Logo](../media/blitzmax_title.svg)
 
-## Debugging and running your application
----
+# Debugging and running your application
+
 Use the `Run` menu to start debugging _(F5)_ or run without debugging _(Ctrl + F5)_.
 
 ![Debug Start](../media/debug_start.png)
@@ -10,8 +10,9 @@ Use the `Run` menu to start debugging _(F5)_ or run without debugging _(Ctrl + F
 While "Run Without Debugging" always runs a release version of your application.\
 Your other build options will still apply.
 
-Debugging or not, once your session starts the Debug toolbar will appear on the top of the editor. You can use this to stop your application at any time, even outside of debug mode.\
-The other debug options will become available once a `DebugStop` is reached in your application.
+Debugging or not, once your session starts the Debug toolbar will appear on the top of the editor.\
+You can use this to stop your application at any time, even outside of debug mode.\
+The other debug buttons will become available once a `DebugStop` is reached in your application.
 
 ![Debug Toolbar](../media/debug_toolbar.png)
 

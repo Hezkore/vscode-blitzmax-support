@@ -1,7 +1,7 @@
 ![BlitzMax Logo](../media/blitzmax_title.svg)
 
-## FAQ & Troubleshooting
----
+# FAQ & Troubleshooting
+
 * What languages are supported?
 	* Only [BlitzMax NG](https://blitzmax.org/) is officially supported.\
 	You can enable the *'Legacy Mode'* build option for basic BlitzMax Vanilla/Legacy build support.\

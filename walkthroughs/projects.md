@@ -1,7 +1,7 @@
 ![BlitzMax Logo](../media/blitzmax_title.svg)
 
-## Folder projects
----
+# Folder projects
+
 While VS Code works just fine with single source files, it works best for large projects!
 
 A folder project is simply any existing source folder, there is no need for a separate project file.\
@@ -18,8 +18,8 @@ The source file for your project can be locked by right clicking any `.bmx` docu
 * _This will set the `source` parameter for your default build task.\
 Read more in the "Building & Tasks" step._
 
-## Workspaces
----
+# Workspaces
+
 An alternate - _rarely used_ - version of a folder project is a "workspace".\
 It consists of multiple folder projects, all stored at different locations and cannot be a subfolder.
 

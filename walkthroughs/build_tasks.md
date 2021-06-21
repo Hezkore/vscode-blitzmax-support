@@ -1,7 +1,7 @@
 ![BlitzMax Logo](../media/blitzmax_title.svg)
 
-## Quick build
----
+# Quick build
+
 A quick way to build your application is by using the shortcut button in the upp right corner.\
 This will automatically generate and run a VS Code build task based on your build options.
 
@@ -13,8 +13,8 @@ That means they will only be visible while editing a BlitzMax source file.
 * _Remember that pressing F5 is the same as using the `Run` menu to start debugging (F5), and will not use your build options.\
 Read more in the "Debug & Run Without Debug" step._
 
-## Building via tasks
----
+# Building via tasks
+
 Tasks in VS Code are simple JSON scripts located inside `<your project>/.vscode/tasks.json`.\
 They can do anything your terminal can, plus a lot more.
 
@@ -39,8 +39,8 @@ You can also use the build options view to edit the default build task settings.
 BlitzMax VS Code tasks use the `bmx` task type.\
 You can read more about VS Code tasks [here](https://code.visualstudio.com/docs/editor/tasks)
 
-## How do a I build a debug/release version?
----
+# How do a I build a debug/release version?
+
 Open your build options view or `tasks.json` and set "Debug" to true or false.
 
 ![Debug Option](../media/build_options_debug.png)

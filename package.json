@@ -1,6 +1,6 @@
 {
 	"name": "blitzmax",
-	"version": "2.11.2",
+	"version": "2.11.3",
 	"publisher": "Hezkore",
 	"displayName": "BlitzMax",
 	"description": "BlitzMax for Visual Studio Code.",
@@ -141,6 +141,14 @@
 						]
 					},
 					{
+						"id": "maxide",
+						"title": "Switch from MaxIDE / BLide",
+						"description": "Making the switch",
+						"media": {
+							"markdown": "walkthroughs/maxide.md"
+						}
+					},
+					{
 						"id": "build options",
 						"title": "Changing Build Options",
 						"description": "Changing your BlitzMax build options.\n[View Build Options](command:blitzmax-options.focus)",
@@ -205,14 +213,6 @@
 						"description": "",
 						"media": {
 							"markdown": "walkthroughs/faq.md"
-						}
-					},
-					{
-						"id": "maxide",
-						"title": "Switch from MaxIDE / BLide",
-						"description": "Making the switch",
-						"media": {
-							"markdown": "walkthroughs/maxide.md"
 						}
 					}
 				]

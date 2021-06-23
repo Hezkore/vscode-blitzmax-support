@@ -221,6 +221,8 @@ export class BmxDebugger {
 
 			// Wait if variables are currently being processed
 			await waitFor( () => !this.processingVariables )
+			
+			if (!this.variableMap || !this.variableMap.entries) return resolve( response )
 
 			args.expression = args.expression.toLowerCase()
 

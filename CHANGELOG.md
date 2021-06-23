@@ -1,3 +1,7 @@
+## 2.12.0
+* Added document symbol provider (outliner)
+* Fixed an evaluation request error
+
 ## 2.11.3
 * Walkthrough now has direct comparisons with MaxIDE
 

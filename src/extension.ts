@@ -9,6 +9,7 @@ import { registerDocsProvider } from './bmxcommands'
 import { registerTaskProvider } from './taskprovider'
 import { registerHoverProvider } from './hoverprovider'
 import { registerBuildTreeProvider } from './buildtree'
+import { registerSymbolProvider } from './symbolProvider'
 import { registerFormatterProvider } from './formatterProvider'
 import { registerTerminalLinkProvider } from './linkprovider'
 import { registerCompletionProvider } from './completionprovider'
@@ -22,6 +23,7 @@ export function activate( context: vscode.ExtensionContext ) {
 	registerDocsProvider( context )
 	registerTaskProvider( context )
 	registerHoverProvider( context )
+	registerSymbolProvider( context )
 	registerBuildTreeProvider( context )
 	registerFormatterProvider( context )
 	registerCompletionProvider( context )

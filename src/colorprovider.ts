@@ -82,7 +82,6 @@ export function registerColorProvider( context: vscode.ExtensionContext ) {
 
 							const colorsRange: vscode.Range = new vscode.Range( colorStartPosition, colorEndPosition )
 							const colorsInteger = isIntegerColors( document.getText( colorsRange ) )
-							console.log( 'Integer colors: ' + colorsInteger )
 
 							colors.push(
 								new vscode.ColorInformation(

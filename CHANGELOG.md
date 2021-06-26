@@ -1,3 +1,8 @@
+## 2.13.0
+* Added document color preview
+* Fixed an issue with the 'Rebuild Documentation' command
+* Added 'Build Modules', 'Rebuild All Modules' and 'Display BlitzMax Version' commands
+
 ## 2.12.0
 * Added document symbol provider (outliner)
 * Fixed an evaluation request error
@@ -20,7 +25,7 @@
 * Changed default build options
 
 ## 2.10.1
-* Fixed an issue with Rebuilding Documentations
+* Fixed an issue with the 'Rebuild Documentation' command
 * Setting task source file will now try to use a relative path
 
 ## 2.10.0 "The Windows Update"

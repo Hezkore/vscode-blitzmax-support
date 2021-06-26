@@ -1,6 +1,6 @@
 {
 	"name": "blitzmax",
-	"version": "2.12.0",
+	"version": "2.13.0",
 	"publisher": "Hezkore",
 	"displayName": "BlitzMax",
 	"description": "BlitzMax for Visual Studio Code.",
@@ -74,6 +74,9 @@
 		"onDebugResolve:bmx",
 		"onDebugDynamicConfigurations:bmx",
 		"onCommand:blitzmax.rebuildDoc",
+		"onCommand:blitzmax.buildModules",
+		"onCommand:blitzmax.rebuildAllModules",
+		"onCommand:blitzmax.version",
 		"onCommand:blitzmax.quickHelp",
 		"onCommand:blitzmax.resetBuildOptions",
 		"onCommand:blitzmax.changeDefaultBuildTask",
@@ -321,6 +324,11 @@
 					"type": "string",
 					"markdownDescription": "[Code formatter](https://github.com/search?q=topic%3ABlitzMax+topic%3Aformatter) arguments for end of format range.",
 					"default": "-end"
+				},
+				"blitzmax.syntax.colorFunctions": {
+					"type": "array",
+					"description": "An array of all the functions that sets a color",
+					"default": ["setcolor", "setclscolor", "requestcolor", "setmaskcolor"]
 				}
 			}
 		},
@@ -337,7 +345,22 @@
 			},
 			{
 				"command": "blitzmax.rebuildDoc",
-				"title": "Rebuild Documentations",
+				"title": "Rebuild Documentation",
+				"category": "BlitzMax"
+			},
+			{
+				"command": "blitzmax.buildModules",
+				"title": "Build Modules",
+				"category": "BlitzMax"
+			},
+			{
+				"command": "blitzmax.rebuildAllModules",
+				"title": "Rebuild All Modules",
+				"category": "BlitzMax"
+			},
+			{
+				"command": "blitzmax.version",
+				"title": "Display BlitzMax Version",
 				"category": "BlitzMax"
 			},
 			{

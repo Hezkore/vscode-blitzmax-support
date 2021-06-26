@@ -24,7 +24,7 @@ export function registerDocsProvider( context: vscode.ExtensionContext ) {
 
 		// Reset old commands and modules
 		_commandsList = []
-		_commandsList = []
+		_modulesList = []
 
 		vscode.window.withProgress( {
 			location: vscode.ProgressLocation.Notification,

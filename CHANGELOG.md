@@ -1,3 +1,6 @@
+## 2.14.0
+* Added workspace symbols
+
 ## 2.13.0
 * Added document color preview
 * Fixed an issue with the 'Rebuild Documentation' command

@@ -16,7 +16,7 @@ import {
 export function registerBuildTreeProvider( context: vscode.ExtensionContext ) {
 
 	const bmxBuildTreeProvider = new BmxBuildTreeProvider( context )
-	vscode.window.registerTreeDataProvider( 'blitzmax-options', bmxBuildTreeProvider )
+	vscode.window.registerTreeDataProvider( 'blitzmax-build-options', bmxBuildTreeProvider )
 
 	vscode.workspace.onDidChangeConfiguration( ( event ) => {
 		if ( event.affectsConfiguration( 'tasks' ) ) bmxBuildTreeProvider.refresh()
@@ -66,7 +66,7 @@ export function registerBuildTreeProvider( context: vscode.ExtensionContext ) {
 	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.toggleBuildOption', async ( option: any ) => {
 		// Just highlight the options view if no option was specified
 		if ( !option ) {
-			vscode.commands.executeCommand( 'blitzmax-options.focus' )
+			vscode.commands.executeCommand( 'blitzmax-build-options.focus' )
 			return
 		}
 
@@ -113,7 +113,7 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 	}
 
 	refresh() {
-		vscode.commands.executeCommand( 'setContext', 'blitzmax:debugging', getBuildDefinitionFromWorkspace().debug );
+		vscode.commands.executeCommand( 'setContext', 'blitzmax:debugging', getBuildDefinitionFromWorkspace().debug )
 		this._onDidChangeTreeData.fire( null )
 	}
 

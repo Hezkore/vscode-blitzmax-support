@@ -130,6 +130,9 @@ export function getCommand( command: string | undefined = undefined, filter: Get
 	// Cache commands if needed
 	cacheCommandsAndModulesIfEmpty( false )
 	if ( !_commandsList ) return []
+	
+	// Send raw command list
+	if (!command && !filter) return _commandsList
 
 	// Find the command
 	if ( command ) command = command.toLowerCase()

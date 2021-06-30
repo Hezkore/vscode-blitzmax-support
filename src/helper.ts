@@ -3,7 +3,7 @@
 import * as vscode from 'vscode'
 import * as path from 'path'
 import { existsSync } from './common'
-import { cacheCommandsAndModulesIfEmpty } from './bmxcommands'
+import { cacheCommandsAndModulesIfEmpty } from './bmxdocs'
 
 export let BlitzMaxPath: string | undefined
 const bmxNoPathMessage = `No BlitzMax path configured!
@@ -110,6 +110,9 @@ export function triggerBmxFormatterHelp() {
 
 // Help with BlitzMax install
 function triggerBmxInstallHelp() {
+	
+	vscode.commands.executeCommand( 'setContext', 'blitzmax:ready', false )
+	
 	// Notify that no BlitzMax path is set
 	if ( !BlitzMaxPath ) {
 		vscode.window.showWarningMessage( bmxNoPathMessage, { modal: true }, 'Select path' ).then( picked => {
@@ -129,7 +132,7 @@ function triggerBmxInstallHelp() {
 				}
 			} )
 		} else {
-
+			vscode.commands.executeCommand( 'setContext', 'blitzmax:ready', true )
 			cacheCommandsAndModulesIfEmpty( true )
 		}
 	}

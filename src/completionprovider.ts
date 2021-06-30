@@ -1,7 +1,7 @@
 'use strict'
 
 import * as vscode from 'vscode'
-import { getCommand, getModule } from './bmxcommands'
+import { getCommand, getModule } from './bmxdocs'
 import { previousTokenPosition } from './common'
 
 export function registerCompletionProvider( context: vscode.ExtensionContext ) {

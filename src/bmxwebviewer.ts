@@ -8,7 +8,7 @@ import { BlitzMaxPath } from './helper'
 let webPanel: vscode.WebviewPanel | undefined
 let webViewPath: string = ''
 
-export async function showBmxDocs( url: string | undefined, jumpTo: string | undefined ) {
+export async function showBmxDocs( url: string | undefined, jumpTo: string | undefined = undefined ) {
 	// Make sure we have the data we need
 	if ( !url || !BlitzMaxPath ) return
 

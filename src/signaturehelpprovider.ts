@@ -1,7 +1,7 @@
 'use strict'
 
 import * as vscode from 'vscode'
-import { getCommand } from './bmxcommands'
+import { getCommand } from './bmxdocs'
 import { previousTokenPosition } from './common'
 
 export function registerSignatureHelpProvider( context: vscode.ExtensionContext ) {

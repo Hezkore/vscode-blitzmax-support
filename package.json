@@ -73,6 +73,7 @@
 		"onLanguage:blitzmax",
 		"onDebugResolve:bmx",
 		"onDebugDynamicConfigurations:bmx",
+		"onView:blitzmax-documentation",
 		"onCommand:blitzmax.rebuildDoc",
 		"onCommand:blitzmax.buildModules",
 		"onCommand:blitzmax.rebuildAllModules",
@@ -154,12 +155,12 @@
 					{
 						"id": "build options",
 						"title": "Changing Build Options",
-						"description": "Changing your BlitzMax build options.\n[View Build Options](command:blitzmax-options.focus)",
+						"description": "Changing your BlitzMax build options.\n[View Build Options](command:blitzmax-build-options.focus)",
 						"media": {
 							"markdown": "walkthroughs/build_options.md"
 						},
 						"completionEvents": [
-							"onView:blitzmax-options"
+							"onView:blitzmax-build-options"
 						]
 					},
 					{
@@ -440,16 +441,27 @@
 		"views": {
 			"blitzmax": [
 				{
-					"id": "blitzmax-options",
-					"name": "BlitzMax Options"
+					"id": "blitzmax-build-options",
+					"name": "Build Options",
+					"icon": "$(gear)"
+				},
+				{
+					"id": "blitzmax-documentation",
+					"name": "Documentation",
+					"icon": "$(book)"
 				}
 			]
 		},
 		"viewsWelcome": [
 			{
-				"view": "blitzmax-options",
-				"contents": "Open a BlitzMax file or folder to edit your BlitzMax build options here.\n[Open File](command:workbench.action.files.openFile)\n[Open Folder](command:vscode.openFolder)\nTo learn more about BlitzMax [visit our homepage](https://blitzmax.org/).",
+				"view": "blitzmax-build-options",
+				"contents": "Open a BlitzMax file or folder to edit your BlitzMax build options here.\n[Open File](command:workbench.action.files.openFile)\n[Open Folder](command:vscode.openFolder)\nTo learn more about BlitzMax NG [visit our homepage](https://blitzmax.org/).",
 				"when": "editorLangId != blitzmax"
+			},
+			{
+				"view": "blitzmax-documentation",
+				"contents": "Set your BlitMax path and make sure module documentation are built.",
+				"when": "blitzmax:ready != true"
 			},
 			{
 				"view": "debug",
@@ -460,22 +472,22 @@
 			"view/title": [
 				{
 					"command": "blitzmax.changeDefaultBuildTask",
-					"when": "view == blitzmax-options"
+					"when": "view == blitzmax-build-options"
 				},
 				{
 					"command": "blitzmax.resetBuildOptions",
-					"when": "view == blitzmax-options"
+					"when": "view == blitzmax-build-options"
 				}
 			],
 			"view/item/context": [
 				{
 					"command": "blitzmax.toggleBuildOption",
-					"when": "view == blitzmax-options && viewItem == option",
+					"when": "view == blitzmax-build-options && viewItem == option",
 					"group": "inline"
 				},
 				{
 					"command": "blitzmax.changeDefaultBuildTask",
-					"when": "view == blitzmax-options && viewItem == workspaceRoot",
+					"when": "view == blitzmax-build-options && viewItem == workspaceRoot",
 					"group": "inline"
 				}
 			],

@@ -304,10 +304,50 @@ function addCommand( data: string ) {
 
 			// Figure out if this is a function
 			if ( leftSide.includes( '(' ) ) {
+				// Is there stuff at the end of the function?
+				const closing = leftSide.lastIndexOf( ')' ) + 1
+				if ( closing > 0 ) {
+					const special = leftSide.substr( closing ).trim()
+					if ( special ) {
+						if ( special.startsWith( "'" ) ) {
+							command.comment = special.slice( 1, 0 ).trim()
+						} else {
+							command.meta = special
+						}
+					}
+					leftSide = leftSide.substring( 0, closing )
+				}
+
 				command.paramsRaw = leftSide.substr( leftSide.indexOf( '(' ) + 1 ).slice( 0, -1 )
 				leftSide = leftSide.slice( 0, -command.paramsRaw.length - 2 )
 				parseCommandParams( command )
 				command.isFunction = true
+			}
+
+			// Translate old BlitzMax stuff
+			let matches = leftSide.match( /(\$|\!|\#\%)/g )
+			if ( matches ) {
+				for ( let index = 0; index < matches.length; index++ ) {
+					const match = matches[index]
+
+					switch ( match ) {
+						case '%':
+							leftSide = leftSide.replace( match, ':Int' )
+							break
+
+						case '#':
+							leftSide = leftSide.replace( match, ':Float' )
+							break
+
+						case '!':
+							leftSide = leftSide.replace( match, ':Double' )
+							break
+
+						case '$':
+							leftSide = leftSide.replace( match, ':String' )
+							break
+					}
+				}
 			}
 
 			// Returns?
@@ -341,16 +381,19 @@ function addCommand( data: string ) {
 				}
 
 				if ( command.description ) {
+					// Replace some Bmx symbols with Markdown ones
 					const fixedDesc: string = command.description.replace( /\@\w+/g, "\```$&```" ).replace( /\@/g, '' )
+					// Missing # which will link to another command
+					
 					command.markdownString.appendMarkdown( fixedDesc )
 					command.shortMarkdownString.appendMarkdown( fixedDesc )
 				}
 
 				if ( command.module ) {
 					let moduleLink: string = ''
-					if (command.url)
+					if ( command.url )
 						moduleLink = generateCommandText( 'blitzmax.openBmxHtml', [command.url, command.urlLocation] )
-					
+
 					command.markdownString.appendMarkdown( '  \n  \n[$(package)](' + moduleLink + ') ' + command.module )
 					command.shortMarkdownString.appendMarkdown( '  \n  \n[$(package)](' + moduleLink + ') ' + command.module )
 				}
@@ -536,11 +579,13 @@ export interface BmxCommand {
 	realName: string,
 	searchName: string
 	description?: string,
+	comment?: string,
 	shortMarkdownString?: vscode.MarkdownString
 	markdownString?: vscode.MarkdownString
 
 	isFunction: boolean
 	returns?: string,
+	meta?: string,
 	params?: BmxCommandParam[],
 	paramsRaw?: string,
 	paramsPretty?: string

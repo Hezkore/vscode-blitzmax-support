@@ -7,7 +7,6 @@ import { BlitzMaxPath } from './helper'
 import { showBmxDocs } from './bmxwebviewer'
 import { BmxCommand, getCommand } from './bmxdocs'
 
-
 export function registerDocsTreeProvider( context: vscode.ExtensionContext ) {
 	// Register documentation tree provider
 	const bmxDocsTreeProvider = new BmxDocsTreeProvider( context )

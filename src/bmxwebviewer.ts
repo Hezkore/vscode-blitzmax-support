@@ -1,5 +1,6 @@
 'use strict'
 
+import * as fs from 'fs'
 import * as path from 'path'
 import * as vscode from 'vscode'
 import { readFile } from './common'
@@ -11,6 +12,13 @@ let webViewPath: string = ''
 export async function showBmxDocs( url: string | undefined, jumpTo: string | undefined = undefined ) {
 	// Make sure we have the data we need
 	if ( !url || !BlitzMaxPath ) return
+	
+	// Append BlitzMax path if the file isn't found on first try
+	try {
+		fs.statSync( url ).isFile()
+	} catch (error) {
+		url = path.join( BlitzMaxPath, url )
+	}
 
 	let htmlSource: BmxConvertedHtmlSource
 

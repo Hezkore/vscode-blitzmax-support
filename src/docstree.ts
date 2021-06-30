@@ -18,8 +18,7 @@ export function registerDocsTreeProvider( context: vscode.ExtensionContext ) {
 	} )
 
 	// Related commands
-	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.openBmxHtml', ( path: any, jumpTo: any ) => {
-		if ( !path || typeof path !== "string" ) return
+	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.openBmxHtml', ( path: string, jumpTo: any ) => {
 		showBmxDocs( path, jumpTo )
 	} ) )
 
@@ -406,8 +405,6 @@ interface HtmlHref {
 
 function scanNamesFromHtml( htmlPath: string, maxCount: number = 0 ): HtmlHref[] {
 
-	console.log( "Fetching names from: " + htmlPath )
-
 	let names: HtmlHref[] = []
 	let htmlSource: string | undefined
 
@@ -428,7 +425,6 @@ function scanNamesFromHtml( htmlPath: string, maxCount: number = 0 ): HtmlHref[]
 			if ( !line || line.length <= 3 ) continue
 
 			if ( line.toLowerCase().startsWith( '<tr><td class=docleft width=1%> <a href=' ) ) {
-				console.log( 'MATCH: ' + line )
 				names.push( {
 					name: line.substring( line.indexOf( '>', 40 ) + 1, line.indexOf( '<', 40 ) ),
 					link: line.substring( 40, line.indexOf( '>', 40 ) )

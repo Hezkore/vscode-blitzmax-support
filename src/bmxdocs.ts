@@ -5,7 +5,7 @@ import * as vscode from 'vscode'
 import * as cp from 'child_process'
 import { BlitzMaxPath } from './helper'
 import { showBmxDocs } from './bmxwebviewer'
-import { getCurrentDocumentWord } from './common'
+import { generateCommandText, getCurrentDocumentWord } from './common'
 import * as awaitNotify from 'await-notify'
 
 let _commandsList: BmxCommand[]
@@ -130,9 +130,9 @@ export function getCommand( command: string | undefined = undefined, filter: Get
 	// Cache commands if needed
 	cacheCommandsAndModulesIfEmpty( false )
 	if ( !_commandsList ) return []
-	
+
 	// Send raw command list
-	if (!command && !filter) return _commandsList
+	if ( !command && !filter ) return _commandsList
 
 	// Find the command
 	if ( command ) command = command.toLowerCase()
@@ -325,6 +325,9 @@ function addCommand( data: string ) {
 				command.shortMarkdownString = new vscode.MarkdownString( undefined, true )
 				command.markdownString = new vscode.MarkdownString( undefined, true )
 
+				command.shortMarkdownString.isTrusted = true
+				command.markdownString.isTrusted = true
+
 				if ( command.paramsPretty ) {
 					let codeBlock = command.realName
 
@@ -338,13 +341,18 @@ function addCommand( data: string ) {
 				}
 
 				if ( command.description ) {
-					command.markdownString.appendText( command.description + '\n' )
-					command.shortMarkdownString.appendText( command.description + '\n' )
+					const fixedDesc: string = command.description.replace( /\@\w+/g, "\```$&```" ).replace( /\@/g, '' )
+					command.markdownString.appendMarkdown( fixedDesc )
+					command.shortMarkdownString.appendMarkdown( fixedDesc )
 				}
 
 				if ( command.module ) {
-					command.markdownString.appendMarkdown( '$(package) _' + command.module + '_\n' )
-					command.shortMarkdownString.appendMarkdown( '$(package) _' + command.module + '_\n' )
+					let moduleLink: string = ''
+					if (command.url)
+						moduleLink = generateCommandText( 'blitzmax.openBmxHtml', [command.url, command.urlLocation] )
+					
+					command.markdownString.appendMarkdown( '  \n  \n[$(package)](' + moduleLink + ') ' + command.module )
+					command.shortMarkdownString.appendMarkdown( '  \n  \n[$(package)](' + moduleLink + ') ' + command.module )
 				}
 
 			}

@@ -5,6 +5,10 @@ import * as os from 'os'
 import * as fs from 'fs'
 import * as path from 'path'
 
+export function generateCommandText( command: string, args: any[] ) {
+	return `command:${command}?${encodeURIComponent(JSON.stringify(args))}`
+}
+
 export const waitFor = async (condFunc: () => boolean) => {
 	return new Promise<void>((resolve) => {
 	  if (condFunc()) {

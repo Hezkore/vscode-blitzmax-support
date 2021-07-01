@@ -486,7 +486,7 @@ function addCommand( data: string ) {
 				}
 				command.insertText.appendText( ')' )
 			} else if (command.default) {
-				/*
+				/* This was more annoying than anything
 				command.insertText = new vscode.SnippetString( command.realName )
 				command.insertText.appendText( ' = ' )
 				command.insertText.appendPlaceholder( command.default )

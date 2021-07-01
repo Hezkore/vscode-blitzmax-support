@@ -22,7 +22,6 @@ export function registerSignatureHelpProvider( context: vscode.ExtensionContext 
 			const sigStack = new vscode.SignatureHelp()
 			let sigCmd: vscode.SignatureInformation
 			let sigParam: vscode.ParameterInformation
-			let cmdPreview: string = ''
 			let paramPreview: string
 
 			for ( let index = 0; index < commands.length; index++ ) {
@@ -31,6 +30,8 @@ export function registerSignatureHelpProvider( context: vscode.ExtensionContext 
 				if ( !params ) continue
 				if ( params.length - 1 < paramIndex ) continue
 
+				let cmdPreview: string = ''
+				
 				sigCmd = new vscode.SignatureInformation( cmdPreview, cmd.shortMarkdownString )
 
 				for ( var ai = 0; ai < params.length; ai++ ) {

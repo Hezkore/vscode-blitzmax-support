@@ -382,9 +382,48 @@ function addCommand( data: string ) {
 
 				if ( command.description ) {
 					// Replace some Bmx symbols with Markdown ones
-					const fixedDesc: string = command.description.replace( /\@\w+/g, "\```$&```" ).replace( /\@/g, '' )
-					// Missing # which will link to another command
+					let fixedDesc: string = ''
+					let markdownStart: number = 0
+					let endMarkdownString: string | undefined
 					
+					function startMarkdown( start: string, end: string, index: number ) {
+						fixedDesc += start
+						endMarkdownString = end
+						markdownStart = index + 1
+					}
+					
+					function endMarkdown() {
+						if ( endMarkdownString ) {
+							fixedDesc += endMarkdownString.replace( '$&',
+								generateCommandText( 'blitzmax.quickHelp', [fixedDesc.substr( markdownStart )] ) )
+							endMarkdownString = undefined
+						}
+					}
+					
+					for ( let index = 0; index < command.description.length; index++ ) {
+						const chr = command.description[index]
+
+						switch ( chr ) {
+							case ' ':
+								endMarkdown()
+								fixedDesc += chr
+								break
+
+							case '@':
+								startMarkdown( '**', '**', index )
+								break
+
+							case '#':
+								startMarkdown( '[', ']($&)', index )
+								break
+
+							default:
+								fixedDesc += chr
+								break
+						}
+					}
+					endMarkdown()
+
 					command.markdownString.appendMarkdown( fixedDesc )
 					command.shortMarkdownString.appendMarkdown( fixedDesc )
 				}

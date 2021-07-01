@@ -302,30 +302,9 @@ function addCommand( data: string ) {
 				leftSide = leftSide.slice( 0, -command.description.length - 3 )
 			}
 
-			// Figure out if this is a function
-			if ( leftSide.includes( '(' ) ) {
-				// Is there stuff at the end of the function?
-				const closing = leftSide.lastIndexOf( ')' ) + 1
-				if ( closing > 0 ) {
-					const special = leftSide.substr( closing ).trim()
-					if ( special ) {
-						if ( special.startsWith( "'" ) ) {
-							command.comment = special.slice( 1, 0 ).trim()
-						} else {
-							command.meta = special
-						}
-					}
-					leftSide = leftSide.substring( 0, closing )
-				}
-
-				command.paramsRaw = leftSide.substr( leftSide.indexOf( '(' ) + 1 ).slice( 0, -1 )
-				leftSide = leftSide.slice( 0, -command.paramsRaw.length - 2 )
-				parseCommandParams( command )
-				command.isFunction = true
-			}
-
 			// Translate old BlitzMax stuff
-			let matches = leftSide.match( /(\$|\!|\#\%)/g )
+			// Regex to match stuff outside of strings is crazy...
+			const matches = leftSide.match( /((?!\"[\w\s]*[\\"]*[\w\s]*)(\$|\!|\#|\%)(?![\w\s]*[\\"]*[\w\s]*\"))/g )
 			if ( matches ) {
 				for ( let index = 0; index < matches.length; index++ ) {
 					const match = matches[index]
@@ -348,6 +327,28 @@ function addCommand( data: string ) {
 							break
 					}
 				}
+			}
+
+			// Figure out if this is a function
+			if ( leftSide.includes( '(' ) ) {
+				// Is there stuff at the end of the function?
+				const closing = leftSide.lastIndexOf( ')' ) + 1
+				if ( closing > 0 ) {
+					const special = leftSide.substr( closing ).trim()
+					if ( special ) {
+						if ( special.startsWith( "'" ) ) {
+							command.comment = special.slice( 1, 0 ).trim()
+						} else {
+							command.meta = special
+						}
+					}
+					leftSide = leftSide.substring( 0, closing )
+				}
+
+				command.paramsRaw = leftSide.substr( leftSide.indexOf( '(' ) + 1 ).slice( 0, -1 )
+				leftSide = leftSide.slice( 0, -command.paramsRaw.length - 2 )
+				parseCommandParams( command )
+				command.isFunction = true
 			}
 
 			// Returns?
@@ -385,13 +386,13 @@ function addCommand( data: string ) {
 					let fixedDesc: string = ''
 					let markdownStart: number = 0
 					let endMarkdownString: string | undefined
-					
+
 					function startMarkdown( start: string, end: string, index: number ) {
 						fixedDesc += start
 						endMarkdownString = end
 						markdownStart = index + 1
 					}
-					
+
 					function endMarkdown() {
 						if ( endMarkdownString ) {
 							fixedDesc += endMarkdownString.replace( '$&',
@@ -399,7 +400,7 @@ function addCommand( data: string ) {
 							endMarkdownString = undefined
 						}
 					}
-					
+
 					for ( let index = 0; index < command.description.length; index++ ) {
 						const chr = command.description[index]
 
@@ -433,8 +434,8 @@ function addCommand( data: string ) {
 					if ( command.url )
 						moduleLink = generateCommandText( 'blitzmax.openBmxHtml', [command.url, command.urlLocation] )
 
-					command.markdownString.appendMarkdown( '  \n  \n[$(package)](' + moduleLink + ') ' + command.module )
-					command.shortMarkdownString.appendMarkdown( '  \n  \n[$(package)](' + moduleLink + ') ' + command.module )
+					command.markdownString.appendMarkdown( '  \n  \n[$(book)](' + moduleLink + ') ' + command.module )
+					command.shortMarkdownString.appendMarkdown( '  \n  \n[$(book)](' + moduleLink + ') ' + command.module )
 				}
 
 			}
@@ -526,6 +527,7 @@ function parseCommandParams( cmd: BmxCommand ) {
 						break
 
 					// Ugh I hate these old BASIC type shortcuts!
+					/* These are taken care of globally now
 					case '%':
 						param.type = 'Int'
 						parse = parsePart.type
@@ -545,7 +547,7 @@ function parseCommandParams( cmd: BmxCommand ) {
 						param.type = 'String'
 						parse = parsePart.type
 						break
-
+					*/
 					// Okay NOW add to the name
 					default:
 						if ( chr != ' ' ) param.name += chr

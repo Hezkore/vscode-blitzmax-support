@@ -329,8 +329,31 @@ function addCommand( data: string ) {
 				}
 			}
 
-			// Figure out if this is a function
-			if ( leftSide.includes( '(' ) ) {
+			// Figure out if this is a value or function.. or something else?
+			let isValue: boolean = false
+			let isFunc: boolean = false
+			for ( let chrNr = 0; chrNr < leftSide.length; chrNr++ ) {
+				const chr = leftSide[chrNr]
+
+				if ( chr == '=' ) {
+					isValue = true
+					break
+				}
+
+				if ( chr == '(' ) {
+					isFunc = true
+					break
+				}
+			}
+
+			// Is value
+			if ( isValue ) {
+				command.default = leftSide.substr( leftSide.indexOf( '=' ) + 1 )
+				leftSide = leftSide.slice( 0, -command.default.length - 1 )
+			}
+
+			// Is function
+			if ( isFunc ) {
 				// Is there stuff at the end of the function?
 				const closing = leftSide.lastIndexOf( ')' ) + 1
 				if ( closing > 0 ) {
@@ -425,6 +448,9 @@ function addCommand( data: string ) {
 					}
 					endMarkdown()
 
+					if ( command.default )
+						fixedDesc += '  \n Default value is ```' + command.default + '```'
+
 					command.markdownString.appendMarkdown( fixedDesc )
 					command.shortMarkdownString.appendMarkdown( fixedDesc )
 				}
@@ -459,6 +485,12 @@ function addCommand( data: string ) {
 					command.insertText.appendText( ' ' )
 				}
 				command.insertText.appendText( ')' )
+			} else if (command.default) {
+				/*
+				command.insertText = new vscode.SnippetString( command.realName )
+				command.insertText.appendText( ' = ' )
+				command.insertText.appendPlaceholder( command.default )
+				*/
 			}
 
 			// Done!
@@ -627,6 +659,7 @@ export interface BmxCommand {
 	isFunction: boolean
 	returns?: string,
 	meta?: string,
+	default?: string,
 	params?: BmxCommandParam[],
 	paramsRaw?: string,
 	paramsPretty?: string

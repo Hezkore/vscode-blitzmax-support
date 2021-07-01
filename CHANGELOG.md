@@ -1,3 +1,6 @@
+## 2.15.1
+* More information during build
+
 ## 2.15.0
 * New documentation view
 * Hover information now shows default value

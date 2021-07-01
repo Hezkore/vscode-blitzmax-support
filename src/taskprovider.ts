@@ -391,8 +391,9 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 	cwd: string | undefined
 	busy = new awaitNotify.Subject()
 
-	lastPercent: number
-	percent: number
+	lastPercent: number = 0
+	percent: number = 0
+	buildStep: string | undefined
 	colorReset: boolean
 
 	configure( cmd: string, args: string[] | undefined, cwd: string | undefined ) {
@@ -430,7 +431,8 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 			// Always update progress
 			if ( progressBar && line.startsWith( '[' ) && line[5] == ']' ) {
 				this.percent = Number( line.substring( 1, 4 ) )
-				progressBar.report( { message: ` ${this.percent}%`, increment: this.percent - this.lastPercent } )
+				if (line.includes( ':' )) this.buildStep = line.substring( 6, line.indexOf( ':' ) )
+				progressBar.report( { message: ` ${this.percent}% - ${this.buildStep}`, increment: this.percent - this.lastPercent } )
 				this.lastPercent = this.percent
 			}
 
@@ -512,9 +514,11 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 
 			vscode.window.withProgress( {
 				location: loc,
-				title: 'Building ' + path.parse( this.args[this.args.length - 1] ).base,
+				title: path.parse( this.args[this.args.length - 1] ).base,
 				cancellable: true
 			}, async ( progress, token ) => {
+				progress.report( {message: '0% - Preparing'} )
+				
 				token.onCancellationRequested( () => {
 					if ( bmkProcess ) {
 						bmkProcess.kill( 'SIGINT' )

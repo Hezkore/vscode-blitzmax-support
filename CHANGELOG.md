@@ -1,3 +1,11 @@
+## 2.15.0
+* New documentation view
+* Hover information now shows default value
+* Fixed multiple issues with the documentation parser
+* Fixed multiple hover information issues
+* Fixed an issue with the signature helper
+* Fixed an issue with the Html CSS replacer
+
 ## 2.14.0
 * Added workspace symbols
 

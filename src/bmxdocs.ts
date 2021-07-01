@@ -5,7 +5,7 @@ import * as vscode from 'vscode'
 import * as cp from 'child_process'
 import { BlitzMaxPath } from './helper'
 import { showBmxDocs } from './bmxwebviewer'
-import { generateCommandText, getCurrentDocumentWord } from './common'
+import { convertTypeTag, generateCommandText, getCurrentDocumentWord } from './common'
 import * as awaitNotify from 'await-notify'
 
 let _commandsList: BmxCommand[]
@@ -302,33 +302,6 @@ function addCommand( data: string ) {
 				leftSide = leftSide.slice( 0, -command.description.length - 3 )
 			}
 
-			// Translate old BlitzMax stuff
-			// Regex to match stuff outside of strings is crazy...
-			const matches = leftSide.match( /((?!\"[\w\s]*[\\"]*[\w\s]*)(\$|\!|\#|\%)(?![\w\s]*[\\"]*[\w\s]*\"))/g )
-			if ( matches ) {
-				for ( let index = 0; index < matches.length; index++ ) {
-					const match = matches[index]
-
-					switch ( match ) {
-						case '%':
-							leftSide = leftSide.replace( match, ':Int' )
-							break
-
-						case '#':
-							leftSide = leftSide.replace( match, ':Float' )
-							break
-
-						case '!':
-							leftSide = leftSide.replace( match, ':Double' )
-							break
-
-						case '$':
-							leftSide = leftSide.replace( match, ':String' )
-							break
-					}
-				}
-			}
-
 			// Figure out if this is a value or function.. or something else?
 			let isValue: boolean = false
 			let isFunc: boolean = false
@@ -357,14 +330,17 @@ function addCommand( data: string ) {
 				// Is there stuff at the end of the function?
 				const closing = leftSide.lastIndexOf( ')' ) + 1
 				if ( closing > 0 ) {
-					const special = leftSide.substr( closing ).trim()
-					if ( special ) {
-						if ( special.startsWith( "'" ) ) {
-							command.comment = special.slice( 1, 0 ).trim()
-						} else {
-							command.meta = special
-						}
+					let special = leftSide.substr( closing ).trim()
+
+					// Fetch comments
+					if ( special.includes( "'" ) ) {
+						command.comment = special.substr( special.indexOf( "'" ) + 1 ).trim()
+						special = special.substring( 0, special.indexOf( "'" ) )
 					}
+
+					// Fetch meta
+					if ( special ) command.meta = special
+
 					leftSide = leftSide.substring( 0, closing )
 				}
 
@@ -372,6 +348,16 @@ function addCommand( data: string ) {
 				leftSide = leftSide.slice( 0, -command.paramsRaw.length - 2 )
 				parseCommandParams( command )
 				command.isFunction = true
+			}
+
+			// Translate old BlitzMax stuff
+			// Regex to match stuff outside of strings is crazy...
+			const matches = leftSide.match( /((?!\"[\w\s]*[\\"]*[\w\s]*)(\$|\!|\#|\%)(?![\w\s]*[\\"]*[\w\s]*\"))/g )
+			if ( matches ) {
+				for ( let index = 0; index < matches.length; index++ ) {
+					const match = matches[index]
+					leftSide = leftSide.replace( match, ':' + convertTypeTag( match ) )
+				}
 			}
 
 			// Returns?
@@ -385,24 +371,37 @@ function addCommand( data: string ) {
 			command.searchName = command.realName.toLowerCase()
 
 			// Make a pretty markdown description of this command
-			if ( command.description || command.paramsPretty ) {
+			if ( command.description || command.paramsPretty || command.module || command.comment || command.default ) {
 				command.shortMarkdownString = new vscode.MarkdownString( undefined, true )
 				command.markdownString = new vscode.MarkdownString( undefined, true )
 
 				command.shortMarkdownString.isTrusted = true
 				command.markdownString.isTrusted = true
 
-				if ( command.paramsPretty ) {
-					let codeBlock = command.realName
+				let codeBlock = command.realName
 
-					// Construct code block
+				if ( command.paramsPretty ) {
+					// Construct function code block
 					if ( command.returns ) codeBlock += ':' + command.returns
 					codeBlock += '( ' + command.paramsPretty + ' )'
+				} else {
 
-					// Append
-					command.markdownString.appendCodeblock( codeBlock, 'blitzmax'
-					)
 				}
+
+				if ( command.default ) {
+					codeBlock += ' = ' + command.default
+				}
+
+				if ( command.meta ) {
+					codeBlock += ' ' + command.meta
+				}
+
+				if ( command.comment ) {
+					codeBlock += " ' " + command.comment
+				}
+
+				// Append
+				command.markdownString.appendCodeblock( codeBlock, 'blitzmax' )
 
 				if ( command.description ) {
 					// Replace some Bmx symbols with Markdown ones
@@ -448,12 +447,10 @@ function addCommand( data: string ) {
 					}
 					endMarkdown()
 
-					if ( command.default )
-						fixedDesc += '  \n Default value is ```' + command.default + '```'
-
-					command.markdownString.appendMarkdown( fixedDesc )
-					command.shortMarkdownString.appendMarkdown( fixedDesc )
+					command.markdownString.appendMarkdown( '  \n' + fixedDesc )
+					command.shortMarkdownString.appendMarkdown( '  \n' + fixedDesc )
 				}
+
 
 				if ( command.module ) {
 					let moduleLink: string = ''
@@ -485,7 +482,7 @@ function addCommand( data: string ) {
 					command.insertText.appendText( ' ' )
 				}
 				command.insertText.appendText( ')' )
-			} else if (command.default) {
+			} else if ( command.default ) {
 				/* This was more annoying than anything
 				command.insertText = new vscode.SnippetString( command.realName )
 				command.insertText.appendText( ' = ' )
@@ -559,27 +556,14 @@ function parseCommandParams( cmd: BmxCommand ) {
 						break
 
 					// Ugh I hate these old BASIC type shortcuts!
-					/* These are taken care of globally now
 					case '%':
-						param.type = 'Int'
-						parse = parsePart.type
-						break
-
 					case '#':
-						param.type = 'Float'
-						parse = parsePart.type
-						break
-
 					case '!':
-						param.type = 'Double'
+					case '$':
+						param.type = convertTypeTag( chr )
 						parse = parsePart.type
 						break
 
-					case '$':
-						param.type = 'String'
-						parse = parsePart.type
-						break
-					*/
 					// Okay NOW add to the name
 					default:
 						if ( chr != ' ' ) param.name += chr

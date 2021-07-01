@@ -141,7 +141,7 @@ function convertBmxWeb( url: string ): Promise<BmxConvertedHtmlSource> {
 				}
 
 				// Replace CSS
-				if ( replaceCSS && line.toLowerCase().trim().startsWith( '<link rel=stylesheet' ) ) {
+				if ( replaceCSS && line.toLowerCase().trim().startsWith( '<link ' ) && line.toLowerCase().trim().includes( ' rel=stylesheet' ) ) {
 					progress.report( { increment: 25 } )
 
 					// Replace with custom or original?

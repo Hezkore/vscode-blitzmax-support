@@ -5,23 +5,33 @@ import * as os from 'os'
 import * as fs from 'fs'
 import * as path from 'path'
 
-export function generateCommandText( command: string, args: any[] ) {
-	return `command:${command}?${encodeURIComponent(JSON.stringify(args))}`
+export function convertTypeTag( tag: string ): string {
+	switch ( tag ) {
+		case '%': return 'Int'
+		case '#': return 'Float'
+		case '!': return 'Double'
+		case '$': return 'String'
+	}
+	return tag
 }
 
-export const waitFor = async (condFunc: () => boolean) => {
-	return new Promise<void>((resolve) => {
-	  if (condFunc()) {
-		 resolve();
-	  }
-	  else {
-		 setTimeout(async () => {
-			await waitFor(condFunc);
+export function generateCommandText( command: string, args: any[] ) {
+	return `command:${command}?${encodeURIComponent( JSON.stringify( args ) )}`
+}
+
+export const waitFor = async ( condFunc: () => boolean ) => {
+	return new Promise<void>( ( resolve ) => {
+		if ( condFunc() ) {
 			resolve();
-		 }, 100);
-	  }
-	});
- };
+		}
+		else {
+			setTimeout( async () => {
+				await waitFor( condFunc );
+				resolve();
+			}, 100 );
+		}
+	} );
+};
 
 export function debugDelay( ms: number ) {
 	return new Promise( resolve => setTimeout( resolve, ms ) )

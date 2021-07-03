@@ -2,16 +2,17 @@
 
 import * as vscode from 'vscode'
 import * as path from 'path'
-import * as fs from 'fs'
 import * as os from 'os'
 import {
 	getBuildDefinitionFromWorkspace,
 	saveAsDefaultTaskDefinition,
 	internalBuildDefinition,
 	BmxBuildTaskDefinition,
-	makeTaskDefinition
+	makeTaskDefinition,
+	getFirstBlitzMaxWorkspace
 } from './taskprovider'
 
+let CurrentWorkspace: vscode.WorkspaceFolder | undefined = undefined
 
 export function registerBuildTreeProvider( context: vscode.ExtensionContext ) {
 
@@ -24,17 +25,17 @@ export function registerBuildTreeProvider( context: vscode.ExtensionContext ) {
 
 	// Related commands
 	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.resetBuildOptions', () => {
-		const definition = getBuildDefinitionFromWorkspace()
-		saveAsDefaultTaskDefinition( makeTaskDefinition( definition.label, definition.detail, 'application', 'console' ) )
-		if ( getBuildDefinitionFromWorkspace() === internalBuildDefinition ) bmxBuildTreeProvider.refresh()
+		const definition = getBuildDefinitionFromWorkspace( CurrentWorkspace )
+		saveAsDefaultTaskDefinition( makeTaskDefinition( definition.label, definition.detail, 'application', 'console' ), CurrentWorkspace )
+		bmxBuildTreeProvider.refresh()
 	} ) )
 
 	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.changeDefaultBuildTask', () => {
 		const document = vscode.window.activeTextEditor?.document
 		const partOfWorkspace = document ? vscode.workspace.getWorkspaceFolder( document.uri ) : undefined
 		if ( partOfWorkspace ) {
-			const definition = getBuildDefinitionFromWorkspace()
-			if ( definition === internalBuildDefinition ) saveAsDefaultTaskDefinition( definition )
+			const definition = getBuildDefinitionFromWorkspace( CurrentWorkspace )
+			if ( definition === internalBuildDefinition ) saveAsDefaultTaskDefinition( definition, CurrentWorkspace )
 			vscode.commands.executeCommand( 'workbench.action.tasks.configureDefaultBuildTask' )
 		} else {
 			vscode.window.showInformationMessage( 'File is not part of a workspace.\nOpen the folder containing this file to edit your custom build tasks.', { modal: true } )
@@ -58,9 +59,9 @@ export function registerBuildTreeProvider( context: vscode.ExtensionContext ) {
 			sourcePath = '${workspaceFolder}' + '/' + path.relative( workspace.uri.fsPath, sourcePath )
 
 		// Update task
-		const definition = getBuildDefinitionFromWorkspace()
+		const definition = getBuildDefinitionFromWorkspace( CurrentWorkspace )
 		definition.source = sourcePath
-		saveAsDefaultTaskDefinition( definition )
+		saveAsDefaultTaskDefinition( definition, CurrentWorkspace )
 	} ) )
 
 	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.toggleBuildOption', async ( option: any ) => {
@@ -76,17 +77,16 @@ export function registerBuildTreeProvider( context: vscode.ExtensionContext ) {
 			if ( treeItem && treeItem.label ) option = treeItem.id
 		}
 
-		const definition = getBuildDefinitionFromWorkspace()
+		const definition = getBuildDefinitionFromWorkspace( CurrentWorkspace )
 		if ( definition === internalBuildDefinition ) {
 			// Don't toggle options directly in the internal definition!
-			saveAsDefaultTaskDefinition( await toggleBuildOptions( Object.assign( {}, definition ), option ) )
+			saveAsDefaultTaskDefinition( await toggleBuildOptions( Object.assign( {}, definition ), option ), CurrentWorkspace )
 			// tasks.json will not change if we're updating the internal task
 			// We have to refresh manually
 			bmxBuildTreeProvider.refresh()
 		} else {
-			saveAsDefaultTaskDefinition( await toggleBuildOptions( definition, option ) )
+			saveAsDefaultTaskDefinition( await toggleBuildOptions( definition, option ), CurrentWorkspace )
 		}
-
 	} ) )
 
 	vscode.commands.registerCommand( 'blitzmax.refreshBuildOptions', () => bmxBuildTreeProvider.refresh() )
@@ -97,7 +97,7 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 	private _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | null> = new vscode.EventEmitter<vscode.TreeItem | null>()
 	readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | null> = this._onDidChangeTreeData.event
 
-	private isForWorkspace: boolean = false
+	//private isForWorkspace: vscode.WorkspaceFolder | undefined
 
 	private buildCategories: vscode.TreeItem[] = []
 
@@ -113,7 +113,7 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 	}
 
 	refresh() {
-		vscode.commands.executeCommand( 'setContext', 'blitzmax:debugging', getBuildDefinitionFromWorkspace().debug )
+		vscode.commands.executeCommand( 'setContext', 'blitzmax:debugging', getBuildDefinitionFromWorkspace( CurrentWorkspace ).debug )
 		this._onDidChangeTreeData.fire( null )
 	}
 
@@ -165,7 +165,7 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 
 	generateWorkbenchRoot(): Promise<vscode.TreeItem[]> {
 
-		//const def = getBuildDefinitionFromWorkspace()
+		//const def = getBuildDefinitionFromWorkspace( CurrentWorkspace )
 		const sourceFile = vscode.window.activeTextEditor?.document
 
 		let rootName: string = 'Unknown'
@@ -181,42 +181,21 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 			rootName = workspace
 				? workspace.name.toUpperCase()
 				: 'File: ' + path.basename( sourceFile.uri.fsPath )
-			this.isForWorkspace = workspace ? true : false
+			CurrentWorkspace = workspace
 		} else {
 
 			// It's not a BlitzMax file
 			// Let's use the first workspace with a .bmx file
+			CurrentWorkspace = undefined
+			const workspace = getFirstBlitzMaxWorkspace()
 
-			this.isForWorkspace = false
-
-			if ( !vscode.workspace || !vscode.workspace.workspaceFolders ) {
-				// There are no workspaces, abort mission!
+			if ( workspace ) {
+				CurrentWorkspace = workspace
+				taskName = this.cleanWorkbenchRootTaskName( getBuildDefinitionFromWorkspace( workspace ).label )
+				rootName = workspace.name.toUpperCase()
+			} else {
 				return Promise.resolve( [] )
 			}
-
-			// Go through all workspaces
-			for ( let workspaceIndex = 0; workspaceIndex < vscode.workspace.workspaceFolders.length; workspaceIndex++ ) {
-				const workspace = vscode.workspace.workspaceFolders[workspaceIndex]
-
-				// Get all the files
-				const files = fs.readdirSync( workspace.uri.fsPath )
-
-				// Check for .bmx files
-				for ( let fileIndex = 0; fileIndex < files.length; fileIndex++ ) {
-					const file = files[fileIndex]
-
-					if ( file.toLowerCase().endsWith( '.bmx' ) ) {
-						this.isForWorkspace = true
-						taskName = this.cleanWorkbenchRootTaskName( getBuildDefinitionFromWorkspace( workspace ).label )
-						rootName = workspace.name.toUpperCase()
-						break
-					}
-				}
-
-				if ( this.isForWorkspace ) break
-			}
-
-			if ( !this.isForWorkspace ) return Promise.resolve( [] )
 		}
 
 		this.mainTreeRoot = new vscode.TreeItem( rootName + ' (' + taskName + ')', vscode.TreeItemCollapsibleState.Expanded )
@@ -228,7 +207,7 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 
 	generateAllBuildCategories(): Promise<vscode.TreeItem[]> {
 
-		const def = getBuildDefinitionFromWorkspace()
+		const def = getBuildDefinitionFromWorkspace( CurrentWorkspace )
 
 		this.buildCategories = [
 			// No category root items
@@ -256,7 +235,7 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 
 	generateBuildCategory( element: vscode.TreeItem ): Promise<vscode.TreeItem[]> {
 
-		let def = getBuildDefinitionFromWorkspace()
+		let def = getBuildDefinitionFromWorkspace( CurrentWorkspace )
 		let items: vscode.TreeItem[] = []
 
 		switch ( element.id ) {

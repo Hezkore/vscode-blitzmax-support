@@ -4,6 +4,7 @@ import * as vscode from 'vscode'
 import * as awaitNotify from 'await-notify'
 import * as cp from 'child_process'
 import * as path from 'path'
+import * as fs from 'fs'
 import * as os from 'os'
 
 let terminal: BmxBuildTaskTerminal | undefined
@@ -11,7 +12,7 @@ export let internalBuildDefinition: BmxBuildTaskDefinition = makeTaskDefinition(
 	'BlitzMax: Default',
 	'Automatically generated BlitzMax task',
 	'application',
-	'gui'
+	'console'
 )
 
 export interface BmxBuildOptions {
@@ -68,11 +69,42 @@ export function registerTaskProvider( context: vscode.ExtensionContext ) {
 	} ) )
 }
 
+export function getFirstBlitzMaxWorkspace(): vscode.WorkspaceFolder | undefined {
+
+	if ( !vscode.workspace || !vscode.workspace.workspaceFolders ) {
+		// There are no workspaces, abort mission!
+		return undefined
+	}
+
+	// Go through all workspaces
+	for ( let workspaceIndex = 0; workspaceIndex < vscode.workspace.workspaceFolders.length; workspaceIndex++ ) {
+		const workspace = vscode.workspace.workspaceFolders[workspaceIndex]
+
+		// Get all the files
+		const files = fs.readdirSync( workspace.uri.fsPath )
+
+		// Check for .bmx files
+		for ( let fileIndex = 0; fileIndex < files.length; fileIndex++ ) {
+			const file = files[fileIndex]
+
+			if ( file.toLowerCase().endsWith( '.bmx' ) ) return workspace
+		}
+	}
+}
+
 export function getBuildDefinitionFromWorkspace( workspace: vscode.WorkspaceFolder | undefined = undefined ): BmxBuildTaskDefinition {
 
 	if ( !workspace ) {
 		const doc = vscode.window.activeTextEditor?.document
-		if ( doc ) workspace = vscode.workspace.getWorkspaceFolder( doc.uri )
+		if ( doc ) {
+			// Is this even a BlitzMax source file?
+			if ( doc.languageId != 'blitzmax' ) {
+				// Okay it's not, so we'll use the first workspace we find
+				workspace = getFirstBlitzMaxWorkspace()
+				console.log(workspace?.name)
+
+			} else workspace = vscode.workspace.getWorkspaceFolder( doc.uri )
+		}
 	}
 
 	// If there's no workspace, we just return the internal build definition
@@ -97,16 +129,16 @@ export function getBuildDefinitionFromWorkspace( workspace: vscode.WorkspaceFold
 	return internalBuildDefinition
 }
 
-export function saveAsDefaultTaskDefinition( newDef: BmxBuildTaskDefinition | undefined ): boolean {
+export function saveAsDefaultTaskDefinition( newDef: BmxBuildTaskDefinition | undefined, workspace: vscode.WorkspaceFolder | undefined ): boolean {
 
 	if ( !newDef ) return false
 
 	// Make sure we're dealing with a build task!
 	newDef.group = { kind: 'build', isDefault: true }
 
-	const doc = vscode.window.activeTextEditor?.document
-	let workspace: vscode.WorkspaceFolder | undefined
-	if ( doc ) workspace = vscode.workspace.getWorkspaceFolder( doc.uri )
+	//const doc = vscode.window.activeTextEditor?.document
+	//let workspace: vscode.WorkspaceFolder | undefined
+	//if ( doc ) workspace = vscode.workspace.getWorkspaceFolder( doc.uri )
 	if ( !workspace ) {
 		internalBuildDefinition = newDef
 		return true
@@ -115,7 +147,7 @@ export function saveAsDefaultTaskDefinition( newDef: BmxBuildTaskDefinition | un
 	// Try to update the task with the same label
 	const tasksFile = vscode.workspace.getConfiguration( 'tasks' )
 	const tasksList: BmxBuildTaskDefinition[] | undefined = tasksFile.get( 'tasks' )
-	console.log( tasksList )
+	
 	if ( tasksList ) {
 
 		let newTasksList: BmxBuildTaskDefinition[] = []
@@ -136,23 +168,23 @@ export function saveAsDefaultTaskDefinition( newDef: BmxBuildTaskDefinition | un
 		}
 
 		if ( replacedTask ) {
-			tasksFile.update( 'tasks', newTasksList  )
+			tasksFile.update( 'tasks', newTasksList )
 			return true
 		} else {
 			if ( firstBmxTaskAtIndex >= 0 ) {
 				newTasksList[firstBmxTaskAtIndex] = newDef
-				tasksFile.update( 'tasks', newTasksList  )
+				tasksFile.update( 'tasks', newTasksList )
 				return true
 			} else {
 				newTasksList.push( newDef )
-				tasksFile.update( 'tasks', newTasksList  )
+				tasksFile.update( 'tasks', newTasksList )
 				return true
 			}
 		}
 
 	}
 
-	tasksFile.update( 'tasks', [newDef]  )
+	tasksFile.update( 'tasks', [newDef] )
 	return true
 }
 
@@ -431,7 +463,7 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 			// Always update progress
 			if ( progressBar && line.startsWith( '[' ) && line[5] == ']' ) {
 				this.percent = Number( line.substring( 1, 4 ) )
-				if (line.includes( ':' )) this.buildStep = line.substring( 6, line.indexOf( ':' ) )
+				if ( line.includes( ':' ) ) this.buildStep = line.substring( 6, line.indexOf( ':' ) )
 				progressBar.report( { message: ` ${this.percent}% - ${this.buildStep}`, increment: this.percent - this.lastPercent } )
 				this.lastPercent = this.percent
 			}
@@ -517,8 +549,8 @@ class BmxBuildTaskTerminal implements vscode.Pseudoterminal {
 				title: path.parse( this.args[this.args.length - 1] ).base,
 				cancellable: true
 			}, async ( progress, token ) => {
-				progress.report( {message: '0% - Preparing'} )
-				
+				progress.report( { message: '0% - Preparing' } )
+
 				token.onCancellationRequested( () => {
 					if ( bmkProcess ) {
 						bmkProcess.kill( 'SIGINT' )

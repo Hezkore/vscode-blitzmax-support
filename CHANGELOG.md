@@ -1,3 +1,6 @@
+## 2.15.2
+* Fixed an issue with the build tree
+
 ## 2.15.1
 * More information during build
 

@@ -101,7 +101,7 @@ export function getBuildDefinitionFromWorkspace( workspace: vscode.WorkspaceFold
 			if ( doc.languageId != 'blitzmax' ) {
 				// Okay it's not, so we'll use the first workspace we find
 				workspace = getFirstBlitzMaxWorkspace()
-				console.log(workspace?.name)
+				//console.log(workspace?.name)
 
 			} else workspace = vscode.workspace.getWorkspaceFolder( doc.uri )
 		}

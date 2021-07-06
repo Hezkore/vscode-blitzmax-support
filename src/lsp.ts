@@ -7,6 +7,7 @@ import { existsSync } from './common'
 import * as lsp from 'vscode-languageclient'
 import { workspaceOrGlobalConfigBoolean, workspaceOrGlobalConfigArray, workspaceOrGlobalConfigString } from './common'
 
+let forcedStop: boolean
 let outputChannel: vscode.OutputChannel
 let activeBmxLsp: BmxLSP | undefined
 let defaultBmxLsp: BmxLSP | undefined
@@ -56,34 +57,51 @@ export function registerLSP( context: vscode.ExtensionContext ) {
 	const statusBarCommandId = 'blitzmax.showLspOptions'
 	context.subscriptions.push( vscode.commands.registerCommand( statusBarCommandId, () => {
 
-		if ( !activeBmxLsp ) return
-
-		if ( !activeBmxLsp._running ) {
+		if ( activeBmxLsp && !activeBmxLsp._running ) {
 			outputChannel.show()
 			vscode.commands.executeCommand( 'workbench.action.openSettings', '@ext:hezkore.blitzmax blitzmax.lsp' )
 			return
 		}
 
-		if ( activeBmxLsp.status.error ) {
+		if ( activeBmxLsp && activeBmxLsp.status.error ) {
 			// Show error
 			vscode.window.showErrorMessage( activeBmxLsp.status.error )
 		} else {
 			// Show options
-			vscode.window.showQuickPick( [`Restart ${activeBmxLsp.name}`, 'View output', 'About'] ).then( ( pick ) => {
-				if ( !activeBmxLsp ) return
+			if ( activeBmxLsp ) {
+				vscode.window.showQuickPick( [`Restart ${activeBmxLsp.name}`, 'View output', `Stop all`, 'About'] ).then( ( pick ) => {
+					if ( !activeBmxLsp ) return
 
-				switch ( pick?.split( ' ' )[0] ) {
-					case 'Restart':
-						restartSingleLSP( activeBmxLsp )
-						break
-					case 'About':
-						vscode.window.showInformationMessage( `${activeBmxLsp.name}\r\n${activeBmxLsp.version}` )
-						break
-					case 'View':
-						outputChannel.show()
-						break
-				}
-			} )
+					switch ( pick?.split( ' ' )[0] ) {
+						case 'Restart':
+							restartSingleLSP( activeBmxLsp )
+							break
+						case 'Stop':
+							forcedStop = true
+							restartAllLSP()
+							break
+						case 'About':
+							vscode.window.showInformationMessage( `${activeBmxLsp.name}\r\n${activeBmxLsp.version}` )
+							break
+						case 'View':
+							outputChannel.show()
+							break
+					}
+				} )
+			} else {
+				vscode.window.showQuickPick( ['View output', `Start all`] ).then( ( pick ) => {
+					switch ( pick?.split( ' ' )[0] ) {
+						case 'Start':
+							forcedStop = false
+							restartAllLSP()
+							changeBmxDocument( vscode.window.activeTextEditor?.document )
+							break
+						case 'View':
+							outputChannel.show()
+							break
+					}
+				} )
+			}
 		}
 	} ) )
 
@@ -137,7 +155,9 @@ function changeBmxDocument( document: vscode.TextDocument | undefined ) {
 	updateStatusBarItem()
 }
 
-function activateBmxLSP( workspace: vscode.WorkspaceFolder | undefined ): BmxLSP {
+function activateBmxLSP( workspace: vscode.WorkspaceFolder | undefined ) {
+	if ( forcedStop ) return
+
 	// Do we have an active LSP?
 	if ( activeBmxLsp ) {
 		// Is it the same LSP?
@@ -219,20 +239,35 @@ async function restartSingleLSP( lsp: BmxLSP | undefined ) {
 }
 
 function updateStatusBarItem() {
-	if ( activeBmxLsp && activeBmxLsp.client ) {
+	if ( activeBmxLsp ) {
+		if ( activeBmxLsp.client ) {
+			// Update the icon and text
+			lspStatusBarItem.text = activeBmxLsp.name ? `${activeBmxLsp.status.icon} ${activeBmxLsp.name}` : activeBmxLsp.status.icon
+
+			// Update the color
+			lspStatusBarItem.color = activeBmxLsp.status.color ? new vscode.ThemeColor( activeBmxLsp.status.color ) : undefined
+
+			// Update tooltip
+			lspStatusBarItem.tooltip = activeBmxLsp.status.tooltip
+
+			lspStatusBarItem.show()
+			return
+		}
+	} else {
 		// Update the icon and text
-		lspStatusBarItem.text = activeBmxLsp.name ? `${activeBmxLsp.status.icon} ${activeBmxLsp.name}` : activeBmxLsp.status.icon
+		lspStatusBarItem.text = 'Language servers stopped'
 
 		// Update the color
-		lspStatusBarItem.color = activeBmxLsp.status.color ? new vscode.ThemeColor( activeBmxLsp.status.color ) : undefined
+		lspStatusBarItem.color = undefined
 
 		// Update tooltip
-		lspStatusBarItem.tooltip = activeBmxLsp.status.tooltip
+		lspStatusBarItem.tooltip = 'Click to start'
 
 		lspStatusBarItem.show()
-	} else {
-		lspStatusBarItem.hide()
+		return
 	}
+
+	lspStatusBarItem.hide()
 }
 
 class BmxLSP {

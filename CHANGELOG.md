@@ -1,3 +1,6 @@
+## 2.15.4
+* New 'Stop all' LSP option
+
 ## 2.15.3
 * Change in dependencies
 

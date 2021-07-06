@@ -47,7 +47,7 @@
 	"dependencies": {
 		"await-notify": "1.0.1",
 		"vscode-debugadapter": "^1.47.0",
-		"vscode-languageclient": "7.0.0"
+		"vscode-languageclient": "6.1.4"
 	},
 	"devDependencies": {
 		"@types/glob": "^7.1.3",
@@ -329,7 +329,12 @@
 				"blitzmax.syntax.colorFunctions": {
 					"type": "array",
 					"description": "An array of all the functions that sets a color",
-					"default": ["setcolor", "setclscolor", "requestcolor", "setmaskcolor"]
+					"default": [
+						"setcolor",
+						"setclscolor",
+						"requestcolor",
+						"setmaskcolor"
+					]
 				}
 			}
 		},

@@ -4,7 +4,7 @@ import { unwatchFile, watchFile } from 'fs'
 import { setTimeout } from 'timers'
 import * as vscode from 'vscode'
 import { existsSync } from './common'
-import * as lsp from 'vscode-languageclient/node'
+import * as lsp from 'vscode-languageclient'
 import { workspaceOrGlobalConfigBoolean, workspaceOrGlobalConfigArray, workspaceOrGlobalConfigString } from './common'
 
 let outputChannel: vscode.OutputChannel

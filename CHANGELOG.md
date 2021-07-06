@@ -1,3 +1,6 @@
+## 2.15.3
+* Change in dependencies
+
 ## 2.15.2
 * Fixed an issue with the build tree
 

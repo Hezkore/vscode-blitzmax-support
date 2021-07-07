@@ -21,13 +21,18 @@
 			"name": "comment.line.bmx"
 		},
 		{
+			"desc": "Built in types",
+			"match": ":\\s*\\b(?i:Object|Byte|Short|Int|UInt|Long|ULong|Float|Double|String|Size_T|Float64|Int128|Float128|Double128|Typename|ElementType|ReturnTypeValueType Ptr|VariableType Var)\\b",
+			"name": "support.class.builtin.bmx"
+		},
+		{
 			"desc": "Type definition and names",
 			"patterns": [
 				{
 					"match": "(?i:((\\w+)?\\s*:\\s*|\\b(New)\\s+|\\s*\\b(Type|Extends|Implements)\\s+))(\\w+)",
 					"captures": {
 						"1": {
-							"name": "storage.bmx"
+							"name": "keyword.operator.type.bmx"
 						},
 						"2": {
 							"name": "variable.bmx"
@@ -86,16 +91,16 @@
 		},
 		{
 			"desc": "Start of Function and Method",
-			"match": "\\b(?i:Function|Method)\\b\\s+(\\w+\\b)?(\\s*:)?",
+			"match": "(?i:\\b(Function|Method))\\b\\s+(\\w+\\b)\\s*(:)?",
 			"captures": {
-				"0": {
+				"1": {
 					"name": "storage.modifier.bmx"
 				},
-				"1": {
+				"2": {
 					"name": "entity.name.function.bmx"
 				},
-				"2": {
-					"name": "punctuation.bmx"
+				"3": {
+					"name": "keyword.operator.type.bmx"
 				}
 			}
 		},
@@ -121,16 +126,6 @@
 			}
 		},
 		{
-			"desc": "Function parameter variables",
-			"begin": ".*\\(\\s*(\\w+)",
-			"end": ".*\\)",
-			"beginMatch": {
-				"1": {
-					"name": "invalid.bmx"
-				}
-			}
-		},
-		{
 			"desc": "Array names",
 			"match": "(\\w+)\\s*\\[.*\\]",
 			"captures": {
@@ -141,7 +136,7 @@
 		},
 		{
 			"desc": "If, Then, Repeat control logic",
-			"match": "\\b(?i:If|End\\s*If|Then|Else\\s*(If)?|Return|For|To|Each|EachIn|Select|End\\*Select|Case|Default|Repeat|Forever|Until|While|Wend|Step|Continue|Exit|Goto)\\b",
+			"match": "\\b(?i:If|End\\s*If|Then|Else\\s*(If)?|Return|For|Next|To|Each|EachIn|Select|End\\*Select|Case|Default|Repeat|Forever|Until|While|Wend|Step|Continue|Exit|Goto)\\b",
 			"name": "keyword.control.bmx"
 		},
 		{
@@ -187,9 +182,9 @@
 			"name": "keyword.operator.bmx"
 		},
 		{
-			"desc": "Method access dot",
+			"desc": "Type operator",
 			"match": ":",
-			"name": "storage.modifier.bmx"
+			"name": "keyword.operator.type.bmx"
 		},
 		{
 			"desc": "Method access dot",

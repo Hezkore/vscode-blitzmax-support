@@ -21,11 +21,14 @@
 			"name": "comment.line.bmx"
 		},
 		{
+			"desc": "Type definition and names",
 			"patterns": [
 				{
-					"desc": "Type definition and names",
 					"match": "(?i:((\\w+)?\\s*:\\s*|\\b(New)\\s+|\\s*\\b(Type|Extends|Implements)\\s+))(\\w+)",
 					"captures": {
+						"1": {
+							"name": "storage.bmx"
+						},
 						"2": {
 							"name": "variable.bmx"
 						},
@@ -61,20 +64,15 @@
 		},
 		{
 			"desc": "Variable creation",
-			"match": "\\b((?i:Local|Global|Field))\\b\\s*(\\w+)?",
+			"match": "\\b((?i:Local|Const|Global|Field))\\b\\s*(\\w+)?",
 			"captures": {
 				"1": {
-					"name": "storage.modifier.bmx"
+					"name": "storage.type.bmx"
 				},
 				"2": {
 					"name": "variable.bmx"
 				}
 			}
-		},
-		{
-			"desc": "Constant creation",
-			"match": "\\b(?i:Const)\\b",
-			"name": "storage.modifier.constant.bmx"
 		},
 		{
 			"desc": "Conditional compiling",
@@ -88,31 +86,47 @@
 		},
 		{
 			"desc": "Start of Function and Method",
-			"match": "\\b(?i:Function|Method)\\b\\s+(\\w+\\b)?",
+			"match": "\\b(?i:Function|Method)\\b\\s+(\\w+\\b)?(\\s*:)?",
 			"captures": {
 				"0": {
 					"name": "storage.modifier.bmx"
 				},
 				"1": {
 					"name": "entity.name.function.bmx"
+				},
+				"2": {
+					"name": "punctuation.bmx"
 				}
 			}
 		},
 		{
 			"desc": "Function and Method calls",
-			"match": "((\\w+)\\.)?(\\w+)\\s*((\\%|\\#|\\!|\\$)|(:\\s*(\\w+)))?\\(",
+			"match": "((\\w+)(\\.))?(\\w+)\\s*((\\%|\\#|\\!|\\$)|(:\\s*(\\w+)))?\\(",
 			"captures": {
 				"2": {
 					"name": "variable.bmx"
 				},
 				"3": {
+					"name": "punctuation.accessor.bmx"
+				},
+				"4": {
 					"name": "entity.name.function.bmx"
 				},
 				"5": {
 					"name": "storage.type.bmx"
 				},
-				"7": {
+				"6": {
 					"name": "storage.type.bmx"
+				}
+			}
+		},
+		{
+			"desc": "Function parameter variables",
+			"begin": ".*\\(\\s*(\\w+)",
+			"end": ".*\\)",
+			"beginMatch": {
+				"1": {
+					"name": "invalid.bmx"
 				}
 			}
 		},
@@ -121,13 +135,13 @@
 			"match": "(\\w+)\\s*\\[.*\\]",
 			"captures": {
 				"1": {
-					"name": "variable"
+					"name": "variable.bmx"
 				}
 			}
 		},
 		{
 			"desc": "If, Then, Repeat control logic",
-			"match": "\\b(?i:If|End\\s*If|Then|Else\\s*(If)?|Repeat|Forever|Until|While|Wend)\\b",
+			"match": "\\b(?i:If|End\\s*If|Then|Else\\s*(If)?|Return|For|To|Each|EachIn|Select|End\\*Select|Case|Default|Repeat|Forever|Until|While|Wend|Step|Continue|Exit|Goto)\\b",
 			"name": "keyword.control.bmx"
 		},
 		{
@@ -148,8 +162,53 @@
 			}
 		},
 		{
+			"desc": "Language keywords",
+			"match": "\\b(?i:Pi|Assert|Var|Ptr|Varptr|DebugStop|Finally|Mod|Shl|Shr|Sar|And|Not|Or|Xor|Operator)\\b",
+			"name": "keyword.bmx"
+		},
+		{
+			"desc": "Language variables",
+			"match": "\\b(?i:Self)\\b",
+			"name": "storage.modifier.bmx"
+		},
+		{
+			"desc": "Booleans",
+			"match": "\\b(?i:True|False|Null)\\b",
+			"name": "constant.character.bmx"
+		},
+		{
+			"desc": "Digits",
+			"match": "-?\\b(?:(0(?:x|X)[0-9a-zA-Z]+)|(?:[0-9](?:\\.|[a-fA-F]+)?)+)\\b",
+			"name": "constant.numeric.bmx"
+		},
+		{
+			"desc": "Operators",
+			"match": "(\\*|\\-|\\+|~|=|!=|<=|>=|<>|<|>|&|\\||\\/|\\[|\\])",
+			"name": "keyword.operator.bmx"
+		},
+		{
+			"desc": "Method access dot",
+			"match": ":",
+			"name": "storage.modifier.bmx"
+		},
+		{
+			"desc": "Method access dot",
+			"match": "\\.",
+			"name": "punctuation.accessor.bmx"
+		},
+		{
+			"desc": "Comma separator",
+			"match": ",",
+			"name": "punctuation.separator.comma.bmx"
+		},
+		{
+			"desc": "Statement terminator",
+			"match": ";",
+			"name": "punctuation.terminator.statement.bmx"
+		},
+		{
 			"desc": "Just assume that every other word is a variable",
-			"match": "(?=[a-zA-Z])\\w+",
+			"match": "\\b(?!\\d)\\w+",
 			"name": "variable.bmx"
 		}
 	]

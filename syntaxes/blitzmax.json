@@ -4,7 +4,7 @@
 	"scopeName": "source.bmx",
 	"patterns": [
 		{
-			"desc": "Rem block",
+			"desc": "",
 			"begin": "^\\s*(?i:Rem)\\b(?:\\s*$|\\s+.*)",
 			"end": "^\\s*(?i:End\\s?Rem)\\b\\s*",
 			"name": "comment.block.bmx"
@@ -21,190 +21,44 @@
 			"name": "comment.line.bmx"
 		},
 		{
-			"desc": "Built in types",
-			"match": ":\\s*\\b(?i:Object|Byte|Short|Int|UInt|Long|ULong|Float|Double|String|Size_T|Float64|Int128|Float128|Double128|Typename|ElementType|ReturnTypeValueType Ptr|VariableType Var)\\b",
-			"name": "support.class.builtin.bmx"
-		},
-		{
-			"desc": "Type definition and names",
-			"patterns": [
-				{
-					"match": "(?i:((\\w+)?\\s*:\\s*|\\b(New)\\s+|\\s*\\b(Type|Extends|Implements)\\s+))(\\w+)",
-					"captures": {
-						"1": {
-							"name": "keyword.operator.type.bmx"
-						},
-						"2": {
-							"name": "variable.bmx"
-						},
-						"3": {
-							"name": "keyword.operator.new.bmx"
-						},
-						"4": {
-							"name": "storage.modifier.bmx"
-						},
-						"5": {
-							"name": "entity.name.type.bmx"
-						}
-					}
-				},
-				{
-					"desc": "Type ending",
-					"match": "\\b(?i:End\\s*Type)\\b",
-					"name": "storage.modifier.bmx"
-				}
-			]
-		},
-		{
-			"desc": "BASIC style type tags",
-			"match": "(?:(\\w+\\s*))(\\%|\\#|\\!|\\$)",
-			"captures": {
+			"desc": "Function and Method definition",
+			"begin": "(?:^|;)\\s*\\b(?i:(Function|Method))\\b",
+			"end": "(?=\\W)",
+			"beginCaptures": {
 				"1": {
-					"name": "variable.bmx"
-				},
-				"2": {
+					"name": "storage.type.function.bmx"
+				}
+			}
+		},
+		{
+			"desc": "Function and Method names",
+			"begin": "(?<!\\d|:|(?i:\\bNew\\b\\s+))(\\b[aA-zZ_]+\\w*)\\s*(?=(:\\s*\\w+)?\\s*\\()",
+			"end": "(?=\\W)",
+			"beginCaptures": {
+				"1": {
+					"name": "entity.name.function.bmx"
+				}
+			}
+		},
+		{
+			"desc": "Built-in types",
+			"begin": "(?<=:|(?i:\\bNew\\b\\s+))\\s*\\b(Object|Byte|Short|Int|UInt|Long|ULong|Float|Double|String|Size_T|Float64|Int128|Float128|Double128|Typename|ElementType|ReturnTypeValueType Ptr|VariableType Var)",
+			"end": "(?:\\W)",
+			"beginCaptures": {
+				"1": {
+					"name": "support.type.bmx"
+				}
+			}
+		},
+		{
+			"desc": "Types",
+			"begin": "(?<=:|(?i:\\bNew\\b\\s+))\\s*\\b([aA-zZ_]+\\w*)",
+			"end": "(?=\\W)",
+			"beginCaptures": {
+				"1": {
 					"name": "entity.name.type.bmx"
 				}
 			}
-		},
-		{
-			"desc": "Variable creation",
-			"match": "\\b((?i:Local|Const|Global|Field))\\b\\s*(\\w+)?",
-			"captures": {
-				"1": {
-					"name": "storage.type.bmx"
-				},
-				"2": {
-					"name": "variable.bmx"
-				}
-			}
-		},
-		{
-			"desc": "Conditional compiling",
-			"match": "^\\s*\\?.*",
-			"name": "keyword.control.bmx"
-		},
-		{
-			"desc": "End of Function and Method",
-			"match": "\\b(?i:End\\s*)(?i:Function|Method)\\b",
-			"name": "storage.modifier.bmx"
-		},
-		{
-			"desc": "Start of Function and Method",
-			"match": "(?i:\\b(Function|Method))\\b\\s+(\\w+\\b)\\s*(:)?",
-			"captures": {
-				"1": {
-					"name": "storage.modifier.bmx"
-				},
-				"2": {
-					"name": "entity.name.function.bmx"
-				},
-				"3": {
-					"name": "keyword.operator.type.bmx"
-				}
-			}
-		},
-		{
-			"desc": "Function and Method calls",
-			"match": "((\\w+)(\\.))?(\\w+)\\s*((\\%|\\#|\\!|\\$)|(:\\s*(\\w+)))?\\(",
-			"captures": {
-				"2": {
-					"name": "variable.bmx"
-				},
-				"3": {
-					"name": "punctuation.accessor.bmx"
-				},
-				"4": {
-					"name": "entity.name.function.bmx"
-				},
-				"5": {
-					"name": "storage.type.bmx"
-				},
-				"6": {
-					"name": "storage.type.bmx"
-				}
-			}
-		},
-		{
-			"desc": "Array names",
-			"match": "(\\w+)\\s*\\[.*\\]",
-			"captures": {
-				"1": {
-					"name": "variable.bmx"
-				}
-			}
-		},
-		{
-			"desc": "If, Then, Repeat control logic",
-			"match": "\\b(?i:If|End\\s*If|Then|Else\\s*(If)?|Return|For|Next|To|Each|EachIn|Select|End\\*Select|Case|Default|Repeat|Forever|Until|While|Wend|Step|Continue|Exit|Goto)\\b",
-			"name": "keyword.control.bmx"
-		},
-		{
-			"desc": "Try Catch",
-			"match": "\\b(?i:Try|Catch|End\\s*Try)\\b",
-			"name": "keyword.control.try.bmx"
-		},
-		{
-			"desc": "Include, Import, Framework",
-			"match": "\\b(?i:Include|Import|Framework)\\b(\\s+\\w+\\.\\w+)?",
-			"captures": {
-				"0": {
-					"name": "keyword.control.bmx"
-				},
-				"1": {
-					"name": "string.bmx"
-				}
-			}
-		},
-		{
-			"desc": "Language keywords",
-			"match": "\\b(?i:Pi|Assert|Var|Ptr|Varptr|DebugStop|Finally|Mod|Shl|Shr|Sar|And|Not|Or|Xor|Operator)\\b",
-			"name": "keyword.bmx"
-		},
-		{
-			"desc": "Language variables",
-			"match": "\\b(?i:Self)\\b",
-			"name": "storage.modifier.bmx"
-		},
-		{
-			"desc": "Booleans",
-			"match": "\\b(?i:True|False|Null)\\b",
-			"name": "constant.character.bmx"
-		},
-		{
-			"desc": "Digits",
-			"match": "-?\\b(?:(0(?:x|X)[0-9a-zA-Z]+)|(?:[0-9](?:\\.|[a-fA-F]+)?)+)\\b",
-			"name": "constant.numeric.bmx"
-		},
-		{
-			"desc": "Operators",
-			"match": "(\\*|\\-|\\+|~|=|!=|<=|>=|<>|<|>|&|\\||\\/|\\[|\\])",
-			"name": "keyword.operator.bmx"
-		},
-		{
-			"desc": "Type operator",
-			"match": ":",
-			"name": "keyword.operator.type.bmx"
-		},
-		{
-			"desc": "Method access dot",
-			"match": "\\.",
-			"name": "punctuation.accessor.bmx"
-		},
-		{
-			"desc": "Comma separator",
-			"match": ",",
-			"name": "punctuation.separator.comma.bmx"
-		},
-		{
-			"desc": "Statement terminator",
-			"match": ";",
-			"name": "punctuation.terminator.statement.bmx"
-		},
-		{
-			"desc": "Just assume that every other word is a variable",
-			"match": "\\b(?!\\d)\\w+",
-			"name": "variable.bmx"
 		}
 	]
 }

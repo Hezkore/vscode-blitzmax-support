@@ -84,11 +84,15 @@
 	},
 	"indentationRules": {
 		"increaseIndentPattern": {
-			"pattern": "(?:^|^\\s*(Private|Public)\\s+|;)\\s*\\b(If\\s+|For\\s+|While\\s*|Select|Function\\s*|Method\\s*|Enum\\s*|Interface\\s*|Type\\s*|Struct\\s*|Private\\s*$|Else\\s*|Case\\+s)\\b",
+			"pattern": "(?:^|^\\s*(Private|Public)\\s+|;)\\s*\\b(If\\s+|For\\s+|While\\s*|Select|Function\\s*|Method\\s*|Enum\\s*|Interface\\s*|Type\\s*|Struct\\s*|Private\\s*$|Else\\s*)\\b",
 			"flags": "i"
 		},
 		"decreaseIndentPattern": {
-			"pattern": "(?:^|;)\\s*\\b(End\\s*(If|Select|Function|Method|Enum|Interface|Type|Struct)\\s*|Next\\s*|Wend\\s*|Public\\s*$|Else\\s*|Case\\+s)\\b",
+			"pattern": "(?:^|;)\\s*\\b(End\\s*(If|Select|Function|Method|Enum|Interface|Type|Struct)\\s*|Next\\s*|Wend\\s*|Public\\s*$|Else\\s*)\\b",
+			"flags": "i"
+		},
+		"indentNextLinePattern": {
+			"pattern": "(?:^|;)\\s*\\bCase\\b",
 			"flags": "i"
 		},
 		"unIndentedLinePattern": {
@@ -97,18 +101,6 @@
 		}
 	},
 	"onEnterRules": [
-		{
-			"beforeText": "(?:^|;)\\s*\\b[cC][aA][sS][eE]\\b",
-			"action": {
-				"indent": "indentOutdent"
-			}
-		},
-		{
-			"beforeText": "(?:^|;)\\s*\\b[dD][eE][fF][aA][uU][lL][tT]\\b\\s*$",
-			"action": {
-				"indent": "indentOutdent"
-			}
-		},
 		{
 			"previousLineText": "(?:^|;)\\s*\\b[fF][uU][nN][cC][tT][iI][oO][nN]+\\b\\s+\\w+",
 			"beforeText": "(?:^|;)\\s*$",
@@ -178,7 +170,7 @@
 			"beforeText": "(?:^|;)\\s*$",
 			"action": {
 				"indent": "outdent",
-				"appendText": "\tCase \nEndSelect"
+				"appendText": "\tCase \n\tEndSelect"
 			}
 		},
 		{

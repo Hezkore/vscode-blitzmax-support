@@ -21,18 +21,197 @@
 			"name": "comment.line.bmx"
 		},
 		{
+			"match": ":",
+			"name": "keyword.operator.type.annotation.bmx"
+		},
+		{
+			"match": "\\.",
+			"name": "punctuation.accessor.bmx"
+		},
+		{
+			"match": ";",
+			"name": "punctuation.terminator.statement.bmx"
+		},
+		{
+			"match": ",",
+			"name": "punctuation.separator.comma.bmx"
+		},
+		{
+			"match": "\\(",
+			"name": "punctuation.definition.parameters.begin.bmx"
+		},
+		{
+			"match": "\\)",
+			"name": "punctuation.definition.parameters.end.bmx"
+		},
+		{
+			"match": "\\[",
+			"name": "meta.brace.square.bmx"
+		},
+		{
+			"match": "\\]",
+			"name": "meta.brace.square.bmx"
+		},
+		{
+			"match": "\\{",
+			"name": "meta.bmx"
+		},
+		{
+			"match": "\\}",
+			"name": "meta.bmx"
+		},
+		{
+			"match": "\\<",
+			"name": "punctuation.definition.typeparameters.begin.bmx"
+		},
+		{
+			"match": "\\>",
+			"name": "punctuation.definition.typeparameters.end.bmx"
+		},
+		{
 			"desc": "Function and Method definition",
-			"begin": "(?<=^|^\\s*(?:Private|Public)\\s+|;)\\s*\\b(?i:(Function|Method))\\b",
-			"end": "(?=\\W)",
+			"patterns": [
+				{
+					"begin": "(?<=^|^\\s*(?:Private|Public)\\s+|;)\\s*\\b(?i:(Function|Method))\\b",
+					"end": "(?=\\W)",
+					"beginCaptures": {
+						"1": {
+							"name": "storage.type.function.bmx"
+						}
+					}
+				},
+				{
+					"begin": "(?<=^|;)\\s*\\b(?i:(End\\s*(Function|Method)))\\b",
+					"end": "(?=\\W|\n)",
+					"beginCaptures": {
+						"1": {
+							"name": "storage.type.function.bmx"
+						}
+					}
+				}
+			]
+		},
+		{
+			"desc": "Storage",
+			"begin": "(?<=^|;)\\s*\\b(?i:(Private|Public)|(Global|Local|Const))\\b",
+			"end": "(?=\\W|\n)",
 			"beginCaptures": {
 				"1": {
-					"name": "storage.type.function.bmx"
+					"name": "storage.modifier.bmx"
+				},
+				"2": {
+					"name": "storage.type.bmx"
 				}
 			}
 		},
 		{
+			"desc": "Type, Enum, Struct, Interface definition",
+			"patterns": [
+				{
+					"begin": "(?<=^|^\\s*(?:Private|Public)\\s+|;)\\s*\\b(?i:(Type|Enum|Struct|Interface)\\s+([aA-zZ_]\\w*))(?i:\\s*(Extends|Implements|Final|Abstract)\\b\\s*(\\w*))?(?i:\\s*(Extends|Implements|Final|Abstract)\\b\\s*(\\w*))?(?i:\\s*(Extends|Implements|Final|Abstract)\\b\\s*(\\w*))?(?i:\\s*(Extends|Implements|Final|Abstract)\\b\\s*(\\w*))?(?i:\\s*(Extends|Implements|Final|Abstract)\\b\\s*(\\w*))?\\b",
+					"end": "(?=\\W)",
+					"beginCaptures": {
+						"1": {
+							"name": "storage.type.class.bmx"
+						},
+						"2": {
+							"name": "entity.name.type.bmx"
+						},
+						"0": {
+							"name": "storage.modifier.bmx"
+						},
+						"4": {
+							"name": "entity.name.type.bmx"
+						},
+						"6": {
+							"name": "entity.name.type.bmx"
+						},
+						"8": {
+							"name": "entity.name.type.bmx"
+						},
+						"10": {
+							"name": "entity.name.type.bmx"
+						},
+						"12": {
+							"name": "entity.name.type.bmx"
+						}
+					}
+				},
+				{
+					"begin": "(?<=^|;)\\s*\\b(?i:(End\\s*(Type|Enum|Struct|Interface)))\\b",
+					"end": "(?=\\W|\n)",
+					"beginCaptures": {
+						"1": {
+							"name": "storage.type.class.bmx"
+						}
+					}
+				}
+			]
+		},
+		{
+			"desc": "Constant language",
+			"begin": "\\b(?i:True|False|Null)\\b",
+			"end": "(?=.)",
+			"beginCaptures": {
+				"0": {
+					"name": "constant.language.bmx"
+				}
+			}
+		},
+		{
+			"desc": "Operators",
+			"patterns": [
+				{
+					"begin": "\\b(?i:Or|And|Not)\\b",
+					"end": "(?=.)",
+					"beginCaptures": {
+						"0": {
+							"name": "keyword.operator.bmx"
+						}
+					}
+				},
+				{
+					"match": "\\=|\\-|\\+|\\*|/|\\~",
+					"name": "keyword.operator.bmx"
+				}
+			]
+		},
+		{
+			"desc": "Language variables",
+			"match": "\\bSuper|Self\\b",
+			"name": "variable.language.bmx"
+		},
+		{
+			"desc": "New operator",
+			"match": "\\bNew\\b",
+			"name": "keyword.operator.new.bmx"
+		},
+		{
+			"desc": "Control keywords",
+			"patterns": [
+				{
+					"begin": "(?<=^|\\W|;)\\s*\\b(?i:(Try|Catch|If|Then|Else|Else If|End|For|While|Wend|Repeat|Forever|Until|Next|Continue|Select|Default|Case|Return))\\b",
+					"end": "(?=\\W)",
+					"beginCaptures": {
+						"1": {
+							"name": "keyword.control.bmx"
+						}
+					}
+				},
+				{
+					"begin": "(?<=^|;)\\s*\\b(?i:(End\\s*(Try|If|Select)))\\b",
+					"end": "(?=\\W|\n)",
+					"beginCaptures": {
+						"1": {
+							"name": "keyword.control.bmx"
+						}
+					}
+				}
+			]
+		},
+		{
 			"desc": "Function and Method names",
-			"begin": "(?<!\\d|:|\\b(?i:New)\\s+)(?!\\b(?i:New))(\\b[aA-zZ_]+\\w*)(?=\\s*(:\\s*\\w+|(%|#|!|\\$))?\\s*\\()",
+			"begin": "(?<!\\d|:|\\b(?i:New)\\s+)(?!\\b(?i:New|Or|And|Not))(\\b[aA-zZ_]\\w*)(?=\\s*(:\\s*\\w+|(%|#|!|\\$))?\\s*\\()",
 			"end": "(?=\\W)",
 			"beginCaptures": {
 				"1": {
@@ -42,7 +221,7 @@
 		},
 		{
 			"desc": "Sloppy Function and Method names",
-			"begin": "(?<!\\W)\\s*(\\b[aA-zZ_]+\\w*)(?=\\s+[^\\W])",
+			"begin": "(?<!\\W)\\s*(?!\\b(?i:New|Or|And|Not))(\\b[aA-zZ_]\\w*)(?=\\s+(?:\"|\\.|[^\\W]))",
 			"end": "(?=.)",
 			"beginCaptures": {
 				"1": {
@@ -71,9 +250,9 @@
 			}
 		},
 		{
-			"desc": "Types",
-			"begin": "(?<=:|(?i:\\bNew\\b\\s+))\\s*\\b([aA-zZ_]+\\w*)",
-			"end": "(?=\\W)",
+			"desc": "Type names",
+			"begin": "(?<=:|(?i:\\bNew\\b\\s+))\\s*([aA-zZ_]\\w*)",
+			"end": "(?=.)",
 			"beginCaptures": {
 				"1": {
 					"name": "entity.name.type.bmx"

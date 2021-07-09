@@ -21,6 +21,16 @@
 			"name": "comment.line.bmx"
 		},
 		{
+			"desc": "Function variables",
+			"begin": "(?<=(\\(|,))\\s*(\\w+\\b)(?!((\\s*\\W\\s*|\\s*:\\s*\\w+\\s*)?\\())",
+			"end": "(?=.)",
+			"beginCaptures": {
+				"2": {
+					"name": "variable.parameter.bmx"
+				}
+			}
+		},
+		{
 			"match": ":",
 			"name": "keyword.operator.type.annotation.bmx"
 		},
@@ -178,12 +188,12 @@
 		},
 		{
 			"desc": "Language variables",
-			"match": "\\bSuper|Self\\b",
+			"match": "\\b(?i:Super|Self)\\b",
 			"name": "variable.language.bmx"
 		},
 		{
 			"desc": "New operator",
-			"match": "\\bNew\\b",
+			"match": "\\b(?i:New)\\b",
 			"name": "keyword.operator.new.bmx"
 		},
 		{
@@ -258,6 +268,10 @@
 					"name": "entity.name.type.bmx"
 				}
 			}
+		},
+		{
+			"match": "\\w",
+			"name": "variable.bmx"
 		}
 	]
 }

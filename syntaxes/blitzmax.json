@@ -22,7 +22,7 @@
 		},
 		{
 			"desc": "Function and Method definition",
-			"begin": "(?:^|;)\\s*\\b(?i:(Function|Method))\\b",
+			"begin": "(?<=^|^\\s*(?:Private|Public)\\s+|;)\\s*\\b(?i:(Function|Method))\\b",
 			"end": "(?=\\W)",
 			"beginCaptures": {
 				"1": {
@@ -32,7 +32,7 @@
 		},
 		{
 			"desc": "Function and Method names",
-			"begin": "(?<!\\d|:|(?i:\\bNew\\b\\s+))(\\b[aA-zZ_]+\\w*)\\s*(?=(:\\s*\\w+)?\\s*\\()",
+			"begin": "(?<!\\d|:|\\b(?i:New)\\s+)(?!\\b(?i:New))(\\b[aA-zZ_]+\\w*)(?=\\s*(:\\s*\\w+|(%|#|!|\\$))?\\s*\\()",
 			"end": "(?=\\W)",
 			"beginCaptures": {
 				"1": {
@@ -41,12 +41,32 @@
 			}
 		},
 		{
+			"desc": "Sloppy Function and Method names",
+			"begin": "(?<!\\W)\\s*(\\b[aA-zZ_]+\\w*)(?=\\s+[^\\W])",
+			"end": "(?=.)",
+			"beginCaptures": {
+				"1": {
+					"name": "entity.name.function.bmx"
+				}
+			}
+		},
+		{
 			"desc": "Built-in types",
-			"begin": "(?<=:|(?i:\\bNew\\b\\s+))\\s*\\b(Object|Byte|Short|Int|UInt|Long|ULong|Float|Double|String|Size_T|Float64|Int128|Float128|Double128|Typename|ElementType|ReturnTypeValueType Ptr|VariableType Var)",
+			"begin": "(?<=:|\\b(?i:New)\\s+)\\s*\\b(Object|Byte|Short|Int|UInt|Long|ULong|Float|Double|String|Size_T|Float64|Int128|Float128|Double128|Typename|ElementType|ReturnTypeValueType Ptr|VariableType Var)",
 			"end": "(?:\\W)",
 			"beginCaptures": {
 				"1": {
 					"name": "support.type.bmx"
+				}
+			}
+		},
+		{
+			"desc": "BASIC style type tags",
+			"begin": "(?<=\\w|(?i:\\bNew\\b\\s+))\\s*(%|#|!|\\$)",
+			"end": "(?=.)",
+			"beginCaptures": {
+				"1": {
+					"name": "support.type.basic.bmx"
 				}
 			}
 		},

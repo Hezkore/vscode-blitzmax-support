@@ -44,7 +44,7 @@
 			"name": "keyword.operator.bmx"
 		},
 		{
-			"match": ":",
+			"match": ":(\\+|\\-|\\~|/|\\*)",
 			"name": "keyword.operator.type.annotation.bmx"
 		},
 		{
@@ -253,8 +253,8 @@
 			"desc": "Control keywords",
 			"patterns": [
 				{
-					"begin": "(?<=^|\\W|;)\\s*\\b(?i:(Try|Catch|Finally|Extern|If|Then|Else|Else If|End|For|To|Step|Each|EachIn|While|Wend|Repeat|Forever|Until|Next|Continue|Exit|Select|Default|Case|Return))\\b",
-					"end": "(?=\\W)",
+					"begin": "\\s*\\b(?i:(Try|Catch|Finally|Extern|If|Then|Else|Else If|End|For|To|Step|Each|EachIn|While|Wend|Repeat|Forever|Until|Next|Continue|Exit|Select|Default|Case|Return))\\b",
+					"end": "(?=.)",
 					"beginCaptures": {
 						"1": {
 							"name": "keyword.control.bmx"
@@ -306,13 +306,26 @@
 		},
 		{
 			"desc": "Sloppy Function and Method names",
-			"begin": "(?<!\\W)\\s*(?!\\b(?i:New|Or|Xor|And|Not|Shl|Shr|Sar|Len|Mod))(\\b[aA-zZ_]\\w*)(?=\\s+(?:\"|\\.|[^\\W]))",
-			"end": "(?=.)",
-			"beginCaptures": {
-				"1": {
-					"name": "entity.name.function.bmx"
+			"patterns": [
+				{
+					"begin": "(?<!\\W)\\s*(?!\\b(?i:New|Or|Xor|And|Not|Shl|Shr|Sar|Len|Mod))(\\b[aA-zZ_]\\w*)(?=\\s+(?:\"|\\.|[^\\W]))",
+					"end": "(?=.)",
+					"beginCaptures": {
+						"1": {
+							"name": "entity.name.function.bmx"
+						}
+					}
+				},
+				{
+					"begin": "(?<=^|;)\\s*(\\w+)(?=\\s*$)",
+						"end": "(?=.)",
+						"beginCaptures": {
+							"1": {
+								"name": "entity.name.function.bmx"
+							}
+						}
 				}
-			}
+			]
 		},
 		{
 			"desc": "Built-in types",

@@ -92,7 +92,7 @@
 			"flags": "i"
 		},
 		"unIndentedLinePattern": {
-			"pattern": "(;\\s*End\\s*\\w+(\\s*|\\s*'.*)$|(?:^|;)\\s*\\bIf\\s+.*(Then\\s+\\w+|\\;\\s*$|(Return.*|Exit|Continue)(\\s*|\\s*'.*)$|\\w\\s+\\w.*\\)(\\s*|\\s*'.*)$)|\\W+\\s+Abstract(\\s+|\\s*$))",
+			"pattern": "(;\\s*End\\s*\\w+(\\s*|\\s*'.*)$|(?:^|;)\\s*\\bIf.*(Return(\\s+.*|(\\s*|\\s*'.*)$)|Exit|Continue)(\\s*|\\s*'.*)$|(?:^|;)\\s*\\bIf\\s+(?!.*\\s+(Or|Xor|And|Not|Shl|Shr|Sar|Len|Mod)\\s+\\w+).*(Then\\s+\\w+|\\;\\s*$|\\s+\\w.*\\)(\\s*|\\s*'.*)$)|\\W+\\s+Abstract(\\s+|\\s*$))",
 			"flags": "i"
 		}
 	},

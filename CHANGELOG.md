@@ -1,3 +1,6 @@
+## 2.16.2
+* Adjusted BlitzMax-like default text settings
+
 ## 2.16.1
 * More work on grammar syntax and language configuration
 * New BlitzMax-like default text settings

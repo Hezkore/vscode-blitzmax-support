@@ -94,7 +94,6 @@
 		"configurationDefaults": {
 			"[blitzmax]": {
 				"editor.insertSpaces": false,
-				"editor.detectIndentation": false,
 				"editor.showFoldingControls": "always"
 			}
 		},

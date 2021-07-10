@@ -1,3 +1,7 @@
+## 2.16.0
+* Complete re-write of the grammar syntax and language configuration
+	* This fixes a lot of syntax highlighting issues, indention issues, allows VS Code to make smarter decisions when it comes to BlitzMax quirks, and allows usage of the 'Reindent Lines' command to some degree
+
 ## 2.15.4
 * New 'Stop all' LSP option
 

@@ -92,101 +92,11 @@
 			"flags": "i"
 		},
 		"unIndentedLinePattern": {
-			"pattern": "(;\\s*End\\s*\\w+(\\s*|\\s*'.*)$|(?:^|;)\\s*\\bIf.*(Return(\\s+.*|(\\s*|\\s*'.*)$)|Exit|Continue)(\\s*|\\s*'.*)$|(?:^|;)\\s*\\bIf\\s+(?!.*\\s+(Or|Xor|And|Not|Shl|Shr|Sar|Len|Mod)\\s+\\w+).*(Then\\s+\\w+|\\;\\s*$|\\s+\\w.*\\)(\\s*|\\s*'.*)$)|\\W+\\s+Abstract(\\s+|\\s*$))",
+			"pattern": "(;\\s*End\\s*\\w+(\\s*|\\s*'.*)$|(?:^|;)\\s*\\bIf.*(Return(\\s+.*|(\\s*|\\s*'.*)$)|;\\s*\\w+\\s*=\\s*\\w*|Exit|Continue)(\\s*|\\s*'.*)$|(?:^|;)\\s*\\bIf\\s+(?!.*\\s+(Or|Xor|And|Not|Shl|Shr|Sar|Len|Mod)\\s+\\w+).*(Then\\s+\\w+|\\;\\s*$|\\s+\\w.*\\)(\\s*|\\s*'.*)$)|\\W+\\s+Abstract(\\s+|\\s*$))",
 			"flags": "i"
 		}
 	},
 	"onEnterRules": [
-		{
-			"previousLineText": "(?:^|;)\\s*\\b[fF][uU][nN][cC][tT][iI][oO][nN]+\\b\\s+\\w+",
-			"beforeText": "(?:^|;)\\s*$",
-			"afterText": "^\\s*$",
-			"action": {
-				"indent": "outdent",
-				"appendText": "EndFunction"
-			}
-		},
-		{
-			"previousLineText": "(?:^|;)\\s*\\b[mM][eE][tT][hH][oO][dD]+\\b\\s+\\w+",
-			"beforeText": "(?:^|;)\\s*$",
-			"afterText": "^\\s*$",
-			"action": {
-				"indent": "outdent",
-				"appendText": "EndMethod"
-			}
-		},
-		{
-			"previousLineText": "(?:^|;)\\s*\\b[tT][yY][pP][eE]+\\b\\s+\\w+",
-			"beforeText": "(?:^|;)\\s*$",
-			"afterText": "^\\s*$",
-			"action": {
-				"indent": "outdent",
-				"appendText": "EndType"
-			}
-		},
-		{
-			"previousLineText": "(?:^|;)\\s*\\b[sS][tT][rR][uU][cC][tT]+\\b\\s+\\w+",
-			"beforeText": "(?:^|;)\\s*$",
-			"afterText": "^\\s*$",
-			"action": {
-				"indent": "outdent",
-				"appendText": "EndStruct"
-			}
-		},
-		{
-			"previousLineText": "(?:^|;)\\s*\\b[eE][nN][uU][mM]+\\b\\s+\\w+",
-			"beforeText": "(?:^|;)\\s*$",
-			"afterText": "^\\s*$",
-			"action": {
-				"indent": "outdent",
-				"appendText": "EndEnum"
-			}
-		},
-		{
-			"previousLineText": "(?:^|;)\\s*\\b[iI][nN][tT][eE][rR][fF][aA][cC][eE]+\\b\\s+\\w+",
-			"beforeText": "(?:^|;)\\s*$",
-			"afterText": "^\\s*$",
-			"action": {
-				"indent": "outdent",
-				"appendText": "EndInterface"
-			}
-		},
-		{
-			"previousLineText": "(?:^|;)\\s*\\b[wW][hH][iI][lL][eE]+\\b\\s+\\w+",
-			"beforeText": "(?:^|;)\\s*$",
-			"afterText": "^\\s*$",
-			"action": {
-				"indent": "outdent",
-				"appendText": "Wend"
-			}
-		},
-		{
-			"previousLineText": "(?:^|;)\\s*\\b[fF][oO][rR]+\\b\\s+\\w+",
-			"beforeText": "(?:^|;)\\s*$",
-			"afterText": "^\\s*$",
-			"action": {
-				"indent": "outdent",
-				"appendText": "Next"
-			}
-		},
-		{
-			"previousLineText": "(?:^|;)\\s*\\b[sS][eE][lL][eE][cC][tT]+\\b\\s+\\w+",
-			"beforeText": "(?:^|;)\\s*$",
-			"afterText": "^\\s*$",
-			"action": {
-				"indent": "outdent",
-				"appendText": "\tCase \n\tEndSelect"
-			}
-		},
-		{
-			"previousLineText": "(?:^|;)\\s*\\b[rR][eE][mM]\\b",
-			"beforeText": "(?:^|;)\\s*$",
-			"afterText": "^\\s*$",
-			"action": {
-				"indent": "outdent",
-				"appendText": "EndRem"
-			}
-		},
 		{
 			"previousLineText": "(?:^|;)\\s*\\?\\s*",
 			"beforeText": "(?:^|;)\\s*$",
@@ -194,24 +104,6 @@
 			"action": {
 				"indent": "outdent",
 				"appendText": "?"
-			}
-		},
-		{
-			"previousLineText": "(?:^|;)\\s*\\b[pP][rR][iI][vV][aA][tT][eE]\\b",
-			"beforeText": "(?:^|;)\\s*$",
-			"afterText": "^\\s*$",
-			"action": {
-				"indent": "outdent",
-				"appendText": "Public"
-			}
-		},
-		{
-			"previousLineText": "(?:^|;)\\s*\\b[iI][fF]\\s+\\w+",
-			"beforeText": "(?:^|;)\\s*$",
-			"afterText": "^\\s*$",
-			"action": {
-				"indent": "outdent",
-				"appendText": "EndIf"
 			}
 		}
 	]

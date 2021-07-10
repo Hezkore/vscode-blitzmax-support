@@ -21,14 +21,27 @@
 			"name": "comment.line.bmx"
 		},
 		{
+			"desc": "Preprocessor",
+			"match": "\\s*\\?.*",
+			"name": "meta.preprocessor.bmx"
+		},
+		{
+			"match": "-?\\b(?:(0(?:x|X)[0-9a-zA-Z]+)|(?:[0-9](?:\\.|[a-fA-F]+)?)+)\\b",
+			"name": "constant.numeric.bmx"
+		},
+		{
 			"desc": "Function variables",
-			"begin": "(?<=(\\(|,))\\s*(\\w+\\b)(?!((\\s*\\W\\s*|\\s*:\\s*\\w+\\s*)?\\())",
+			"begin": "(?<=^\\s*\\w*\\s*(?:Function|Method).*)\\b(?<!\\s*=\\W*\\s*)\\s*(\\w+\\b)(?!((\\s*\\W\\s*|\\s*:\\s*\\w+\\s*)?\\())",
 			"end": "(?=.)",
 			"beginCaptures": {
-				"2": {
+				"0": {
 					"name": "variable.parameter.bmx"
 				}
 			}
+		},
+		{
+			"match": "\\.\\.",
+			"name": "keyword.operator.bmx"
 		},
 		{
 			"match": ":",
@@ -79,10 +92,30 @@
 			"name": "punctuation.definition.typeparameters.end.bmx"
 		},
 		{
+			"desc": "Built-in variables",
+			"begin": "\\s*\\b(?i:(AppDir|AppFile|AppTitle|AppArgs|LaunchDir))\\b",
+			"end": "(?=\\W)",
+			"beginCaptures": {
+				"1": {
+					"name": "support.variable.bmx"
+				}
+			}
+		},
+		{
+			"desc": "Built-in keywords",
+			"begin": "\\s*\\b(?i:(Strict|SuperStrict|Assert))\\b",
+			"end": "(?=\\W)",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.bmx"
+				}
+			}
+		},
+		{
 			"desc": "Function and Method definition",
 			"patterns": [
 				{
-					"begin": "(?<=^|^\\s*(?:Private|Public)\\s+|;)\\s*\\b(?i:(Function|Method))\\b",
+					"begin": "(?<=^\\s*\\w*\\s*|;)\\s*\\b(?i:(Function|Method))\\b",
 					"end": "(?=\\W)",
 					"beginCaptures": {
 						"1": {
@@ -102,8 +135,18 @@
 			]
 		},
 		{
+			"desc": "Built-in functions",
+			"begin": "\\s*\\b(?i:(Asc|Chr|IncbinPtr|IncbinLen|Release|Delete|StackAlloc|FieldOffset|StaticArray|Max|Min|Abs|Sgn|RuntimeError|DebugStop|DebugLog|OnEnd|End|ReadStdin|WriteStdout|Delay|UDelay|MilliSecs|MemAlloc|MemFree|MemExtend|MemClear|MemCopy|MemMove|GCSetMode|GCSuspend|GCResume|GCCollect|GCCollectALittle|GCMemAlloced|GCEnter|GCLeave|GCRetain|GCRelease|GCThreadIsRegistered|GCRegisterMyThread|GCUnregisterMyThread|HandleFromObject|HandleToObject|ArrayCopy|IsEmptyArray|IsEmptyString|ObjectIsString))\\b",
+			"end": "(?=\\W)",
+			"beginCaptures": {
+				"1": {
+					"name": "support.function.bmx"
+				}
+			}
+		},
+		{
 			"desc": "Storage",
-			"begin": "(?<=^|;)\\s*\\b(?i:(Private|Public)|(Global|Local|Const))\\b",
+			"begin": "(?<=^|;)\\s*\\b(?i:(Private|Public|Protected|Export|ReadOnly)|(Global|Local|Field|Const))\\b",
 			"end": "(?=\\W|\n)",
 			"beginCaptures": {
 				"1": {
@@ -118,7 +161,7 @@
 			"desc": "Type, Enum, Struct, Interface definition",
 			"patterns": [
 				{
-					"begin": "(?<=^|^\\s*(?:Private|Public)\\s+|;)\\s*\\b(?i:(Type|Enum|Struct|Interface)\\s+([aA-zZ_]\\w*))(?i:\\s*(Extends|Implements|Final|Abstract)\\b\\s*(\\w*))?(?i:\\s*(Extends|Implements|Final|Abstract)\\b\\s*(\\w*))?(?i:\\s*(Extends|Implements|Final|Abstract)\\b\\s*(\\w*))?(?i:\\s*(Extends|Implements|Final|Abstract)\\b\\s*(\\w*))?(?i:\\s*(Extends|Implements|Final|Abstract)\\b\\s*(\\w*))?\\b",
+					"begin": "(?<=^|^\\s*(?:Private|Public|Protected|Export|ReadOnly)\\s+|;)\\s*\\b(?i:(Type|Enum|Struct|Interface)\\s+([aA-zZ_]\\w*))(?i:\\s*(Extends|Implements|Final|Override|Where|Abstract)\\b\\s*(\\w*))?(?i:\\s*(Extends|Implements|Final|Override|Where|Abstract)\\b\\s*(\\w*))?(?i:\\s*(Extends|Implements|Final|Override|Where|Abstract)\\b\\s*(\\w*))?(?i:\\s*(Extends|Implements|Final|Override|Where|Abstract)\\b\\s*(\\w*))?(?i:\\s*(Extends|Implements|Final|Override|Where|Abstract)\\b\\s*(\\w*))?\\b",
 					"end": "(?=\\W)",
 					"beginCaptures": {
 						"1": {
@@ -160,7 +203,7 @@
 		},
 		{
 			"desc": "Constant language",
-			"begin": "\\b(?i:True|False|Null)\\b",
+			"begin": "\\b(?i:True|False|Null|Pi)\\b",
 			"end": "(?=.)",
 			"beginCaptures": {
 				"0": {
@@ -172,7 +215,7 @@
 			"desc": "Operators",
 			"patterns": [
 				{
-					"begin": "\\b(?i:Or|And|Not)\\b",
+					"begin": "\\b(?i:Or|Xor|And|Not|Shl|Shr|Sar|Len|Mod)\\b",
 					"end": "(?=.)",
 					"beginCaptures": {
 						"0": {
@@ -181,7 +224,7 @@
 					}
 				},
 				{
-					"match": "\\=|\\-|\\+|\\*|/|\\~",
+					"match": "\\*|\\-|\\+|\\;|\\:|~|=|!=|<=|>=|<>|<|>|&|\\||/",
 					"name": "keyword.operator.bmx"
 				}
 			]
@@ -197,10 +240,20 @@
 			"name": "keyword.operator.new.bmx"
 		},
 		{
+			"desc": "Deprecated",
+			"begin": "(?<=^|\\W|;)\\s*\\b(?i:(Goto|DefData|ReadData|RestoreData))\\b",
+			"end": "(?=\\W)",
+			"beginCaptures": {
+				"1": {
+					"name": "invalid.deprecated.bmx"
+				}
+			}
+		},
+		{
 			"desc": "Control keywords",
 			"patterns": [
 				{
-					"begin": "(?<=^|\\W|;)\\s*\\b(?i:(Try|Catch|If|Then|Else|Else If|End|For|While|Wend|Repeat|Forever|Until|Next|Continue|Select|Default|Case|Return))\\b",
+					"begin": "(?<=^|\\W|;)\\s*\\b(?i:(Try|Catch|Finally|Extern|If|Then|Else|Else If|End|For|To|Step|Each|EachIn|While|Wend|Repeat|Forever|Until|Next|Continue|Exit|Select|Default|Case|Return))\\b",
 					"end": "(?=\\W)",
 					"beginCaptures": {
 						"1": {
@@ -209,7 +262,7 @@
 					}
 				},
 				{
-					"begin": "(?<=^|;)\\s*\\b(?i:(End\\s*(Try|If|Select)))\\b",
+					"begin": "(?<=^|;)\\s*\\b(?i:(End\\s*(Try|If|Extern|While|Select)))\\b",
 					"end": "(?=\\W|\n)",
 					"beginCaptures": {
 						"1": {
@@ -220,8 +273,30 @@
 			]
 		},
 		{
+			"desc": "Imports and Includes",
+			"begin": "(?=^)\\s*\\b(?i:(Framework)|(Import)|(Include)|(Incbin)|(Module|ModuleInfo))\\b",
+			"end": "(?=.)",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.framework.bmx"
+				},
+				"2": {
+					"name": "keyword.control.import.bmx"
+				},
+				"3": {
+					"name": "keyword.control.include.bmx"
+				},
+				"4": {
+					"name": "keyword.control.incbin.bmx"
+				},
+				"5": {
+					"name": "keyword.control.module.bmx"
+				}
+			}
+		},
+		{
 			"desc": "Function and Method names",
-			"begin": "(?<!\\d|:|\\b(?i:New)\\s+)(?!\\b(?i:New|Or|And|Not))(\\b[aA-zZ_]\\w*)(?=\\s*(:\\s*\\w+|(%|#|!|\\$))?\\s*\\()",
+			"begin": "(?<!\\d|:|\\b(?i:New)\\s+)(?!\\b(?i:New|Or|Xor|And|Not|Shl|Shr|Sar|Len|Mod))(\\b[aA-zZ_]\\w*)(?=\\s*(:\\s*\\w+|(%|#|!|\\$))?\\s*\\()",
 			"end": "(?=\\W)",
 			"beginCaptures": {
 				"1": {
@@ -231,7 +306,7 @@
 		},
 		{
 			"desc": "Sloppy Function and Method names",
-			"begin": "(?<!\\W)\\s*(?!\\b(?i:New|Or|And|Not))(\\b[aA-zZ_]\\w*)(?=\\s+(?:\"|\\.|[^\\W]))",
+			"begin": "(?<!\\W)\\s*(?!\\b(?i:New|Or|Xor|And|Not|Shl|Shr|Sar|Len|Mod))(\\b[aA-zZ_]\\w*)(?=\\s+(?:\"|\\.|[^\\W]))",
 			"end": "(?=.)",
 			"beginCaptures": {
 				"1": {
@@ -241,7 +316,7 @@
 		},
 		{
 			"desc": "Built-in types",
-			"begin": "(?<=:|\\b(?i:New)\\s+)\\s*\\b(Object|Byte|Short|Int|UInt|Long|ULong|Float|Double|String|Size_T|Float64|Int128|Float128|Double128|Typename|ElementType|ReturnTypeValueType Ptr|VariableType Var)",
+			"begin": "(?<=:|\\b(?i:New)\\s+)\\s*\\b(Object|Byte|Short|Int|UInt|Long|ULong|Float|Double|String|Size_T|Float64|Int128|Float128|Double128|Typename|ElementType|ReturnTypeValueType Ptr|VariableType Var|Ptr|TBlitzException|TNullObjectException|TNullMethodException|TNullFunctionException|TArrayBoundsException|TOutOfDataException|TRuntimeException|TInvalidEnumException|IIterable|IIterator|IDisposable|LParam|WParam|Var|Ptr)",
 			"end": "(?:\\W)",
 			"beginCaptures": {
 				"1": {

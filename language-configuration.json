@@ -84,19 +84,15 @@
 	},
 	"indentationRules": {
 		"increaseIndentPattern": {
-			"pattern": "(?:^|^\\s*(Private|Public)\\s+|;)\\s*\\b(If\\s+|For\\s+|While\\s*|Select|Function\\s*|Method\\s*|Enum\\s*|Interface\\s*|Type\\s*|Struct\\s*|Private\\s*$|Else\\s*)\\b",
+			"pattern": "(?:^|^\\s*(Private|Public)\\s+|;)\\s*\\b(If\\s+|For\\s+|Repeat|While\\s*|Select\\s*|Try\\s*|Case\\s*|Catch\\s*|Function\\s*|Method\\s*|Enum\\s*|Interface\\s*|Type\\s*|Struct\\s*|Private(\\s*|\\s*'.*)$|Else\\s*|ElseIf\\s*)\\b",
 			"flags": "i"
 		},
 		"decreaseIndentPattern": {
-			"pattern": "(?:^|;)\\s*\\b(End\\s*(If|Select|Function|Method|Enum|Interface|Type|Struct)\\s*|Next\\s*|Wend\\s*|Public\\s*$|Else\\s*)\\b",
-			"flags": "i"
-		},
-		"indentNextLinePattern": {
-			"pattern": "(?:^|;)\\s*\\bCase\\b",
+			"pattern": "(?:^)\\s*\\b(End\\s*(If|Select|Function|Method|Enum|Interface|Type|Struct|Try|While)\\s*|Next\\s*|Until\\s*|Forever\\s*|Wend\\s*|Public(\\s*|\\s*'.*)$|Case\\s*|Catch\\s*|Else\\s*|ElseIf\\s*)\\b",
 			"flags": "i"
 		},
 		"unIndentedLinePattern": {
-			"pattern": "(?:^|;)\\s*\\bIf\\s+.*(Then\\s+\\w+|Return\\s*.*$)",
+			"pattern": "(;\\s*End\\s*\\w+(\\s*|\\s*'.*)$|(?:^|;)\\s*\\bIf\\s+.*(Then\\s+\\w+|\\;\\s*$|(Return.*|Exit|Continue)(\\s*|\\s*'.*)$|\\w\\s+\\w.*\\)(\\s*|\\s*'.*)$)|\\W+\\s+Abstract(\\s+|\\s*$))",
 			"flags": "i"
 		}
 	},
@@ -104,6 +100,7 @@
 		{
 			"previousLineText": "(?:^|;)\\s*\\b[fF][uU][nN][cC][tT][iI][oO][nN]+\\b\\s+\\w+",
 			"beforeText": "(?:^|;)\\s*$",
+			"afterText": "^\\s*$",
 			"action": {
 				"indent": "outdent",
 				"appendText": "EndFunction"
@@ -112,6 +109,7 @@
 		{
 			"previousLineText": "(?:^|;)\\s*\\b[mM][eE][tT][hH][oO][dD]+\\b\\s+\\w+",
 			"beforeText": "(?:^|;)\\s*$",
+			"afterText": "^\\s*$",
 			"action": {
 				"indent": "outdent",
 				"appendText": "EndMethod"
@@ -120,6 +118,7 @@
 		{
 			"previousLineText": "(?:^|;)\\s*\\b[tT][yY][pP][eE]+\\b\\s+\\w+",
 			"beforeText": "(?:^|;)\\s*$",
+			"afterText": "^\\s*$",
 			"action": {
 				"indent": "outdent",
 				"appendText": "EndType"
@@ -128,6 +127,7 @@
 		{
 			"previousLineText": "(?:^|;)\\s*\\b[sS][tT][rR][uU][cC][tT]+\\b\\s+\\w+",
 			"beforeText": "(?:^|;)\\s*$",
+			"afterText": "^\\s*$",
 			"action": {
 				"indent": "outdent",
 				"appendText": "EndStruct"
@@ -136,6 +136,7 @@
 		{
 			"previousLineText": "(?:^|;)\\s*\\b[eE][nN][uU][mM]+\\b\\s+\\w+",
 			"beforeText": "(?:^|;)\\s*$",
+			"afterText": "^\\s*$",
 			"action": {
 				"indent": "outdent",
 				"appendText": "EndEnum"
@@ -144,6 +145,7 @@
 		{
 			"previousLineText": "(?:^|;)\\s*\\b[iI][nN][tT][eE][rR][fF][aA][cC][eE]+\\b\\s+\\w+",
 			"beforeText": "(?:^|;)\\s*$",
+			"afterText": "^\\s*$",
 			"action": {
 				"indent": "outdent",
 				"appendText": "EndInterface"
@@ -152,6 +154,7 @@
 		{
 			"previousLineText": "(?:^|;)\\s*\\b[wW][hH][iI][lL][eE]+\\b\\s+\\w+",
 			"beforeText": "(?:^|;)\\s*$",
+			"afterText": "^\\s*$",
 			"action": {
 				"indent": "outdent",
 				"appendText": "Wend"
@@ -160,6 +163,7 @@
 		{
 			"previousLineText": "(?:^|;)\\s*\\b[fF][oO][rR]+\\b\\s+\\w+",
 			"beforeText": "(?:^|;)\\s*$",
+			"afterText": "^\\s*$",
 			"action": {
 				"indent": "outdent",
 				"appendText": "Next"
@@ -168,6 +172,7 @@
 		{
 			"previousLineText": "(?:^|;)\\s*\\b[sS][eE][lL][eE][cC][tT]+\\b\\s+\\w+",
 			"beforeText": "(?:^|;)\\s*$",
+			"afterText": "^\\s*$",
 			"action": {
 				"indent": "outdent",
 				"appendText": "\tCase \n\tEndSelect"
@@ -176,6 +181,7 @@
 		{
 			"previousLineText": "(?:^|;)\\s*\\b[rR][eE][mM]\\b",
 			"beforeText": "(?:^|;)\\s*$",
+			"afterText": "^\\s*$",
 			"action": {
 				"indent": "outdent",
 				"appendText": "EndRem"
@@ -184,6 +190,7 @@
 		{
 			"previousLineText": "(?:^|;)\\s*\\?\\s*",
 			"beforeText": "(?:^|;)\\s*$",
+			"afterText": "^\\s*$",
 			"action": {
 				"indent": "outdent",
 				"appendText": "?"
@@ -192,6 +199,7 @@
 		{
 			"previousLineText": "(?:^|;)\\s*\\b[pP][rR][iI][vV][aA][tT][eE]\\b",
 			"beforeText": "(?:^|;)\\s*$",
+			"afterText": "^\\s*$",
 			"action": {
 				"indent": "outdent",
 				"appendText": "Public"
@@ -200,6 +208,7 @@
 		{
 			"previousLineText": "(?:^|;)\\s*\\b[iI][fF]\\s+\\w+",
 			"beforeText": "(?:^|;)\\s*$",
+			"afterText": "^\\s*$",
 			"action": {
 				"indent": "outdent",
 				"appendText": "EndIf"

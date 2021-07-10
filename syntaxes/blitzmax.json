@@ -258,7 +258,7 @@
 			"desc": "Control keywords",
 			"patterns": [
 				{
-					"begin": "(?<!(?i:End))\\s*\\b(?i:(Try|Catch|Finally|Extern|If|Then|Else|Else If|End|For|To|Step|Each|EachIn|While|Wend|Repeat|Forever|Until|Next|Continue|Exit|Select|Default|Case|Return))\\b",
+					"begin": "(?<!(?i:End))\\s*\\b(?i:(Try|Catch|Finally|Extern|If|Then|Else|Else\\s*If|End|For|To|Step|Each|EachIn|While|Wend|Repeat|Forever|Until|Next|Continue|Exit|Select|Default|Case|Return))\\b",
 					"end": "(?=.)",
 					"beginCaptures": {
 						"1": {
@@ -267,7 +267,7 @@
 					}
 				},
 				{
-					"begin": "(?i:(End\\s*(Try|If|Extern|While|Select)))",
+					"begin": "(?i:(\\s*End\\s*(Try|If|Extern|While|Select)))",
 					"end": "(?=.)",
 					"beginCaptures": {
 						"0": {
@@ -279,9 +279,12 @@
 		},
 		{
 			"desc": "Imports and Includes",
-			"begin": "(?=^)\\s*\\b(?i:(Framework)|(Import)|(Include)|(Incbin)|(Module|ModuleInfo))\\b",
+			"begin": "(?=^)\\s*\\b(?i:(Framework)|(Import)|(Include)|(Incbin)|(Module|ModuleInfo))\\b(\\s+.+)?",
 			"end": "(?=.)",
 			"beginCaptures": {
+				"0": {
+					"name": "variable.other.readwrite.alias.bmx"
+				},
 				"1": {
 					"name": "keyword.control.framework.bmx"
 				},

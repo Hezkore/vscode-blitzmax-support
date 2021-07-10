@@ -30,8 +30,18 @@
 			"name": "constant.numeric.bmx"
 		},
 		{
+			"desc": "Built-in types",
+			"begin": "(?<=:|\\b(?i:New)\\s+)\\s*\\b(Object|Byte|Short|Int|UInt|Long|ULong|Float|Double|String|Size_T|Float64|Int128|Float128|Double128|Typename|ElementType|ReturnTypeValueType Ptr|VariableType Var|Ptr|TBlitzException|TNullObjectException|TNullMethodException|TNullFunctionException|TArrayBoundsException|TOutOfDataException|TRuntimeException|TInvalidEnumException|IIterable|IIterator|IDisposable|LParam|WParam|Var|Ptr)",
+			"end": "(?:\\W)",
+			"beginCaptures": {
+				"1": {
+					"name": "support.type.bmx"
+				}
+			}
+		},
+		{
 			"desc": "Function variables",
-			"begin": "(?<=^\\s*\\w*\\s*(?:Function|Method).*)\\b(?<!\\s*=\\W*\\s*)\\s*(\\w+\\b)(?!((\\s*\\W\\s*|\\s*:\\s*\\w+\\s*)?\\())",
+			"begin": "(?<=^\\s*\\w*\\s*(?:Function|Method).*)\\b(?<!\\s*=\\W*\\s*|\\).*)\\s*(\\w+\\b)(?!((\\s*\\W\\s*|\\s*:\\s*\\w+\\s*)?\\())",
 			"end": "(?=.)",
 			"beginCaptures": {
 				"0": {
@@ -92,6 +102,55 @@
 			"name": "punctuation.definition.typeparameters.end.bmx"
 		},
 		{
+			"desc": "Storage modifiers",
+			"match": "\\s+(Extends|Implements|Final|Override|Where|Abstract)\\s*",
+			"name": "storage.modifier.bmx.bmx"
+		},
+		{
+			"desc": "Type, Enum, Struct, Interface definition",
+			"patterns": [
+				{
+					"begin": "(?<=^|^\\s*(?:Private|Public|Protected|Export|ReadOnly)\\s+|;)\\s*\\b(?i:(Type|Enum|Struct|Interface)\\s+([aA-zZ_]\\w*))(?i:\\s*(Extends|Implements|Final|Override|Where|Abstract)\\b\\s*(\\w*))?(?i:\\s*(Extends|Implements|Final|Override|Where|Abstract)\\b\\s*(\\w*))?(?i:\\s*(Extends|Implements|Final|Override|Where|Abstract)\\b\\s*(\\w*))?(?i:\\s*(Extends|Implements|Final|Override|Where|Abstract)\\b\\s*(\\w*))?(?i:\\s*(Extends|Implements|Final|Override|Where|Abstract)\\b\\s*(\\w*))?\\b",
+					"end": "(?=\\W)",
+					"beginCaptures": {
+						"1": {
+							"name": "storage.type.class.bmx"
+						},
+						"2": {
+							"name": "entity.name.type.bmx"
+						},
+						"0": {
+							"name": "storage.modifier.bmx"
+						},
+						"4": {
+							"name": "entity.name.type.bmx"
+						},
+						"6": {
+							"name": "entity.name.type.bmx"
+						},
+						"8": {
+							"name": "entity.name.type.bmx"
+						},
+						"10": {
+							"name": "entity.name.type.bmx"
+						},
+						"12": {
+							"name": "entity.name.type.bmx"
+						}
+					}
+				},
+				{
+					"begin": "(?<=^|;)\\s*\\b(?i:(End\\s*(Type|Enum|Struct|Interface)))\\b",
+					"end": "(?=\\W|\n)",
+					"beginCaptures": {
+						"0": {
+							"name": "storage.type.class.bmx"
+						}
+					}
+				}
+			]
+		},
+		{
 			"desc": "Built-in variables",
 			"begin": "\\s*\\b(?i:(AppDir|AppFile|AppTitle|AppArgs|LaunchDir))\\b",
 			"end": "(?=\\W)",
@@ -135,16 +194,6 @@
 			]
 		},
 		{
-			"desc": "Built-in functions",
-			"begin": "\\s*\\b(?i:(Asc|Chr|IncbinPtr|IncbinLen|Release|Delete|StackAlloc|FieldOffset|StaticArray|Max|Min|Abs|Sgn|RuntimeError|DebugStop|DebugLog|OnEnd|End|ReadStdin|WriteStdout|Delay|UDelay|MilliSecs|MemAlloc|MemFree|MemExtend|MemClear|MemCopy|MemMove|GCSetMode|GCSuspend|GCResume|GCCollect|GCCollectALittle|GCMemAlloced|GCEnter|GCLeave|GCRetain|GCRelease|GCThreadIsRegistered|GCRegisterMyThread|GCUnregisterMyThread|HandleFromObject|HandleToObject|ArrayCopy|IsEmptyArray|IsEmptyString|ObjectIsString))\\b",
-			"end": "(?=\\W)",
-			"beginCaptures": {
-				"1": {
-					"name": "support.function.bmx"
-				}
-			}
-		},
-		{
 			"desc": "Storage",
 			"begin": "(?<=^|;)\\s*\\b(?i:(Private|Public|Protected|Export|ReadOnly)|(Global|Local|Field|Const))\\b",
 			"end": "(?=\\W|\n)",
@@ -156,50 +205,6 @@
 					"name": "storage.type.bmx"
 				}
 			}
-		},
-		{
-			"desc": "Type, Enum, Struct, Interface definition",
-			"patterns": [
-				{
-					"begin": "(?<=^|^\\s*(?:Private|Public|Protected|Export|ReadOnly)\\s+|;)\\s*\\b(?i:(Type|Enum|Struct|Interface)\\s+([aA-zZ_]\\w*))(?i:\\s*(Extends|Implements|Final|Override|Where|Abstract)\\b\\s*(\\w*))?(?i:\\s*(Extends|Implements|Final|Override|Where|Abstract)\\b\\s*(\\w*))?(?i:\\s*(Extends|Implements|Final|Override|Where|Abstract)\\b\\s*(\\w*))?(?i:\\s*(Extends|Implements|Final|Override|Where|Abstract)\\b\\s*(\\w*))?(?i:\\s*(Extends|Implements|Final|Override|Where|Abstract)\\b\\s*(\\w*))?\\b",
-					"end": "(?=\\W)",
-					"beginCaptures": {
-						"1": {
-							"name": "storage.type.class.bmx"
-						},
-						"2": {
-							"name": "entity.name.type.bmx"
-						},
-						"0": {
-							"name": "storage.modifier.bmx"
-						},
-						"4": {
-							"name": "entity.name.type.bmx"
-						},
-						"6": {
-							"name": "entity.name.type.bmx"
-						},
-						"8": {
-							"name": "entity.name.type.bmx"
-						},
-						"10": {
-							"name": "entity.name.type.bmx"
-						},
-						"12": {
-							"name": "entity.name.type.bmx"
-						}
-					}
-				},
-				{
-					"begin": "(?<=^|;)\\s*\\b(?i:(End\\s*(Type|Enum|Struct|Interface)))\\b",
-					"end": "(?=\\W|\n)",
-					"beginCaptures": {
-						"1": {
-							"name": "storage.type.class.bmx"
-						}
-					}
-				}
-			]
 		},
 		{
 			"desc": "Constant language",
@@ -215,7 +220,7 @@
 			"desc": "Operators",
 			"patterns": [
 				{
-					"begin": "\\b(?i:Or|Xor|And|Not|Shl|Shr|Sar|Len|Mod)\\b",
+					"begin": "\\s+(?i:Or|Xor|And|Not|Shl|Shr|Sar|Len|Mod)\\s+",
 					"end": "(?=.)",
 					"beginCaptures": {
 						"0": {
@@ -253,7 +258,7 @@
 			"desc": "Control keywords",
 			"patterns": [
 				{
-					"begin": "\\s*\\b(?i:(Try|Catch|Finally|Extern|If|Then|Else|Else If|End|For|To|Step|Each|EachIn|While|Wend|Repeat|Forever|Until|Next|Continue|Exit|Select|Default|Case|Return))\\b",
+					"begin": "(?<!(?i:End))\\s*\\b(?i:(Try|Catch|Finally|Extern|If|Then|Else|Else If|End|For|To|Step|Each|EachIn|While|Wend|Repeat|Forever|Until|Next|Continue|Exit|Select|Default|Case|Return))\\b",
 					"end": "(?=.)",
 					"beginCaptures": {
 						"1": {
@@ -262,11 +267,11 @@
 					}
 				},
 				{
-					"begin": "(?<=^|;)\\s*\\b(?i:(End\\s*(Try|If|Extern|While|Select)))\\b",
-					"end": "(?=\\W|\n)",
+					"begin": "(?i:(End\\s*(Try|If|Extern|While|Select)))",
+					"end": "(?=.)",
 					"beginCaptures": {
-						"1": {
-							"name": "keyword.control.bmx"
+						"0": {
+							"name": "keyword.control.end.bmx"
 						}
 					}
 				}
@@ -296,7 +301,7 @@
 		},
 		{
 			"desc": "Function and Method names",
-			"begin": "(?<!\\d|:|\\b(?i:New)\\s+)(?!\\b(?i:New|Or|Xor|And|Not|Shl|Shr|Sar|Len|Mod))(\\b[aA-zZ_]\\w*)(?=\\s*(:\\s*\\w+|(%|#|!|\\$))?\\s*\\()",
+			"begin": "(?<!\\d|:|\\b(?i:New)\\s+)(?!\\s+(?i:New|Or|Xor|And|Not|Shl|Shr|Sar|Len|Mod)\\s+)(\\b[aA-zZ_]\\w*)(?=\\s*(:\\s*\\w+|(%|#|!|\\$))?\\s*\\()",
 			"end": "(?=\\W)",
 			"beginCaptures": {
 				"1": {
@@ -318,24 +323,14 @@
 				},
 				{
 					"begin": "(?<=^|;)\\s*(\\w+)(?=\\s*$)",
-						"end": "(?=.)",
-						"beginCaptures": {
-							"1": {
-								"name": "entity.name.function.bmx"
-							}
+					"end": "(?=.)",
+					"beginCaptures": {
+						"1": {
+							"name": "entity.name.function.bmx"
 						}
+					}
 				}
 			]
-		},
-		{
-			"desc": "Built-in types",
-			"begin": "(?<=:|\\b(?i:New)\\s+)\\s*\\b(Object|Byte|Short|Int|UInt|Long|ULong|Float|Double|String|Size_T|Float64|Int128|Float128|Double128|Typename|ElementType|ReturnTypeValueType Ptr|VariableType Var|Ptr|TBlitzException|TNullObjectException|TNullMethodException|TNullFunctionException|TArrayBoundsException|TOutOfDataException|TRuntimeException|TInvalidEnumException|IIterable|IIterator|IDisposable|LParam|WParam|Var|Ptr)",
-			"end": "(?:\\W)",
-			"beginCaptures": {
-				"1": {
-					"name": "support.type.bmx"
-				}
-			}
 		},
 		{
 			"desc": "BASIC style type tags",
@@ -344,6 +339,17 @@
 			"beginCaptures": {
 				"1": {
 					"name": "support.type.basic.bmx"
+				}
+			}
+		},
+		
+		{
+			"desc": "Built-in functions",
+			"begin": "\\s*\\b(?i:(End|Asc|Chr|IncbinPtr|IncbinLen|Release|Delete|StackAlloc|FieldOffset|StaticArray|Max|Min|Abs|Sgn|RuntimeError|DebugStop|DebugLog|OnEnd|ReadStdin|WriteStdout|Delay|UDelay|MilliSecs|MemAlloc|MemFree|MemExtend|MemClear|MemCopy|MemMove|GCSetMode|GCSuspend|GCResume|GCCollect|GCCollectALittle|GCMemAlloced|GCEnter|GCLeave|GCRetain|GCRelease|GCThreadIsRegistered|GCRegisterMyThread|GCUnregisterMyThread|HandleFromObject|HandleToObject|ArrayCopy|IsEmptyArray|IsEmptyString|ObjectIsString))\\b",
+			"end": "(?=\\W)",
+			"beginCaptures": {
+				"1": {
+					"name": "support.function.bmx"
 				}
 			}
 		},

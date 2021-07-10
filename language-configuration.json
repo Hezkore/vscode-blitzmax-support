@@ -84,17 +84,18 @@
 	},
 	"indentationRules": {
 		"increaseIndentPattern": {
-			"pattern": "(?:^|^\\s*(Private|Public)\\s+|;)\\s*\\b(If\\s+|For\\s+|Repeat|While\\s*|Select\\s*|Try\\s*|Case\\s*|Catch\\s*|Function\\s*|Method\\s*|Enum\\s*|Interface\\s*|Type\\s*|Struct\\s*|Private(\\s*|\\s*'.*)$|Else\\s*|ElseIf\\s*)\\b",
+			"pattern": "(?:^|^\\s*(Private|Public)\\s+|;)\\s*\\b(If\\s+(?!.*(\\.\\.(\\s*|\\s*'.*)$|\\;\\s*\\.*|New\\s+\\w+|\\s+\\w+.*(=|:\\W)\\s*.*(\\w+|\\W)(\\s*|\\s*'.*)$))|For\\s+|Repeat|Rem|While\\s*|Select\\s*|Try\\s*|Case\\s*|Catch\\s*|Function\\s*|Method\\s*|Enum\\s*|Interface\\s*|Type\\s*|Struct\\s*|Private(\\s*|\\s*'.*)$|Else\\s*|ElseIf\\s*)\\b",
 			"flags": "i"
 		},
 		"decreaseIndentPattern": {
-			"pattern": "(?:^)\\s*\\b(End\\s*(If|Select|Function|Method|Enum|Interface|Type|Struct|Try|While)\\s*|Next\\s*|Until\\s*|Forever\\s*|Wend\\s*|Public(\\s*|\\s*'.*)$|Case\\s*|Catch\\s*|Else\\s*|ElseIf\\s*)\\b",
+			"pattern": "(?:^)\\s*\\b(End\\s*(If|Select|Function|Method|Enum|Interface|Type|Struct|Try|While)\\s*|End\\s*Rem|Next\\s*|Until\\s*|Forever\\s*|Wend\\s*|Public(\\s*|\\s*'.*)$|Case\\s*|Catch\\s*|Else\\s*|ElseIf\\s*)\\b",
 			"flags": "i"
 		},
 		"unIndentedLinePattern": {
-			"pattern": "(;\\s*End\\s*\\w+(\\s*|\\s*'.*)$|(?:^|;)\\s*\\bIf.*(Return(\\s+.*|(\\s*|\\s*'.*)$)|;\\s*\\w+\\s*=\\s*\\w*|Exit|Continue)(\\s*|\\s*'.*)$|(?:^|;)\\s*\\bIf\\s+(?!.*\\s+(Or|Xor|And|Not|Shl|Shr|Sar|Len|Mod)\\s+\\w+).*(Then\\s+\\w+|\\;\\s*$|\\s+\\w.*\\)(\\s*|\\s*'.*)$)|\\W+\\s+Abstract(\\s+|\\s*$))",
+			"pattern": "(;\\s*End\\s*\\w+(\\s*|\\s*'.*)$|(?:^|;)\\s*\\bIf.*(\\s+|;)(Return(;.*|\\s+.*|(\\s*|\\s*'.*)$)|Exit|Continue)(\\s*|\\s*'.*)$|(?:^|;)\\s*\\bIf\\s+(?!.*\\s+(Or|Xor|And|Not|Shl|Shr|Sar|Len|Mod)\\s+\\w+).*(Then\\s+\\w+|\\;\\s*$|\\s+\\w.*\\)(\\s*|\\s*'.*)$)|\\W+\\s+Abstract(\\s+|\\s*$))",
 			"flags": "i"
-		}
+		},
+		"indentNextLinePattern": ".*\\.\\.(\\s*|\\s*'.*)$"
 	},
 	"onEnterRules": [
 		{

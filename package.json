@@ -1,6 +1,6 @@
 {
 	"name": "blitzmax",
-	"version": "2.16.0",
+	"version": "2.16.1",
 	"publisher": "Hezkore",
 	"displayName": "BlitzMax",
 	"description": "BlitzMax for Visual Studio Code.",
@@ -91,6 +91,13 @@
 		"onCommand:blitzmax.settings"
 	],
 	"contributes": {
+		"configurationDefaults": {
+			"[blitzmax]": {
+				"editor.insertSpaces": false,
+				"editor.detectIndentation": false,
+				"editor.showFoldingControls": "always"
+			}
+		},
 		"walkthroughs": [
 			{
 				"id": "config bmx",

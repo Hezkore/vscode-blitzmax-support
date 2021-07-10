@@ -1,3 +1,7 @@
+## 2.16.1
+* More work on grammar syntax and language configuration
+* New BlitzMax-like default text settings
+
 ## 2.16.0
 * Complete re-write of the grammar syntax and language configuration
 	* This fixes a lot of syntax highlighting issues, indention issues, allows VS Code to make smarter decisions when it comes to BlitzMax quirks, and allows usage of the 'Reindent Lines' command to some degree

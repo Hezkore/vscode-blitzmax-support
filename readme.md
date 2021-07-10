@@ -1,6 +1,4 @@
 # BlitzMax for Visual Studio Code
-[![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/Hezkore/vscode-blitzmax-support)
-
 [![Version](https://vsmarketplacebadge.apphb.com/version/hezkore.BlitzMax.svg)](https://marketplace.visualstudio.com/items?itemName=hezkore.Blitzmax)\
 [![Installs](https://vsmarketplacebadge.apphb.com/installs-short/hezkore.BlitzMax.svg)](https://marketplace.visualstudio.com/items?itemName=hezkore.BlitzMax)
 

@@ -22,15 +22,15 @@ export function generateCommandText( command: string, args: any[] ) {
 export const waitFor = async ( condFunc: () => boolean ) => {
 	return new Promise<void>( ( resolve ) => {
 		if ( condFunc() ) {
-			resolve();
+			resolve()
 		}
 		else {
 			setTimeout( async () => {
-				await waitFor( condFunc );
-				resolve();
-			}, 100 );
+				await waitFor( condFunc )
+				resolve()
+			}, 100 )
 		}
-	} );
+	} )
 };
 
 export function debugDelay( ms: number ) {

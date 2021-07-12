@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode'
 
-let workspaceSymbols: Map<string, BmxWorkspaceSymbol[]>
+export let workspaceSymbols: Map<string, BmxWorkspaceSymbol[]>
 
 export function registerSymbolProvider( context: vscode.ExtensionContext ) {
 	workspaceSymbols = new Map()
@@ -31,6 +31,23 @@ interface BmxWorkspaceSymbol {
 	symbolInformation: vscode.SymbolInformation
 }
 
+export function CacheWorkspaceSymbols() {
+	return new Promise<void>( async ( resolve ) => {
+		
+		const files = await vscode.workspace.findFiles( '**/*.bmx', '**/.bmx/**' )
+		
+		for ( let index = 0; index < files.length; index++ ) {
+			const file = files[index]
+			if ( !workspaceSymbols.has( file.fsPath ) ) {
+				const document = await vscode.workspace.openTextDocument( file.fsPath )
+				GetBmxDocSymbols( document )
+			}
+		}
+		
+		resolve()
+	} )
+}
+
 export class BmxWorkspaceSymbolProvider implements vscode.WorkspaceSymbolProvider {
 	public async provideWorkspaceSymbols( query: string ): Promise<vscode.SymbolInformation[]> {
 
@@ -40,19 +57,13 @@ export class BmxWorkspaceSymbolProvider implements vscode.WorkspaceSymbolProvide
 
 
 		// Make sure we've got symbols for all files
-		const files = await vscode.workspace.findFiles( '**/*.bmx', '**/.bmx/**' )
-		for (let index = 0; index < files.length; index++) {
-			const file = files[index]
-			if ( !workspaceSymbols.has( file.fsPath ) ) {
-				await vscode.workspace.openTextDocument( file.fsPath ).then( document => {
-					GetBmxDocSymbols( document )
-				} )
-			}
-		}
+		await CacheWorkspaceSymbols()
 
 		// Check for matches
 		workspaceSymbols.forEach( symbols => {
 			for ( let index = 0; index < symbols.length; index++ ) {
+				if ( symbols[index].symbolInformation.kind == vscode.SymbolKind.TypeParameter )
+					continue
 				const symbol = symbols[index]
 				if ( symbol.searchName.includes( query ) ) matches.push( symbol.symbolInformation )
 			}
@@ -99,7 +110,6 @@ function GetBmxDocSymbols( document: vscode.TextDocument ): vscode.DocumentSymbo
 		//.toLowerCase()
 
 		if ( lineCleanText.length < 2 ) continue
-
 		const words: string[] = lineCleanText.split( ' ' )
 		if ( words.length < 0 ) continue
 
@@ -107,7 +117,7 @@ function GetBmxDocSymbols( document: vscode.TextDocument ): vscode.DocumentSymbo
 
 		let firstWordOffset: number = 0
 		let firstWord: string = words[0].toLowerCase()
-		let firstWordLength: number = firstWord.length
+		let firstWordLength: number = firstWord.length	
 		if ( firstWord == 'end' && words.length > 1 ) {
 
 			let foundWord: string | undefined
@@ -191,8 +201,12 @@ function GetBmxDocSymbols( document: vscode.TextDocument ): vscode.DocumentSymbo
 				break
 
 			case 'global':
-			case 'local':
 				isSymbolKind = vscode.SymbolKind.Variable
+				supportsMultiDefine = true
+				break
+			
+			case 'local':
+				isSymbolKind = vscode.SymbolKind.TypeParameter // Not correct, but what am I do to?!
 				supportsMultiDefine = true
 				break
 
@@ -314,7 +328,7 @@ function GetBmxDocSymbols( document: vscode.TextDocument ): vscode.DocumentSymbo
 
 					// Where do we push the symbol?
 					if ( containers.length > 0 ) {
-						containers[containers.length - 1].children.push( symbol )
+						if (symbol.kind != vscode.SymbolKind.TypeParameter) containers[containers.length - 1].children.push( symbol )
 						workspaceSymbols.get( document.uri.fsPath )?.push(
 							{
 								searchName: symbol.name.toLowerCase(),
@@ -324,9 +338,8 @@ function GetBmxDocSymbols( document: vscode.TextDocument ): vscode.DocumentSymbo
 									)
 							}
 						)
-
 					} else {
-						symbols.push( symbol )
+						if (symbol.kind != vscode.SymbolKind.TypeParameter) symbols.push( symbol )
 						workspaceSymbols.get( document.uri.fsPath )?.push(
 							{
 								searchName: symbol.name.toLowerCase(),

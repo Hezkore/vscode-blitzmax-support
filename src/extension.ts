@@ -13,8 +13,9 @@ import { registerColorProvider } from './colorprovider'
 import { registerDocsTreeProvider } from './docstree'
 import { registerBuildTreeProvider } from './buildtree'
 import { registerSymbolProvider } from './symbolprovider'
-import { registerFormatterProvider } from './formatterprovider'
 import { registerTerminalLinkProvider } from './linkprovider'
+import { registerFormatterProvider } from './formatterprovider'
+import { registerDefinitionProvider } from './definitionprovider'
 import { registerCompletionProvider } from './completionprovider'
 import { registerSignatureHelpProvider } from './signaturehelpprovider'
 
@@ -32,6 +33,7 @@ export function activate( context: vscode.ExtensionContext ) {
 	registerDocsTreeProvider( context )
 	registerBuildTreeProvider( context )
 	registerFormatterProvider( context )
+	registerDefinitionProvider( context )
 	registerCompletionProvider( context )
 	registerTerminalLinkProvider( context )
 	registerSignatureHelpProvider( context )

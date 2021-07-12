@@ -1,3 +1,6 @@
+## 2.17.0
+* Linked 'Go to Definition' function to 'Go to Symbol in Workspace' function
+
 ## 2.16.2
 * Adjusted BlitzMax-like default text settings
 

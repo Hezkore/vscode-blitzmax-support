@@ -27,19 +27,23 @@
 	"autoClosingPairs": [
 		{
 			"open": "{",
-			"close": "}"
+			"close": "}",
+			"notIn": [
+				"string",
+				"comment"
+			]
 		},
 		{
 			"open": "[",
-			"close": "]"
+			"close": "]",
+			"notIn": [
+				"string",
+				"comment"
+			]
 		},
 		{
 			"open": "(",
-			"close": ")"
-		},
-		{
-			"open": "<",
-			"close": ">",
+			"close": ")",
 			"notIn": [
 				"string",
 				"comment"

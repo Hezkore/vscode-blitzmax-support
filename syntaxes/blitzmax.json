@@ -15,10 +15,10 @@
 			"include": "#storage"
 		},
 		{
-			"include": "#function-name"
+			"include": "#type-name"
 		},
 		{
-			"include": "#type-name"
+			"include": "#function-name"
 		}
 	],
 	"repository": {
@@ -58,8 +58,8 @@
 			]
 		},
 		"comment-block": {
-			"begin": "^\\s*(?i:rem)\\b(?:\\s*$|\\s+.*)",
-			"end": "^\\s*(?i:end\\s?rem)\\b\\s*",
+			"begin": "(?i)^\\s*rem\\b(?:\\s*$|\\s+.*)",
+			"end": "(?i)^\\s*end\\s?rem\\b\\s*",
 			"beginCaptures": {
 				"0": {
 					"name": "comment.block.begin.bmx"
@@ -105,6 +105,12 @@
 					"include": "#try-catch-finally-endtry"
 				},
 				{
+					"include": "#for-while-until"
+				},
+				{
+					"include": "#select-case"
+				},
+				{
 					"include": "#operator"
 				},
 				{
@@ -117,7 +123,7 @@
 			"name": "variable.module.bmx"
 		},
 		"framework": {
-			"begin": "\\b(?i:framework)\\b\\s*",
+			"begin": "(?i)\\b(framework)\\b",
 			"end": "(?=\\s+|\\W+)",
 			"beginCaptures": {
 				"0": {
@@ -131,7 +137,7 @@
 			]
 		},
 		"import": {
-			"begin": "\\b(?i:import)\\b\\s*",
+			"begin": "(?i)\\b(import)\\b",
 			"end": "(?=\\s+|\\W+)",
 			"beginCaptures": {
 				"0": {
@@ -145,38 +151,31 @@
 			]
 		},
 		"include": {
-			"begin": "\\b(?i:include)\\b\\s*",
-			"end": "(?=\\s+|\\W+)",
-			"beginCaptures": {
-				"0": {
-					"name": "keyword.control.include.bmx"
-				}
-			}
+			"match": "(?i)\\b(include)\\b",
+			"name": "keyword.control.include.bmx"
 		},
 		"if-then-else-endif": {
-			"begin": "\\b(?i:if|then|else\\s*if|else|end\\s*if)\\b\\s*",
-			"end": "(?=\\s+|\\W+)",
-			"beginCaptures": {
-				"0": {
-					"name": "keyword.control.conditional.bmx"
-				}
-			}
+			"match": "(?i)\\b(if|then|else\\s*if|else|end\\s*if)\\b",
+			"name": "keyword.control.conditional.bmx"
 		},
 		"try-catch-finally-endtry": {
-			"begin": "\\b(?i:try|catch|finally|end\\s*try)\\b\\s*",
-			"end": "(?=\\s+|\\W+)",
-			"beginCaptures": {
-				"0": {
-					"name": "keyword.control.trycatch.bmx"
-				}
-			}
+			"match": "(?i)\\b(try|catch|finally|end\\s*try)\\b\\s*",
+			"name": "keyword.control.trycatch.bmx"
+		},
+		"for-while-until": {
+			"match": "(?i)\\b(for|next|while|end\\s*while|wend|to|step|eachin|repeat|until|forever)\\b",
+			"name": "keyword.control.loop.bmx"
+		},
+		"select-case": {
+			"match": "(?i)\\b(select|case|end\\s*select|default)\\b",
+			"name": "keyword.control.conditional.switch.bmx"
 		},
 		"operator": {
-			"match": "(?i:\\+|\\-|\\^|\\/|\\|\\bmod\\b|\\bshl\\b|\\bshr\\b|\\bsar\\b|\\&|\\||\\~|\\=|\\<\\>|\\<|\\>|\\<\\=|\\=\\>)",
+			"match": "(?i)(\\+|\\-|\\^|\\/|\\|\\bmod\\b|\\bshl\\b|\\bshr\\b|\\bsar\\b|\\&|\\||\\~|\\=|\\<\\>|\\<|\\>|\\<\\=|\\=\\>)",
 			"name": "keyword.operator.bmx"
 		},
 		"control": {
-			"match": "\\b(?i:and|or|not)\\b",
+			"match": "(?i)\\b(and|or|not)\\b",
 			"name": "keyword.control.bmx"
 		},
 		"storage": {
@@ -195,11 +194,17 @@
 				},
 				{
 					"include": "#function-end"
+				},
+				{
+					"include": "#method"
+				},
+				{
+					"include": "#method-end"
 				}
 			]
 		},
 		"storage-modifier": {
-			"match": "\\b(?i:extends|implements|abstract|final|export|override|where|public|private|protected|extern|end\\s*extern)\\b",
+			"match": "(?i)\\b(extends|implements|abstract|final|export|override|where|public|private|protected|extern|end\\s*extern)\\b",
 			"name": "storage.modifier.bmx"
 		},
 		"type-name": {
@@ -209,15 +214,22 @@
 				},
 				{
 					"include": "#type-name-custom"
+				},
+				{
+					"include": "#type-name-tag"
 				}
 			]
 		},
 		"type-name-support": {
-			"match": "(?<=:\\s*(\\w+\\s+)?|(?i:new)\\s+)(?i:var|ptr|object|byte|short|int|uint|long|ulong|float|double|string|size_t|float64|int128|float128|double128|typename|elementtype|tblitzexception|tnullobjectexception|tnullmethodexception|tnullfunctionexception|tarrayboundsexception|toutofdataexception|truntimeexception|tinvalidenumexception|iiterable|iiterator|idisposable|lparam|wparam)\\b",
+			"match": "(?i)(?<=:\\s*(\\w+\\s+)?|new\\s+)(var|ptr|object|byte|short|int|uint|long|ulong|float|double|string|size_t|float64|int128|float128|double128|typename|elementtype|tblitzexception|tnullobjectexception|tnullmethodexception|tnullfunctionexception|tarrayboundsexception|toutofdataexception|truntimeexception|tinvalidenumexception|iiterable|iiterator|idisposable|lparam|wparam)\\b",
 			"name": "support.type.bmx"
 		},
 		"type-name-custom": {
-			"match": "(?<=:\\s*(\\w+\\s+)?|(?i:new)\\s+)\\w+",
+			"match": "(?i)(?<=:\\s*(\\w+\\s+)?|new\\s+)\\w+",
+			"name": "entity.name.class.bmx"
+		},
+		"type-name-tag": {
+			"match": "(?<=\\w+\\s*(\\w+\\s+)?|new\\s+)(\\%|\\#|\\!|\\$)",
 			"name": "entity.name.class.bmx"
 		},
 		"type-name-word": {
@@ -225,11 +237,11 @@
 			"name": "entity.name.class.bmx"
 		},
 		"type-end": {
-			"match": "\\b(?i:end\\s*type)\\b",
+			"match": "(?i)\\bend\\s*type\\b",
 			"name": "storage.class.bmx"
 		},
 		"type": {
-			"begin": "\\b(?i:type)\\b\\s*",
+			"begin": "(?i)\\btype\\b",
 			"end": "(?=\\;|\\n|\\')",
 			"beginCaptures": {
 				"0": {
@@ -252,34 +264,39 @@
 				},
 				{
 					"include": "#function-name-guess"
+				},
+				{
+					"include": "#function-name-single"
 				}
 			]
 		},
 		"function-name-certain": {
-			"match": "(?<!(?i:new\\s+))\\b(?<!:\\s*)\\w+(?=\\s*:\\s*\\w+\\s*\\(|\\()\\b",
+			"match": "(?i)(?<!new\\s+)\\b(?<!:\\s*)\\w+(?=(\\s*:\\s*\\w+|\\%|\\#|\\!|\\$)\\s*\\(|\\s*\\()\\b",
 			"name": "entity.name.function.bmx"
 		},
 		"function-name-guess": {
-			"match": "(?<=^|;|,)\\s*\\w+\\b\\s+(?!\\.|\\,)(?=\\w+)",
+			"match": "(?i)(?<=^\\s*|\\W+)(\\w+)\\b\\s+(?!\\.|\\,|then|else|and|or|not)(?=(\\w+|\"))",
+			"name": "entity.name.function.guess.bmx"
+		},
+		"function-name-single": {
+			"match": "(?<=^\\s*|;\\s*)(\\w+)\\s*(?=$|'.*)",
 			"name": "entity.name.function.guess.bmx"
 		},
 		"function-end": {
-			"match": "\\b(?i:end\\s*function)\\b",
-			"name": "storage.function.bmx"
+			"match": "(?i)\\bend\\s*function\\b",
+			"name": "storage.function.end.bmx"
 		},
 		"function": {
-			"begin": "\\b(?i:function)\\b\\s*",
-			"end": "\\w+",
-			"beginCaptures": {
-				"0": {
-					"name": "storage.function.bmx"
-				}
-			},
-			"endCaptures": {
-				"0": {
-					"name": "entity.name.function.bmx"
-				}
-			}
+			"match": "(?i)\\bfunction\\b",
+			"name": "storage.function.begin.bmx"
+		},
+		"method-end": {
+			"match": "(?i)\\bend\\s*method\\b",
+			"name": "storage.method.end.bmx"
+		},
+		"method": {
+			"match": "(?i)\\bmethod\\b",
+			"name": "storage.method.begin.bmx"
 		}
 	}
 }

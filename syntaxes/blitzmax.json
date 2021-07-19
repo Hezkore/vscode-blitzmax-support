@@ -27,10 +27,10 @@
 			"include": "#support"
 		},
 		{
-			"include": "#variable"
+			"include": "#entity"
 		},
 		{
-			"include": "#entity"
+			"include": "#variable"
 		}
 	],
 	"repository": {
@@ -109,90 +109,12 @@
 			"name": "constant.character.bmx"
 		},
 		"constant-language": {
-			"match": "(?i)\\b(true|false|null)\\b",
+			"match": "(?i)\\b(True|False|Null)\\b",
 			"name": "constant.language.bmx"
 		},
 		"constant-other": {
 			"match": "",
 			"name": "constant.other.bmx"
-		},
-		"entity": {
-			"patterns": [
-				{
-					"include": "#entity-other"
-				},
-				{
-					"include": "#entity-name"
-				}
-			]
-		},
-		"entity-other": {
-			"patterns": [
-				{
-					"include": "#entity-other-inherited-class"
-				},
-				{
-					"include": "#entity-other-attribute-name"
-				}
-			]
-		},
-		"entity-other-inherited-class": {
-			
-			"begin": "(?i)(?<=(Extends|Implements|Extends|Implements)\\s+)",
-			"end": "\\w+",
-			"endCaptures": {
-			  "0": { "name": "entity.other.inherited.class.bmx" }
-			},
-			"name": "entity.name.class.bmx"
-		},
-		"entity-name": {
-			"patterns": [
-				{
-					"include": "#entity-name-type"
-				},
-				{
-					"include": "#entity-name-tag"
-				},
-				{
-					"include": "#entity-name-function"
-				},
-				{
-					"include": "#entity-name-section"
-				}
-			]
-		},
-		"entity-name-type": {
-			"match": "(?i)(?<=:\\s*(\\w+\\s+)?|(New|Type|Extends|Implements)\\s+)\\w+",
-			"name": "entity.name.class.bmx"
-		},
-		"entity-name-tag": {
-			"match": "(?<=\\w+\\s*(\\w+\\s+)?|new\\s+)(\\%|\\#|\\!|\\$)",
-			"name": "entity.name.tag.bmx"
-		},
-		"entity-name-function": {
-			"patterns": [
-				{
-					"include": "#function-name-certain"
-				},
-				{
-					"include": "#function-name-guess"
-				},
-				{
-					"include": "#function-name-single"
-				}
-			]
-		},
-		"function-name-certain": {
-			"match": "(?i)(?<!(?:New|Extends|Implements)\\s+)\\b(?<!:\\s*)\\w+(?=(\\s*:\\s*\\w+|\\%|\\#|\\!|\\$)\\s*\\(|\\s*\\()\\b",
-			"name": "entity.name.function.bmx"
-		},
-		"function-name-guess": {
-			"match": "(?i)(?<=^\\s*|\\W+)(\\w+)\\b\\s+(?!\\.|\\,|Then|Else|And|Or|Not)(?=(\\w+|\"))",
-			"name": "entity.name.function.guess.bmx"
-		},
-		"function-name-single": {
-			"match": "(?<=^\\s*|;\\s*)(\\w+)\\s*(?=$|'.*)",
-			"name": "entity.name.function.guess.bmx"
 		},
 		"invalid": {
 			"patterns": [
@@ -218,15 +140,15 @@
 			]
 		},
 		"keyword-control": {
-			"match": "\\b(?i)(Strict|SuperStrict|End|Rem|End\\s*Rem|True|False|Pi|Null|Byte|Short|Int|UInt|Long|ULong|Size_T|LParam|WParam|Float|Double|Int128|Float64|Float128|Double128|String|Object|Var|Ptr|If|Then|Else|Else\\s*If|End\\s*If|For|To|Step|Next|EachIn|While|Wend|End\\s*While|Repeat|Until|Forever|Select|End\\s*Select|Case|Default|Exit|Continue|Const|Local|Global|Field|Function|End\\s*Function|Method|End\\s*Method|Return|Type|End\\s*Type|Interface|End\\s*Interface|Struct|End\\s*Struct|Enum|End\\s*Enum|Extends|Implements|Abstract|Final|ReadOnly|Export|Override|Where|New|Delete|Self|Super|Release|Public|Private|Protected|Extern|End\\s*Extern|Module|ModuleInfo|Incbin|IncbinPtr|IncbinLen|Include|Framework|Import|Assert|Goto|Try|Catch|Finally|End\\s*Try|Throw|DefData|ReadData|RestoreData|And|Or|Not|Shl|Shr|Sar|Len|Mod|Varptr|SizeOf|Asc|Chr|StackAlloc|FieldOffset|StaticArray|NoDebug|Alias)\\b",
+			"match": "\\b(?i)(And|Or|Not|Shl|Shr|Mod|Operator|Strict|SuperStrict|End|Pi|If|Then|Else|Else\\s*If|End\\s*If|For|To|Step|Next|EachIn|While|Wend|End\\s*While|Repeat|Until|Forever|Select|End\\s*Select|Case|Default|Exit|Continue|Function|End\\s*Function|Method|End\\s*Method|Return|Type|End\\s*Type|Interface|End\\s*Interface|Struct|End\\s*Struct|Enum|End\\s*Enum|New|Delete|Self|Super|Release|Module|ModuleInfo|Incbin|IncbinPtr|IncbinLen|Include|Framework|Import|Assert|Goto|Try|Catch|Finally|End\\s*Try|Throw|DefData|ReadData|RestoreData|Len|Varptr|SizeOf|Asc|Chr|StackAlloc|FieldOffset|StaticArray|NoDebug|Alias)\\b",
 			"name": "keyword.control"
 		},
 		"keyword-operator": {
-			"match": "(?i)And|Or|Not|Shl|Shr|Mod|Operator",
+			"match": "(?i)(\\:)?(\\*|\\-|\\+|\\~|\\=|\\!\\=|\\<\\=|\\>\\=|\\<\\>|\\<|\\>|\\&|\\||\\/)",
 			"name": "keyword.operator.type.bmx"
 		},
 		"keyword-other": {
-			"match": "\\.|\\.\\.|\\,|\\;",
+			"match": "\\.|\\.\\.|\\,|\\;|\\:",
 			"name": "keyword.operator.other.bmx"
 		},
 		"meta": {
@@ -241,6 +163,14 @@
 					"include": "#storage-modifier"
 				}
 			]
+		},
+		"storage-type": {
+			"match": "(?i)\\b(Const|Local|Global|Field)\\b",
+			"name": "storage.type.bmx"
+		},
+		"storage-modifier": {
+			"match": "(?i)\\b(Public|Private|Protected|Extern|End\\s*Extern|Abstract|Extends|Implements|Final|ReadOnly|Export|Override|Where)\\b",
+			"name": "storage.modifier.bmx"
 		},
 		"string": {
 			"patterns": [
@@ -304,6 +234,10 @@
 				}
 			]
 		},
+		"support-type": {
+			"match": "(?i)\\b(Byte|Short|Int|UInt|Long|ULong|Size_T|LParam|WParam|Float|Double|Int128|Float64|Float128|Double128|String|Object|Var|Ptr)\\b",
+			"name": "support.type.bmx"
+		},
 		"variable": {
 			"patterns": [
 				{
@@ -316,6 +250,89 @@
 					"include": "#variable-other"
 				}
 			]
+		},
+		"variable-other": {
+			"match": "\\w+",
+			"name": "variable.other.bmx"
+		},
+		"entity": {
+			"patterns": [
+				{
+					"include": "#entity-other"
+				},
+				{
+					"include": "#entity-name"
+				}
+			]
+		},
+		"entity-other": {
+			"patterns": [
+				{
+					"include": "#entity-other-inherited-class"
+				},
+				{
+					"include": "#entity-other-attribute-name"
+				}
+			]
+		},
+		"entity-other-inherited-class": {
+			"begin": "(?i)(?<=\\b(Extends|Implements)\\s+)",
+			"end": "\\w+",
+			"endCaptures": {
+				"0": {
+					"name": "entity.other.inherited.class.bmx"
+				}
+			},
+			"name": "entity.name.class.bmx"
+		},
+		"entity-name": {
+			"patterns": [
+				{
+					"include": "#entity-name-type"
+				},
+				{
+					"include": "#entity-name-tag"
+				},
+				{
+					"include": "#entity-name-function"
+				},
+				{
+					"include": "#entity-name-section"
+				}
+			]
+		},
+		"entity-name-type": {
+			"match": "(?i)(?<=:\\s*(\\w+\\s+)?|\\b(New|Type|Extends|Implements)\\s+)\\w+",
+			"name": "entity.name.class.bmx"
+		},
+		"entity-name-tag": {
+			"match": "(?i)(?<=\\w+\\s*(\\w+\\s+)?|\\bNew\\s+)(\\%|\\#|\\!|\\$)",
+			"name": "entity.name.tag.bmx"
+		},
+		"entity-name-function": {
+			"patterns": [
+				{
+					"include": "#entity-name-function-name-certain"
+				},
+				{
+					"include": "#entity-name-function-name-guess"
+				},
+				{
+					"include": "#entity-name-function-name-single"
+				}
+			]
+		},
+		"entity-name-function-name-certain": {
+			"match": "(?i)(?<!\\b(?:New|Extends|Implements)\\s+)\\b(?<!:\\s*)\\w+(?=(\\s*:\\s*\\w+|\\%|\\#|\\!|\\$)\\s*\\(|\\s*\\()\\b",
+			"name": "entity.name.function.bmx"
+		},
+		"entity-name-function-name-guess": {
+			"match": "(?i)(?<=^\\s*|\\W+)(\\w+)\\b\\s+(?!\\.|\\,|(Then|Else|And|Or|Not|Return)\\b)(?=(\\w+|\"))",
+			"name": "entity.name.function.guess.bmx"
+		},
+		"entity-name-function-name-single": {
+			"match": "(?<=^\\s*|;\\s*)(\\w+)\\s*(?=$|'.*)",
+			"name": "entity.name.function.single.bmx"
 		}
 	}
 }

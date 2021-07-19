@@ -27,10 +27,13 @@
 			"include": "#support"
 		},
 		{
+			"include": "#variable"
+		},
+		{
 			"include": "#entity"
 		},
 		{
-			"include": "#variable"
+			"include": "#variable-other"
 		}
 	],
 	"repository": {
@@ -140,7 +143,7 @@
 			]
 		},
 		"keyword-control": {
-			"match": "\\b(?i)(And|Or|Not|Shl|Shr|Mod|Operator|Strict|SuperStrict|End|Pi|If|Then|Else|Else\\s*If|End\\s*If|For|To|Step|Next|EachIn|While|Wend|End\\s*While|Repeat|Until|Forever|Select|End\\s*Select|Case|Default|Exit|Continue|Function|End\\s*Function|Method|End\\s*Method|Return|Type|End\\s*Type|Interface|End\\s*Interface|Struct|End\\s*Struct|Enum|End\\s*Enum|New|Delete|Self|Super|Release|Module|ModuleInfo|Incbin|IncbinPtr|IncbinLen|Include|Framework|Import|Assert|Goto|Try|Catch|Finally|End\\s*Try|Throw|DefData|ReadData|RestoreData|Len|Varptr|SizeOf|Asc|Chr|StackAlloc|FieldOffset|StaticArray|NoDebug|Alias)\\b",
+			"match": "\\b(?i)(And|Or|Not|Shl|Shr|Sar|Mod|Operator|Strict|SuperStrict|If|Then|Else|Else\\s*If|End\\s*If|For|To|Step|Next|EachIn|While|Wend|End\\s*While|Repeat|Until|Forever|Select|End\\s*Select|Case|Default|Exit|Continue|Return|New|Delete|Release|Module|ModuleInfo|Incbin|IncbinPtr|IncbinLen|Include|Framework|Import|Assert|Goto|Try|Catch|Finally|End\\s*Try|Throw|DefData|ReadData|RestoreData|Varptr|StackAlloc|FieldOffset|NoDebug|Alias)\\b",
 			"name": "keyword.control"
 		},
 		"keyword-operator": {
@@ -165,11 +168,35 @@
 			]
 		},
 		"storage-type": {
-			"match": "(?i)\\b(Const|Local|Global|Field)\\b",
-			"name": "storage.type.bmx"
+			"patterns": [
+				{
+					"match": "(?i)\\b(Const|Local|Global|Field)\\b",
+					"name": "storage.type.var.bmx"
+				},
+				{
+					"match": "(?i)\\b((End\\s*)?Type)\\b",
+					"name": "storage.type.type.bmx"
+				},
+				{
+					"match": "(?i)\\b((End\\s*)?Function)\\b",
+					"name": "storage.type.function.bmx"
+				},
+				{
+					"match": "(?i)\\b((End\\s*)?Method)\\b",
+					"name": "storage.type.method.bmx"
+				},
+				{
+					"match": "(?i)\\b((End\\s*)?Enum)\\b",
+					"name": "storage.type.enum.bmx"
+				},
+				{
+					"match": "(?i)\\b((End\\s*)?Interface)\\b",
+					"name": "storage.type.interface.bmx"
+				}
+			]
 		},
 		"storage-modifier": {
-			"match": "(?i)\\b(Public|Private|Protected|Extern|End\\s*Extern|Abstract|Extends|Implements|Final|ReadOnly|Export|Override|Where)\\b",
+			"match": "(?i)\\b(Public|Private|Protected|Extern|End\\s*Extern|Abstract|Extends|Implements|Final|ReadOnly|Export|Override|Where|StaticArray)\\b",
 			"name": "storage.modifier.bmx"
 		},
 		"string": {
@@ -234,6 +261,10 @@
 				}
 			]
 		},
+		"support-function": {
+			"match": "(?i)\\b(End|Pi|Asc|Chr|Len|SizeOf)\\b",
+			"name": "support.function.bmx"
+		},
 		"support-type": {
 			"match": "(?i)\\b(Byte|Short|Int|UInt|Long|ULong|Size_T|LParam|WParam|Float|Double|Int128|Float64|Float128|Double128|String|Object|Var|Ptr)\\b",
 			"name": "support.type.bmx"
@@ -245,11 +276,52 @@
 				},
 				{
 					"include": "#variable-language"
-				},
-				{
-					"include": "#variable-other"
 				}
 			]
+		},
+		"variable-parameter-word": {
+			"match": "\\w+",
+			"name": "variable.parameter.bmx"
+		},
+		"variable-parameter": {
+			"begin": "(?i)(?<=(Function|Method|,)\\s+(\\w+\\s*:\\s*)?\\w+\\s*(\\W\\s*)?)\\(",
+			"end": "\\)",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#constant"
+				},
+				{
+					"include": "#invalid"
+				},
+				{
+					"include": "#keyword"
+				},
+				{
+					"include": "#storage"
+				},
+				{
+					"include": "#string"
+				},
+				{
+					"include": "#support"
+				},
+				{
+					"include": "#entity"
+				},
+				{
+					"include": "#variable-parameter-word"
+				},
+				{
+					"include": "#variable"
+				}
+			]
+		},
+		"variable-language" : {
+			"match": "(?i)\\b(Self|Super)\\b",
+			"name": "variable.language.bmx"
 		},
 		"variable-other": {
 			"match": "\\w+",
@@ -302,7 +374,7 @@
 			]
 		},
 		"entity-name-type": {
-			"match": "(?i)(?<=:\\s*(\\w+\\s+)?|\\b(New|Type|Extends|Implements)\\s+)\\w+",
+			"match": "(?i)(?<=:\\s*(\\w+\\s+)?|\\b(New|Type|Struct|Enum|Interface|Extends|Implements)\\s+)\\w+",
 			"name": "entity.name.class.bmx"
 		},
 		"entity-name-tag": {

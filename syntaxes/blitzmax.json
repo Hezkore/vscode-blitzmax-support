@@ -6,19 +6,31 @@
 			"include": "#comment"
 		},
 		{
-			"include": "#string"
+			"include": "#constant"
+		},
+		{
+			"include": "#invalid"
 		},
 		{
 			"include": "#keyword"
 		},
 		{
+			"include": "#meta"
+		},
+		{
 			"include": "#storage"
 		},
 		{
-			"include": "#type-name"
+			"include": "#string"
 		},
 		{
-			"include": "#function-name"
+			"include": "#support"
+		},
+		{
+			"include": "#variable"
+		},
+		{
+			"include": "#entity"
 		}
 	],
 	"repository": {
@@ -32,19 +44,19 @@
 				}
 			]
 		},
-		"pre-compilation": {
+		"bmk-script": {
 			"begin": "@bmk\\b",
-			"end": "(?=\n)",
+			"end": "$",
 			"beginCaptures": {
 				"0": {
-					"name": "support.script.start.bmx"
+					"name": "comment.line.script.start.bmx"
 				}
 			},
-			"name": "support.script.bmx"
+			"name": "comment.line.script.bmx"
 		},
 		"comment-line": {
 			"begin": "'",
-			"end": "(?=\n)",
+			"end": "$",
 			"beginCaptures": {
 				"0": {
 					"name": "comment.line.apostrophe.begin.bmx"
@@ -53,7 +65,7 @@
 			"name": "comment.line.apostrophe",
 			"patterns": [
 				{
-					"include": "#pre-compilation"
+					"include": "#bmk-script"
 				}
 			]
 		},
@@ -72,7 +84,190 @@
 			},
 			"name": "comment.block.bmx"
 		},
+		"constant": {
+			"patterns": [
+				{
+					"include": "#constant-numeric"
+				},
+				{
+					"include": "#constant-character"
+				},
+				{
+					"include": "#constant-language"
+				},
+				{
+					"include": "#constant-other"
+				}
+			]
+		},
+		"constant-numeric": {
+			"match": "-?\\b(?:(0(?:x|X)[0-9a-zA-Z]+)|(?:[0-9](?:\\.|[a-fA-F]+)?)+)\\b",
+			"name": "constant.numeric.bmx"
+		},
+		"constant-character": {
+			"match": "",
+			"name": "constant.character.bmx"
+		},
+		"constant-language": {
+			"match": "(?i)\\b(true|false|null)\\b",
+			"name": "constant.language.bmx"
+		},
+		"constant-other": {
+			"match": "",
+			"name": "constant.other.bmx"
+		},
+		"entity": {
+			"patterns": [
+				{
+					"include": "#entity-other"
+				},
+				{
+					"include": "#entity-name"
+				}
+			]
+		},
+		"entity-other": {
+			"patterns": [
+				{
+					"include": "#entity-other-inherited-class"
+				},
+				{
+					"include": "#entity-other-attribute-name"
+				}
+			]
+		},
+		"entity-other-inherited-class": {
+			
+			"begin": "(?i)(?<=(Extends|Implements|Extends|Implements)\\s+)",
+			"end": "\\w+",
+			"endCaptures": {
+			  "0": { "name": "entity.other.inherited.class.bmx" }
+			},
+			"name": "entity.name.class.bmx"
+		},
+		"entity-name": {
+			"patterns": [
+				{
+					"include": "#entity-name-type"
+				},
+				{
+					"include": "#entity-name-tag"
+				},
+				{
+					"include": "#entity-name-function"
+				},
+				{
+					"include": "#entity-name-section"
+				}
+			]
+		},
+		"entity-name-type": {
+			"match": "(?i)(?<=:\\s*(\\w+\\s+)?|(New|Type|Extends|Implements)\\s+)\\w+",
+			"name": "entity.name.class.bmx"
+		},
+		"entity-name-tag": {
+			"match": "(?<=\\w+\\s*(\\w+\\s+)?|new\\s+)(\\%|\\#|\\!|\\$)",
+			"name": "entity.name.tag.bmx"
+		},
+		"entity-name-function": {
+			"patterns": [
+				{
+					"include": "#function-name-certain"
+				},
+				{
+					"include": "#function-name-guess"
+				},
+				{
+					"include": "#function-name-single"
+				}
+			]
+		},
+		"function-name-certain": {
+			"match": "(?i)(?<!(?:New|Extends|Implements)\\s+)\\b(?<!:\\s*)\\w+(?=(\\s*:\\s*\\w+|\\%|\\#|\\!|\\$)\\s*\\(|\\s*\\()\\b",
+			"name": "entity.name.function.bmx"
+		},
+		"function-name-guess": {
+			"match": "(?i)(?<=^\\s*|\\W+)(\\w+)\\b\\s+(?!\\.|\\,|Then|Else|And|Or|Not)(?=(\\w+|\"))",
+			"name": "entity.name.function.guess.bmx"
+		},
+		"function-name-single": {
+			"match": "(?<=^\\s*|;\\s*)(\\w+)\\s*(?=$|'.*)",
+			"name": "entity.name.function.guess.bmx"
+		},
+		"invalid": {
+			"patterns": [
+				{
+					"include": "#invalid-illegal"
+				},
+				{
+					"include": "#invalid-deprecated"
+				}
+			]
+		},
+		"keyword": {
+			"patterns": [
+				{
+					"include": "#keyword-control"
+				},
+				{
+					"include": "#keyword-operator"
+				},
+				{
+					"include": "#keyword-other"
+				}
+			]
+		},
+		"keyword-control": {
+			"match": "\\b(?i)(Strict|SuperStrict|End|Rem|End\\s*Rem|True|False|Pi|Null|Byte|Short|Int|UInt|Long|ULong|Size_T|LParam|WParam|Float|Double|Int128|Float64|Float128|Double128|String|Object|Var|Ptr|If|Then|Else|Else\\s*If|End\\s*If|For|To|Step|Next|EachIn|While|Wend|End\\s*While|Repeat|Until|Forever|Select|End\\s*Select|Case|Default|Exit|Continue|Const|Local|Global|Field|Function|End\\s*Function|Method|End\\s*Method|Return|Type|End\\s*Type|Interface|End\\s*Interface|Struct|End\\s*Struct|Enum|End\\s*Enum|Extends|Implements|Abstract|Final|ReadOnly|Export|Override|Where|New|Delete|Self|Super|Release|Public|Private|Protected|Extern|End\\s*Extern|Module|ModuleInfo|Incbin|IncbinPtr|IncbinLen|Include|Framework|Import|Assert|Goto|Try|Catch|Finally|End\\s*Try|Throw|DefData|ReadData|RestoreData|And|Or|Not|Shl|Shr|Sar|Len|Mod|Varptr|SizeOf|Asc|Chr|StackAlloc|FieldOffset|StaticArray|NoDebug|Alias)\\b",
+			"name": "keyword.control"
+		},
+		"keyword-operator": {
+			"match": "(?i)And|Or|Not|Shl|Shr|Mod|Operator",
+			"name": "keyword.operator.type.bmx"
+		},
+		"keyword-other": {
+			"match": "\\.|\\.\\.|\\,|\\;",
+			"name": "keyword.operator.other.bmx"
+		},
+		"meta": {
+			"patterns": []
+		},
+		"storage": {
+			"patterns": [
+				{
+					"include": "#storage-type"
+				},
+				{
+					"include": "#storage-modifier"
+				}
+			]
+		},
 		"string": {
+			"patterns": [
+				{
+					"include": "#string-quoted-triple"
+				},
+				{
+					"include": "#string-quoted-double"
+				}
+			]
+		},
+		"string-quoted-triple": {
+			"begin": "\"\"\"",
+			"end": "\"\"\"",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.begin.bmx"
+				}
+			},
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.end.bmx"
+				}
+			},
+			"name": "string.quoted.triple.bmx"
+		},
+		"string-quoted-double": {
 			"begin": "\"",
 			"end": "\"",
 			"beginCaptures": {
@@ -87,216 +282,40 @@
 			},
 			"name": "string.quoted.double.bmx"
 		},
-		"keyword": {
+		"support": {
 			"patterns": [
 				{
-					"include": "#framework"
+					"include": "#support-function"
 				},
 				{
-					"include": "#import"
+					"include": "#support-class"
 				},
 				{
-					"include": "#include"
+					"include": "#support-type"
 				},
 				{
-					"include": "#if-then-else-endif"
+					"include": "#support-constant"
 				},
 				{
-					"include": "#try-catch-finally-endtry"
+					"include": "#support-variable"
 				},
 				{
-					"include": "#for-while-until"
-				},
-				{
-					"include": "#select-case"
-				},
-				{
-					"include": "#operator"
-				},
-				{
-					"include": "#control"
+					"include": "#support-other"
 				}
 			]
 		},
-		"module-name": {
-			"match": "\\w+\\.\\w+",
-			"name": "variable.module.bmx"
-		},
-		"framework": {
-			"begin": "(?i)\\b(framework)\\b",
-			"end": "(?=\\s+|\\W+)",
-			"beginCaptures": {
-				"0": {
-					"name": "keyword.control.import.bmx"
-				}
-			},
+		"variable": {
 			"patterns": [
 				{
-					"include": "#module-name"
+					"include": "#variable-parameter"
+				},
+				{
+					"include": "#variable-language"
+				},
+				{
+					"include": "#variable-other"
 				}
 			]
-		},
-		"import": {
-			"begin": "(?i)\\b(import)\\b",
-			"end": "(?=\\s+|\\W+)",
-			"beginCaptures": {
-				"0": {
-					"name": "keyword.control.import.bmx"
-				}
-			},
-			"patterns": [
-				{
-					"include": "#module-name"
-				}
-			]
-		},
-		"include": {
-			"match": "(?i)\\b(include)\\b",
-			"name": "keyword.control.include.bmx"
-		},
-		"if-then-else-endif": {
-			"match": "(?i)\\b(if|then|else\\s*if|else|end\\s*if)\\b",
-			"name": "keyword.control.conditional.bmx"
-		},
-		"try-catch-finally-endtry": {
-			"match": "(?i)\\b(try|catch|finally|end\\s*try)\\b\\s*",
-			"name": "keyword.control.trycatch.bmx"
-		},
-		"for-while-until": {
-			"match": "(?i)\\b(for|next|while|end\\s*while|wend|to|step|eachin|repeat|until|forever)\\b",
-			"name": "keyword.control.loop.bmx"
-		},
-		"select-case": {
-			"match": "(?i)\\b(select|case|end\\s*select|default)\\b",
-			"name": "keyword.control.conditional.switch.bmx"
-		},
-		"operator": {
-			"match": "(?i)(\\+|\\-|\\^|\\/|\\|\\bmod\\b|\\bshl\\b|\\bshr\\b|\\bsar\\b|\\&|\\||\\~|\\=|\\<\\>|\\<|\\>|\\<\\=|\\=\\>)",
-			"name": "keyword.operator.bmx"
-		},
-		"control": {
-			"match": "(?i)\\b(and|or|not)\\b",
-			"name": "keyword.control.bmx"
-		},
-		"storage": {
-			"patterns": [
-				{
-					"include": "#storage-modifier"
-				},
-				{
-					"include": "#type"
-				},
-				{
-					"include": "#type-end"
-				},
-				{
-					"include": "#function"
-				},
-				{
-					"include": "#function-end"
-				},
-				{
-					"include": "#method"
-				},
-				{
-					"include": "#method-end"
-				}
-			]
-		},
-		"storage-modifier": {
-			"match": "(?i)\\b(extends|implements|abstract|final|export|override|where|public|private|protected|extern|end\\s*extern)\\b",
-			"name": "storage.modifier.bmx"
-		},
-		"type-name": {
-			"patterns": [
-				{
-					"include": "#type-name-support"
-				},
-				{
-					"include": "#type-name-custom"
-				},
-				{
-					"include": "#type-name-tag"
-				}
-			]
-		},
-		"type-name-support": {
-			"match": "(?i)(?<=:\\s*(\\w+\\s+)?|new\\s+)(var|ptr|object|byte|short|int|uint|long|ulong|float|double|string|size_t|float64|int128|float128|double128|typename|elementtype|tblitzexception|tnullobjectexception|tnullmethodexception|tnullfunctionexception|tarrayboundsexception|toutofdataexception|truntimeexception|tinvalidenumexception|iiterable|iiterator|idisposable|lparam|wparam)\\b",
-			"name": "support.type.bmx"
-		},
-		"type-name-custom": {
-			"match": "(?i)(?<=:\\s*(\\w+\\s+)?|new\\s+)\\w+",
-			"name": "entity.name.class.bmx"
-		},
-		"type-name-tag": {
-			"match": "(?<=\\w+\\s*(\\w+\\s+)?|new\\s+)(\\%|\\#|\\!|\\$)",
-			"name": "entity.name.class.bmx"
-		},
-		"type-name-word": {
-			"match": "[aA-zZ]\\w*",
-			"name": "entity.name.class.bmx"
-		},
-		"type-end": {
-			"match": "(?i)\\bend\\s*type\\b",
-			"name": "storage.class.bmx"
-		},
-		"type": {
-			"begin": "(?i)\\btype\\b",
-			"end": "(?=\\;|\\n|\\')",
-			"beginCaptures": {
-				"0": {
-					"name": "storage.class.bmx"
-				}
-			},
-			"patterns": [
-				{
-					"include": "#storage-modifier"
-				},
-				{
-					"include": "#type-name-word"
-				}
-			]
-		},
-		"function-name": {
-			"patterns": [
-				{
-					"include": "#function-name-certain"
-				},
-				{
-					"include": "#function-name-guess"
-				},
-				{
-					"include": "#function-name-single"
-				}
-			]
-		},
-		"function-name-certain": {
-			"match": "(?i)(?<!new\\s+)\\b(?<!:\\s*)\\w+(?=(\\s*:\\s*\\w+|\\%|\\#|\\!|\\$)\\s*\\(|\\s*\\()\\b",
-			"name": "entity.name.function.bmx"
-		},
-		"function-name-guess": {
-			"match": "(?i)(?<=^\\s*|\\W+)(\\w+)\\b\\s+(?!\\.|\\,|then|else|and|or|not)(?=(\\w+|\"))",
-			"name": "entity.name.function.guess.bmx"
-		},
-		"function-name-single": {
-			"match": "(?<=^\\s*|;\\s*)(\\w+)\\s*(?=$|'.*)",
-			"name": "entity.name.function.guess.bmx"
-		},
-		"function-end": {
-			"match": "(?i)\\bend\\s*function\\b",
-			"name": "storage.function.end.bmx"
-		},
-		"function": {
-			"match": "(?i)\\bfunction\\b",
-			"name": "storage.function.begin.bmx"
-		},
-		"method-end": {
-			"match": "(?i)\\bend\\s*method\\b",
-			"name": "storage.method.end.bmx"
-		},
-		"method": {
-			"match": "(?i)\\bmethod\\b",
-			"name": "storage.method.begin.bmx"
 		}
 	}
 }

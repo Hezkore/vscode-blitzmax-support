@@ -9,6 +9,9 @@
 			"include": "#constant"
 		},
 		{
+			"include": "#string"
+		},
+		{
 			"include": "#invalid"
 		},
 		{
@@ -19,9 +22,6 @@
 		},
 		{
 			"include": "#storage"
-		},
-		{
-			"include": "#string"
 		},
 		{
 			"include": "#support"
@@ -119,6 +119,46 @@
 			"match": "",
 			"name": "constant.other.bmx"
 		},
+		"string": {
+			"patterns": [
+				{
+					"include": "#string-quoted-triple"
+				},
+				{
+					"include": "#string-quoted-double"
+				}
+			]
+		},
+		"string-quoted-triple": {
+			"begin": "\"\"\"",
+			"end": "\"\"\"",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.begin.bmx"
+				}
+			},
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.end.bmx"
+				}
+			},
+			"name": "string.quoted.triple.bmx"
+		},
+		"string-quoted-double": {
+			"begin": "\"",
+			"end": "\"",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.begin.bmx"
+				}
+			},
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.end.bmx"
+				}
+			},
+			"name": "string.quoted.double.bmx"
+		},
 		"invalid": {
 			"patterns": [
 				{
@@ -143,8 +183,17 @@
 			]
 		},
 		"keyword-control": {
-			"match": "\\b(?i)(And|Or|Not|Shl|Shr|Sar|Mod|Operator|Strict|SuperStrict|If|Then|Else|Else\\s*If|End\\s*If|For|To|Step|Next|EachIn|While|Wend|End\\s*While|Repeat|Until|Forever|Select|End\\s*Select|Case|Default|Exit|Continue|Return|New|Delete|Release|Module|ModuleInfo|Incbin|IncbinPtr|IncbinLen|Include|Framework|Import|Assert|Goto|Try|Catch|Finally|End\\s*Try|Throw|DefData|ReadData|RestoreData|Varptr|StackAlloc|FieldOffset|NoDebug|Alias)\\b",
-			"name": "keyword.control"
+			"patterns": [
+				{
+					"match": "\\b(?i)(And|Or|Not|Shl|Shr|Sar|Mod|Operator|Strict|SuperStrict|If|Then|Else|Else\\s*If|End\\s*If|For|To|Step|Next|EachIn|While|Wend|End\\s*While|Repeat|Until|Forever|Select|End\\s*Select|Case|Default|Exit|Continue|Return|New|Delete|Release|Module|ModuleInfo|Incbin|IncbinPtr|IncbinLen|Include|Framework|Import|Assert|Goto|Try|Catch|Finally|End\\s*Try|Throw|DefData|ReadData|RestoreData|Varptr|StackAlloc|FieldOffset|NoDebug|Alias)\\b",
+					"name": "keyword.control"
+				},
+				{
+					"begin": "^\\s*\\?",
+					"end": "$",
+					"name": "keyword.control"
+				}
+			]
 		},
 		"keyword-operator": {
 			"match": "(?i)(\\:)?(\\*|\\-|\\+|\\~|\\=|\\!\\=|\\<\\=|\\>\\=|\\<\\>|\\<|\\>|\\&|\\||\\/)",
@@ -196,48 +245,17 @@
 			]
 		},
 		"storage-modifier": {
-			"match": "(?i)\\b(Public|Private|Protected|Extern|End\\s*Extern|Abstract|Extends|Implements|Final|ReadOnly|Export|Override|Where|StaticArray)\\b",
-			"name": "storage.modifier.bmx"
-		},
-		"string": {
 			"patterns": [
 				{
-					"include": "#string-quoted-triple"
+				"match": "(?i)\\b(Public|Private|Protected|Extern|End\\s*Extern|Abstract|Extends|Implements|Final|ReadOnly|Export|Override|Where|StaticArray)\\b",
+				"name": "storage.modifier.bmx"
 				},
 				{
-					"include": "#string-quoted-double"
+					"begin": "(?<=.+)\\{",
+					"end": "\\}",
+					"name": "storage.modifier.meta.bmx"
 				}
 			]
-		},
-		"string-quoted-triple": {
-			"begin": "\"\"\"",
-			"end": "\"\"\"",
-			"beginCaptures": {
-				"0": {
-					"name": "punctuation.definition.string.begin.bmx"
-				}
-			},
-			"endCaptures": {
-				"0": {
-					"name": "punctuation.definition.string.end.bmx"
-				}
-			},
-			"name": "string.quoted.triple.bmx"
-		},
-		"string-quoted-double": {
-			"begin": "\"",
-			"end": "\"",
-			"beginCaptures": {
-				"0": {
-					"name": "punctuation.definition.string.begin.bmx"
-				}
-			},
-			"endCaptures": {
-				"0": {
-					"name": "punctuation.definition.string.end.bmx"
-				}
-			},
-			"name": "string.quoted.double.bmx"
 		},
 		"support": {
 			"patterns": [
@@ -319,7 +337,7 @@
 				}
 			]
 		},
-		"variable-language" : {
+		"variable-language": {
 			"match": "(?i)\\b(Self|Super)\\b",
 			"name": "variable.language.bmx"
 		},
@@ -403,7 +421,7 @@
 			"name": "entity.name.function.guess.bmx"
 		},
 		"entity-name-function-name-single": {
-			"match": "(?<=^\\s*|;\\s*)(\\w+)\\s*(?=$|'.*)",
+			"match": "(?i)(?<=^\\s*|;\\s*|\\s*Then\\s*)(\\w+)\\s*(?=$|'.*|;)",
 			"name": "entity.name.function.single.bmx"
 		}
 	}

@@ -1,3 +1,6 @@
+## 2.17.1
+* Re-write of grammar syntax
+
 ## 2.17.0
 * Linked 'Go to Definition' function to 'Go to Symbol in Workspace' function
 

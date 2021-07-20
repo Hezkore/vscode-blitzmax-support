@@ -247,8 +247,8 @@
 		"storage-modifier": {
 			"patterns": [
 				{
-				"match": "(?i)\\b(Public|Private|Protected|Extern|End\\s*Extern|Abstract|Extends|Implements|Final|ReadOnly|Export|Override|Where|StaticArray)\\b",
-				"name": "storage.modifier.bmx"
+					"match": "(?i)\\b(Public|Private|Protected|Extern|End\\s*Extern|Abstract|Extends|Implements|Final|ReadOnly|Export|Override|Where|StaticArray)\\b",
+					"name": "storage.modifier.bmx"
 				},
 				{
 					"begin": "(?<=.+)\\{",
@@ -302,7 +302,7 @@
 			"name": "variable.parameter.bmx"
 		},
 		"variable-parameter": {
-			"begin": "(?i)(?<=(Function|Method|,)\\s+(\\w+\\s*:\\s*)?\\w+\\s*(\\W\\s*)?)\\(",
+			"begin": "(?i)(?<=\\b(Function|Method)\\s+(\\w+\\s*:\\s*)?\\w+\\s*(\\W\\s*)?)\\(",
 			"end": "\\)",
 			"patterns": [
 				{

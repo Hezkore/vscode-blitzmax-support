@@ -1,3 +1,6 @@
+## 2.17.3
+* Updated language configuration
+
 ## 2.17.2
 * Updated grammar syntax
 

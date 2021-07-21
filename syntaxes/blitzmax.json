@@ -421,7 +421,7 @@
 			"name": "entity.name.function.guess.bmx"
 		},
 		"entity-name-function-name-single": {
-			"match": "(?i)(?<=^\\s*|;\\s*|\\s*Then\\s*)(\\w+)\\s*(?=$|'.*|;)",
+			"match": "(?i)(?<=^\\s*|;\\s*|\\.\\.\\s*|\\bThen\\s*)(\\w+)\\s*(?=$|'.*|;)",
 			"name": "entity.name.function.single.bmx"
 		}
 	}

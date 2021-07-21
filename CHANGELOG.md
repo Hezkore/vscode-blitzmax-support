@@ -1,3 +1,6 @@
+## 2.17.2
+* Updated grammar syntax
+
 ## 2.17.1
 * Re-write of grammar syntax
 

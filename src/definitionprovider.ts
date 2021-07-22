@@ -1,10 +1,13 @@
 import * as vscode from 'vscode'
+import { activeLspCapabilities } from './lsp'
 import { CacheWorkspaceSymbols, workspaceSymbols } from './symbolprovider'
 
 export function registerDefinitionProvider( context: vscode.ExtensionContext ) {
 	vscode.languages.registerDefinitionProvider( 'blitzmax', {
 		async provideDefinition( document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken ) {
 
+			if (activeLspCapabilities().definitionProvider) return []
+			
 			// What word are we looking for?
 			let wordRange = document.getWordRangeAtPosition( position )
 			if ( !wordRange ) return

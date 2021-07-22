@@ -1,3 +1,6 @@
+## 2.17.4
+* Extension will now disable features the LSP covers
+
 ## 2.17.3
 * Updated language configuration
 

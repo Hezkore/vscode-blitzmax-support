@@ -48,6 +48,12 @@ function getOuterMostWorkspaceFolder( folder: vscode.WorkspaceFolder | undefined
 	return folder
 }
 
+export function activeLspCapabilities(): lsp.ServerCapabilities {
+	
+	if (!activeBmxLsp) return {}
+	return activeBmxLsp.capabilities()
+}
+
 export function registerLSP( context: vscode.ExtensionContext ) {
 
 	// Create our output channel
@@ -282,6 +288,17 @@ class BmxLSP {
 
 	_started: boolean
 	_running: boolean
+	
+	capabilities(): lsp.ServerCapabilities {
+		if ( this.isRunning() && this.client.initializeResult )
+			return this.client.initializeResult.capabilities
+		return {}
+	}
+	
+	isRunning(): boolean {
+		if ( this.client && this._started && this._running ) return true
+		return false
+	}
 
 	pause() {
 		if ( this.client && this._started ) {

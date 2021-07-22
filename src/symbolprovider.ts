@@ -1,6 +1,7 @@
 'use strict'
 
 import * as vscode from 'vscode'
+import { activeLspCapabilities } from './lsp'
 
 export let workspaceSymbols: Map<string, BmxWorkspaceSymbol[]>
 
@@ -33,9 +34,9 @@ interface BmxWorkspaceSymbol {
 
 export function CacheWorkspaceSymbols() {
 	return new Promise<void>( async ( resolve ) => {
-		
+
 		const files = await vscode.workspace.findFiles( '**/*.bmx', '**/.bmx/**' )
-		
+
 		for ( let index = 0; index < files.length; index++ ) {
 			const file = files[index]
 			if ( !workspaceSymbols.has( file.fsPath ) ) {
@@ -43,13 +44,17 @@ export function CacheWorkspaceSymbols() {
 				GetBmxDocSymbols( document )
 			}
 		}
-		
+
 		resolve()
 	} )
 }
 
 export class BmxWorkspaceSymbolProvider implements vscode.WorkspaceSymbolProvider {
 	public async provideWorkspaceSymbols( query: string ): Promise<vscode.SymbolInformation[]> {
+
+		console.log( activeLspCapabilities() )
+
+		if ( activeLspCapabilities().workspaceSymbolProvider ) return []
 
 		if ( query.length <= 0 ) return []
 		query = query.toLowerCase()
@@ -75,6 +80,9 @@ export class BmxWorkspaceSymbolProvider implements vscode.WorkspaceSymbolProvide
 
 export class BmxDocumentSymbolProvider implements vscode.DocumentSymbolProvider {
 	public provideDocumentSymbols( document: vscode.TextDocument ): vscode.DocumentSymbol[] {
+
+		if ( activeLspCapabilities().documentSymbolProvider ) return []
+
 		return GetBmxDocSymbols( document )
 	}
 }
@@ -117,7 +125,7 @@ function GetBmxDocSymbols( document: vscode.TextDocument ): vscode.DocumentSymbo
 
 		let firstWordOffset: number = 0
 		let firstWord: string = words[0].toLowerCase()
-		let firstWordLength: number = firstWord.length	
+		let firstWordLength: number = firstWord.length
 		if ( firstWord == 'end' && words.length > 1 ) {
 
 			let foundWord: string | undefined
@@ -204,7 +212,7 @@ function GetBmxDocSymbols( document: vscode.TextDocument ): vscode.DocumentSymbo
 				isSymbolKind = vscode.SymbolKind.Variable
 				supportsMultiDefine = true
 				break
-			
+
 			case 'local':
 				isSymbolKind = vscode.SymbolKind.TypeParameter // Not correct, but what am I do to?!
 				supportsMultiDefine = true
@@ -328,7 +336,7 @@ function GetBmxDocSymbols( document: vscode.TextDocument ): vscode.DocumentSymbo
 
 					// Where do we push the symbol?
 					if ( containers.length > 0 ) {
-						if (symbol.kind != vscode.SymbolKind.TypeParameter) containers[containers.length - 1].children.push( symbol )
+						if ( symbol.kind != vscode.SymbolKind.TypeParameter ) containers[containers.length - 1].children.push( symbol )
 						workspaceSymbols.get( document.uri.fsPath )?.push(
 							{
 								searchName: symbol.name.toLowerCase(),
@@ -339,7 +347,7 @@ function GetBmxDocSymbols( document: vscode.TextDocument ): vscode.DocumentSymbo
 							}
 						)
 					} else {
-						if (symbol.kind != vscode.SymbolKind.TypeParameter) symbols.push( symbol )
+						if ( symbol.kind != vscode.SymbolKind.TypeParameter ) symbols.push( symbol )
 						workspaceSymbols.get( document.uri.fsPath )?.push(
 							{
 								searchName: symbol.name.toLowerCase(),

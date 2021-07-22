@@ -3,11 +3,14 @@
 import * as vscode from 'vscode'
 import { getCommand } from './bmxdocs'
 import { previousTokenPosition } from './common'
+import { activeLspCapabilities } from './lsp'
 
 export function registerSignatureHelpProvider( context: vscode.ExtensionContext ) {
 	vscode.languages.registerSignatureHelpProvider( 'blitzmax', {
 		provideSignatureHelp( document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.SignatureHelpContext ): vscode.ProviderResult<vscode.SignatureHelp> {
-
+			
+			if ( activeLspCapabilities().signatureHelpProvider ) return null
+			
 			let call = findStart( document, position )
 			if ( !call ) return null
 

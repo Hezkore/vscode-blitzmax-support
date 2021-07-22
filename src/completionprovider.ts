@@ -3,12 +3,15 @@
 import * as vscode from 'vscode'
 import { getCommand, getModule } from './bmxdocs'
 import { previousTokenPosition } from './common'
+import { activeLspCapabilities } from './lsp'
 
 export function registerCompletionProvider( context: vscode.ExtensionContext ) {
 
 	vscode.languages.registerCompletionItemProvider( 'blitzmax', {
 		provideCompletionItems( document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext ) {
 
+			if (activeLspCapabilities().completionProvider) return []
+			
 			const completionItems: vscode.CompletionItem[] = []
 
 			// Triggered via typing

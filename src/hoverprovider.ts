@@ -3,12 +3,15 @@
 import * as vscode from 'vscode'
 import { getCommand } from './bmxdocs'
 import { getCurrentDocumentWord } from './common'
+import { activeLspCapabilities } from './lsp'
 
 export function registerHoverProvider( context: vscode.ExtensionContext ) {
 
 	vscode.languages.registerHoverProvider( 'blitzmax', {
 		provideHover( document, position, token ) {
-
+			
+			if ( activeLspCapabilities().hoverProvider ) return
+			
 			// What word are we looking for?
 			let word = getCurrentDocumentWord( position, document, undefined, false )
 			if ( !word ) return

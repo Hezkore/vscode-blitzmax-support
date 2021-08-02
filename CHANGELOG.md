@@ -1,3 +1,6 @@
+## 2.19.0
+* Added document link provider for import, framework and include
+
 ## 2.18.0
 * Debug sessions now has their own terminal
 

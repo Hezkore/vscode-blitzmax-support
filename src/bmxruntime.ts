@@ -49,7 +49,7 @@ export class BmxDebugConfigurationProvider implements vscode.DebugConfigurationP
 	}
 
 	resolveDebugConfiguration( workspace: vscode.WorkspaceFolder | undefined, config: vscode.DebugConfiguration | undefined, token?: vscode.CancellationToken ): vscode.ProviderResult<vscode.DebugConfiguration> {
-		
+
 		const doc = vscode.window.activeTextEditor?.document
 		if ( doc ) workspace = vscode.workspace.getWorkspaceFolder( doc.uri )
 
@@ -98,16 +98,18 @@ export class BmxDebugSession extends LoggingDebugSession {
 	isDebugging: boolean // True if the Bmx debugger has halted the application
 	lastStackFrameId: number
 	stack: BmxDebugStackFrame[] = []
-	bmxProcess: process.ChildProcessWithoutNullStreams
+	bmxProcess: process.ChildProcess
 	workspace: vscode.WorkspaceFolder | undefined
+	bmxProcessPath: string | undefined
+	debugParser: BmxDebugger
+	killSignal: NodeJS.Signals = 'SIGKILL'
+	isRestart: boolean
 
-	private _killSignal: NodeJS.Signals = 'SIGKILL'
 	private _buildDone = new awaitNotify.Subject()
 	private _buildTaskExecution: vscode.TaskExecution | undefined
 	private _buildError: boolean
-	private _isRestart: boolean
-	private _bmxProcessPath: string | undefined
-	private debugParser: BmxDebugger
+	private terminal: vscode.Terminal
+	private pseudoTerminal: BmxDebugTerminal
 
 	public constructor() {
 		super( 'bmx-debug.txt' )
@@ -144,7 +146,7 @@ export class BmxDebugSession extends LoggingDebugSession {
 	protected async launchRequest( response: DebugProtocol.LaunchResponse, args: BmxLaunchRequestArguments ) {
 		// Setup a build task definition based on our launch arguments
 		let debuggerTaskDefinition: BmxBuildTaskDefinition = <BmxBuildTaskDefinition>( args )
-		
+
 		debuggerTaskDefinition.debug = !!!args.noDebug
 
 		if ( debuggerTaskDefinition.debug ) this.debugParser = new BmxDebugger( this )
@@ -187,7 +189,7 @@ export class BmxDebugSession extends LoggingDebugSession {
 		this.workspace = args.workspace
 
 		// Figure out output path
-		this._bmxProcessPath = taskOutput( debuggerTaskDefinition, args.workspace )
+		this.bmxProcessPath = taskOutput( debuggerTaskDefinition, args.workspace )
 
 		// Launch!
 		//console.log("LAUNCHING: " + this._bmxProcessPath)
@@ -200,48 +202,20 @@ export class BmxDebugSession extends LoggingDebugSession {
 	startRuntime() {
 
 		// Make sure we have a path
-		if ( !this._bmxProcessPath ) return
+		if ( !this.bmxProcessPath ) return
 
-		// Kill if already running
-		if ( this.bmxProcess ) {
-			if ( this.isDebugging && this.debugParser ) {
-				// Use the debugger to quit
-				this.debugParser.sendInputToDebugger( 'q' )
-			} else {
-				// Just kill the process
-				this.bmxProcess.kill( this._killSignal )
-			}
-		}
+		if ( !this.pseudoTerminal ) this.pseudoTerminal = new BmxDebugTerminal
+		this.pseudoTerminal.configure( this )
 		
+		if ( !this.terminal ) this.terminal = vscode.window.createTerminal( {
+			name: 'BlitzMax Debug Session',
+			pty: this.pseudoTerminal,
+			iconPath: new vscode.ThemeIcon( 'rocket' )
+		} )
+		this.terminal.show( true )
+
 		// Reset some stuff
 		this.isDebugging = false
-
-		this.bmxProcess = process.spawn( this._bmxProcessPath )
-
-		// Any normal stdout goes to debug console
-		this.bmxProcess.stdout.on( 'data', ( data ) => {
-			this.sendEvent( new OutputEvent( data.toString(), 'stdout' ) )
-		} )
-
-		this.bmxProcess.on( 'error', ( err ) => {
-			vscode.window.showErrorMessage( 'BlitzMax process error: ' +
-				err.message.toString() )
-			this.sendEvent( new OutputEvent( err.message.toString(), 'stderr' ) )
-		} )
-
-		this.bmxProcess.stderr.on( 'data', ( data ) => {
-			if ( this.debugParser ) {
-				this.debugParser.onDebugOutput( data.toString() )
-			} else {
-				this.sendEvent( new OutputEvent( data.toString(), 'stderr' ) )
-			}
-		} )
-
-		this.bmxProcess.on( 'close', ( code ) => {
-			if ( !this._isRestart )
-				this.sendEvent( new TerminatedEvent() )
-			this._isRestart = false
-		} )
 	}
 
 	protected terminateRequest( response: DebugProtocol.TerminateResponse, args: DebugProtocol.TerminateArguments, request?: DebugProtocol.Request ) {
@@ -258,13 +232,13 @@ export class BmxDebugSession extends LoggingDebugSession {
 				this.debugParser.sendInputToDebugger( 'q' )
 			} else {
 				// Just kill the process
-				this.bmxProcess.kill( this._killSignal )
+				this.bmxProcess.kill( this.killSignal )
 			}
 		}
 
 		this.sendResponse( response )
 	}
-	
+
 	protected pauseRequest( response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments, request?: DebugProtocol.Request ) {
 		response.message = 'Pause is not supported'
 		response.success = false
@@ -273,7 +247,7 @@ export class BmxDebugSession extends LoggingDebugSession {
 
 	protected restartRequest( response: DebugProtocol.RestartResponse, args: DebugProtocol.RestartArguments, request?: DebugProtocol.Request ) {
 		this.debugParser.restartRequest()
-		this._isRestart = true
+		this.isRestart = true
 		this.startRuntime()
 		this.sendResponse( response )
 	}
@@ -283,8 +257,8 @@ export class BmxDebugSession extends LoggingDebugSession {
 		response.body = { threads: [new Thread( BmxDebugSession.THREAD_ID, "thread 1" )] }
 		this.sendResponse( response )
 	}
-	
-	protected async evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments, request?: DebugProtocol.Request) {
+
+	protected async evaluateRequest( response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments, request?: DebugProtocol.Request ) {
 		response = await this.debugParser.evaluateRequest( response, args )
 		this.sendResponse( response )
 	}
@@ -322,5 +296,91 @@ export class BmxDebugSession extends LoggingDebugSession {
 	protected async stepOutRequest( response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments ): Promise<void> {
 		response = await this.debugParser.stepOutRequest( response, args )
 		this.sendResponse( response )
+	}
+}
+
+class BmxDebugTerminal implements vscode.Pseudoterminal {
+	private writeEmitter = new vscode.EventEmitter<string>()
+	onDidWrite: vscode.Event<string> = this.writeEmitter.event
+	private closeEmitter = new vscode.EventEmitter<number>()
+	onDidClose?: vscode.Event<number> = this.closeEmitter.event
+
+	debugSession: BmxDebugSession
+
+	configure( session: BmxDebugSession ) {
+		this.debugSession = session
+	}
+
+	open( initialDimensions: vscode.TerminalDimensions | undefined ): void {
+		this.run()
+	}
+
+	close() {
+	}
+
+	handleInput( data: string ) {
+		if ( this.debugSession.bmxProcess &&
+			this.debugSession.bmxProcess.stdin &&
+			this.debugSession.bmxProcess.stdin.writable ) {
+				
+			this.writeEmitter.fire( data )
+			if ( data == '\r' ) data = '\n'
+			this.debugSession.bmxProcess.stdin.write( data )
+		}
+	}
+
+	private async run(): Promise<void> {
+		return new Promise<void>( ( resolve ) => {
+			// We have a defininition, right?
+			if ( !this.debugSession || !this.debugSession.bmxProcessPath ) {
+				this.closeEmitter.fire( -1 )
+				return resolve()
+			}
+
+			this.writeEmitter.fire( `${this.debugSession.bmxProcessPath}\r\n\r\n` )
+
+
+			// Kill if already running
+			if ( this.debugSession.bmxProcess ) {
+				if ( this.debugSession.isDebugging && this.debugSession.debugParser ) {
+					// Use the debugger to quit
+					this.debugSession.debugParser.sendInputToDebugger( 'q' )
+				} else {
+					// Just kill the process
+					this.debugSession.bmxProcess.kill( this.debugSession.killSignal )
+				}
+			}
+
+			this.debugSession.bmxProcess = process.spawn( this.debugSession.bmxProcessPath )
+
+			// Any normal stdout goes to debug console
+			if ( this.debugSession.bmxProcess.stdout ) this.debugSession.bmxProcess.stdout.on( 'data', ( data ) => {
+				this.writeEmitter.fire( data.toString() )
+				this.debugSession.sendEvent( new OutputEvent( data.toString(), 'stdout' ) )
+			} )
+
+			this.debugSession.bmxProcess.on( 'error', ( err ) => {
+				this.writeEmitter.fire( err.message.toString() )
+				vscode.window.showErrorMessage( 'BlitzMax process error: ' +
+					err.message.toString() )
+				this.debugSession.sendEvent( new OutputEvent( err.message.toString(), 'stderr' ) )
+			} )
+
+			if ( this.debugSession.bmxProcess.stderr ) this.debugSession.bmxProcess.stderr.on( 'data', ( data ) => {
+				this.writeEmitter.fire( data.toString() )
+				if ( this.debugSession.debugParser ) {
+					this.debugSession.debugParser.onDebugOutput( data.toString() )
+				} else {
+					this.debugSession.sendEvent( new OutputEvent( data.toString(), 'stderr' ) )
+				}
+			} )
+
+			this.debugSession.bmxProcess.on( 'close', ( code ) => {
+				this.closeEmitter.fire( code ? code : 0 )
+				if ( !this.debugSession.isRestart )
+					this.debugSession.sendEvent( new TerminatedEvent() )
+				this.debugSession.isRestart = false
+			} )
+		} )
 	}
 }

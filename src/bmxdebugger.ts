@@ -58,7 +58,7 @@ export class BmxDebugger {
 	}
 
 	sendInputToDebugger( key: string ) {
-		this.session.bmxProcess.stdin.write( key + '\n' )
+		if(this.session.bmxProcess.stdin) this.session.bmxProcess.stdin.write( key + '\n' )
 	}
 
 	onDebugOutput( output: string ) {

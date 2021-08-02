@@ -1,3 +1,6 @@
+## 2.18.0
+* Debug sessions now has their own terminal
+
 ## 2.17.4
 * Extension will now disable features the LSP covers
 

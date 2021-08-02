@@ -1,6 +1,7 @@
 'use strict'
 
 import * as fs from 'fs'
+import * as path from 'path'
 import * as vscode from 'vscode'
 import * as cp from 'child_process'
 import { BlitzMaxPath } from './helper'
@@ -183,7 +184,7 @@ function cacheModules() {
 
 	const globalBmxPath = vscode.workspace.getConfiguration( 'blitzmax' ).inspect( 'base.path' )?.globalValue
 	const relativePath = '/mod/'
-	const absolutePath = vscode.Uri.file( globalBmxPath + relativePath ).fsPath
+	const absolutePath = vscode.Uri.file( path.join( <string>(globalBmxPath), relativePath ) ).fsPath
 	let parentPath: string | undefined
 	let totalPath: string | undefined
 
@@ -209,6 +210,7 @@ function cacheModules() {
 
 								_modulesList.push( {
 									path: totalPath ? totalPath : 'undefined',
+									pathSource: path.join( totalPath ? totalPath : 'undefined', source ),
 									parent: parent.slice( 0, -4 ),
 									child: child.slice( 0, -4 ),
 									name: parent.slice( 0, -4 ) + '.' + child.slice( 0, -4 ),
@@ -626,6 +628,7 @@ function parseCommandParams( cmd: BmxCommand ) {
 
 export interface BmxModule {
 	path: string,
+	pathSource: string,
 	name: string,
 	parent: string,
 	child: string,

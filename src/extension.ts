@@ -17,6 +17,7 @@ import { registerTerminalLinkProvider } from './linkprovider'
 import { registerFormatterProvider } from './formatterprovider'
 import { registerDefinitionProvider } from './definitionprovider'
 import { registerCompletionProvider } from './completionprovider'
+import { registerDocumentLinkProvider } from './documentlinkprovider'
 import { registerSignatureHelpProvider } from './signaturehelpprovider'
 
 export function activate( context: vscode.ExtensionContext ) {
@@ -36,6 +37,7 @@ export function activate( context: vscode.ExtensionContext ) {
 	registerDefinitionProvider( context )
 	registerCompletionProvider( context )
 	registerTerminalLinkProvider( context )
+	registerDocumentLinkProvider( context )
 	registerSignatureHelpProvider( context )
 }
 

@@ -65,7 +65,7 @@
 					"name": "comment.line.apostrophe.begin.bmx"
 				}
 			},
-			"name": "comment.line.apostrophe",
+			"name": "comment.line.apostrophe.bmx",
 			"patterns": [
 				{
 					"include": "#bmk-script"
@@ -185,13 +185,32 @@
 		"keyword-control": {
 			"patterns": [
 				{
-					"match": "\\b(?i)(And|Or|Not|Shl|Shr|Sar|Mod|Operator|Strict|SuperStrict|If|Then|Else|Else\\s*If|End\\s*If|For|To|Step|Next|EachIn|While|Wend|End\\s*While|Repeat|Until|Forever|Select|End\\s*Select|Case|Default|Exit|Continue|Return|New|Delete|Release|Module|ModuleInfo|Incbin|IncbinPtr|IncbinLen|Include|Framework|Import|Assert|Goto|Try|Catch|Finally|End\\s*Try|Throw|DefData|ReadData|RestoreData|Varptr|StackAlloc|FieldOffset|NoDebug|Alias)\\b",
-					"name": "keyword.control"
+					"match": "\\b(?i)(And|Or|Not|Shl|Shr|Sar|Mod|Operator|Strict|SuperStrict|If|Then|Else|Else\\s*If|End\\s*If|For|To|Step|Next|EachIn|While|Wend|End\\s*While|Repeat|Until|Forever|Select|End\\s*Select|Case|Default|Exit|Continue|Return|New|Delete|Release|Module|ModuleInfo|Incbin|IncbinPtr|IncbinLen|Assert|Goto|Try|Catch|Finally|End\\s*Try|Throw|DefData|ReadData|RestoreData|Varptr|StackAlloc|FieldOffset|NoDebug|Alias)\\b",
+					"name": "keyword.control.bmx"
 				},
 				{
 					"begin": "^\\s*\\?",
 					"end": "$",
-					"name": "keyword.control"
+					"name": "keyword.control.bmx"
+				},
+				{
+					"begin": "^\\b(?i)(Include|Framework|Import)",
+					"end": "((\\w+\\.\\w+)|(?=($|')))",
+					"beginCaptures": {
+						"1": {
+							"name": "keyword.control.bmx"
+						}
+					},
+					"endCaptures": {
+						"1": {
+							"name": "constant.language.bmx"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#string"
+						}
+					]
 				}
 			]
 		},

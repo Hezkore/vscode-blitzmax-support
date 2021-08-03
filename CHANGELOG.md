@@ -1,3 +1,6 @@
+## 2.19.1
+* Updated grammar syntax
+
 ## 2.19.0
 * Added document link provider for import, framework and include
 

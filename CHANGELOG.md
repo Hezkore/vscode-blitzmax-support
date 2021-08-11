@@ -1,3 +1,10 @@
+## 2.19.2
+* Debug terminal no longer steals focus
+* Fixed rem blocks
+* < > no longer surround selection
+* Fixed rem blocks in snippets
+* Snippets are now priorities in suggestions list
+
 ## 2.19.1
 * Updated grammar syntax
 

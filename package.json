@@ -94,7 +94,8 @@
 		"configurationDefaults": {
 			"[blitzmax]": {
 				"editor.insertSpaces": false,
-				"editor.showFoldingControls": "always"
+				"editor.showFoldingControls": "always",
+				"editor.snippetSuggestions": "top"
 			}
 		},
 		"walkthroughs": [

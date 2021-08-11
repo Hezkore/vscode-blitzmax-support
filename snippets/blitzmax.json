@@ -145,13 +145,13 @@
 	
 	"BBDoc Keyword" : {
 		"prefix" : "BBDoc Keyword",
-		"body" : [ "BLOCK_COMMENT_START", "bbdoc: ${1:intro}", "about: ${2:about}", "keyword: ${0:keyword}", "BLOCK_COMMENT_END" ],
+		"body" : [ "$BLOCK_COMMENT_START", "bbdoc: ${1:intro}", "about: ${2:about}", "keyword: ${0:keyword}", "$BLOCK_COMMENT_END" ],
 		"description" : "BBDoc Keyword Block"
 	},
 	
 	"BBDoc Full" : {
 		"prefix" : "BBDoc Full",
-		"body" : [ "$BLOCK_COMMENT_START", "bbdoc: ${1:intro}", "about: ${2:about}", "returns: ${3:returns}", "param: ${4:param}", "keyword: ${0:keyword}", "BLOCK_COMMENT_END" ],
+		"body" : [ "$BLOCK_COMMENT_START", "bbdoc: ${1:intro}", "about: ${2:about}", "returns: ${3:returns}", "param: ${4:param}", "keyword: ${0:keyword}", "$BLOCK_COMMENT_END" ],
 		"description" : "BBDoc Full Block"
 	},
 	

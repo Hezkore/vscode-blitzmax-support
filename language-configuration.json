@@ -2,8 +2,8 @@
 	"comments": {
 		"lineComment": "'",
 		"blockComment": [
-			"[rR][eE][mM]+",
-			"[eE][nN][dD]\\s*[rR][eE][mM]+"
+			"rem",
+			"endrem",
 		]
 	},
 	"brackets": [
@@ -70,10 +70,6 @@
 		[
 			"(",
 			")"
-		],
-		[
-			"<",
-			">"
 		],
 		[
 			"\"",

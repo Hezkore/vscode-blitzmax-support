@@ -194,7 +194,7 @@
 					"name": "keyword.control.bmx"
 				},
 				{
-					"begin": "^\\b(?i)(Include|Framework|Import)",
+					"begin": "^\\s*\\b(?i)(Include|Framework|Import)",
 					"end": "((\\w+\\.\\w+)|(?=($|')))",
 					"beginCaptures": {
 						"1": {

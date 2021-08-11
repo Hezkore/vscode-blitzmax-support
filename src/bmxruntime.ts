@@ -212,7 +212,7 @@ export class BmxDebugSession extends LoggingDebugSession {
 			pty: this.pseudoTerminal,
 			iconPath: new vscode.ThemeIcon( 'rocket' )
 		} )
-		this.terminal.show( true )
+		//this.terminal.show( true )
 
 		// Reset some stuff
 		this.isDebugging = false

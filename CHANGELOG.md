@@ -1,3 +1,7 @@
+## 2.19.3
+* The default build task is now set to GUI instead of Console
+* Fixed MacOS Catalina unable to launch GUI applications
+
 ## 2.19.2
 * Debug terminal no longer steals focus
 * Fixed rem blocks

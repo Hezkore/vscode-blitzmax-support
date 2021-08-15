@@ -12,7 +12,7 @@ export let internalBuildDefinition: BmxBuildTaskDefinition = makeTaskDefinition(
 	'BlitzMax: Default',
 	'Automatically generated BlitzMax task',
 	'application',
-	'console'
+	'gui'
 )
 
 export interface BmxBuildOptions {

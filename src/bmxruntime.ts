@@ -9,6 +9,7 @@ import { DebugProtocol } from 'vscode-debugprotocol'
 import * as process from 'child_process'
 import * as awaitNotify from 'await-notify'
 import * as vscode from 'vscode'
+import * as os from 'os'
 import { makeTask, taskOutput, getBuildDefinitionFromWorkspace, BmxBuildTaskDefinition, BmxBuildOptions } from './taskprovider'
 import { BmxDebugger, BmxDebugStackFrame } from './bmxdebugger'
 
@@ -190,7 +191,12 @@ export class BmxDebugSession extends LoggingDebugSession {
 
 		// Figure out output path
 		this.bmxProcessPath = taskOutput( debuggerTaskDefinition, args.workspace )
-
+		if ( os.platform() == 'darwin' && args.apptype == 'gui' ) {
+			this.bmxProcessPath +=
+				'.app/Contents/MacOS/' +
+				this.bmxProcessPath.substr( this.bmxProcessPath.lastIndexOf( '/' ) + 1 )
+		}
+		
 		// Launch!
 		//console.log("LAUNCHING: " + this._bmxProcessPath)
 		this.startRuntime()

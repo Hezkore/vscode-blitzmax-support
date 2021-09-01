@@ -1,6 +1,6 @@
 {
 	"name": "blitzmax",
-	"version": "2.19.3",
+	"version": "2.19.4",
 	"publisher": "Hezkore",
 	"displayName": "BlitzMax",
 	"description": "BlitzMax for Visual Studio Code.",
@@ -279,18 +279,20 @@
 				},
 				"blitzmax.lsp.path": {
 					"type": "string",
-					"markdownDescription": "Relative or absolute path to [LSP](https://github.com/search?q=topic%3ABlitzMax+topic%3Alsp).",
-					"default": "./bin/lsp",
+					"markdownDescription": "Relative or absolute path to the [LSP](https://github.com/search?q=topic%3ABlitzMax+topic%3Alsp).",
+					"default": "./bin/bls",
 					"scope": "machine-overridable"
 				},
 				"blitzmax.lsp.args": {
 					"type": "array",
-					"markdownDescription": "[LSP](https://github.com/search?q=topic%3ABlitzMax+topic%3Alsp) specfic arguments."
+					"markdownDescription": "[LSP](https://github.com/search?q=topic%3ABlitzMax+topic%3Alsp) specfic arguments.",
+					"scope": "machine-overridable"
 				},
 				"blitzmax.lsp.hotReload": {
 					"type": "boolean",
 					"default": false,
-					"markdownDescription": "Restart [LSP](https://github.com/search?q=topic%3ABlitzMax+topic%3Alsp) if changes to the [LSP](https://github.com/search?q=topic%3ABlitzMax+topic%3Alsp) binary are detected."
+					"markdownDescription": "Restart [LSP](https://github.com/search?q=topic%3ABlitzMax+topic%3Alsp) if changes to the [LSP](https://github.com/search?q=topic%3ABlitzMax+topic%3Alsp) binary are detected.  \n*(only supported on Linux)*",
+					"scope": "machine-overridable"
 				},
 				"blitzmax.help.customStyle": {
 					"type": "boolean",

@@ -223,7 +223,16 @@
 			"name": "keyword.operator.other.bmx"
 		},
 		"meta": {
-			"patterns": []
+			"patterns": [
+				{
+					"match": "(\\(|\\))",
+					"name": "meta.brace.round.bmx"
+				},
+				{
+					"match": "(\\[|\\])",
+					"name": "meta.brace.square.bmx"
+				}
+			]
 		},
 		"storage": {
 			"patterns": [

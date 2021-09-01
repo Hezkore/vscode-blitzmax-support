@@ -1,3 +1,7 @@
+## 2.19.4
+* Updated language syntax to include parentheses and brackets
+* Changed default LSP binary to 'bls'
+
 ## 2.19.3
 * The default build task is now set to GUI instead of Console
 * Fixed MacOS Catalina unable to launch GUI applications

@@ -1,3 +1,6 @@
+## 2.19.5
+* Better .bmx source file encoding detection
+
 ## 2.19.4
 * Updated language syntax to include parentheses and brackets
 * Changed default LSP binary to 'bls'

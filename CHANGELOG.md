@@ -1,3 +1,6 @@
+## 2.20.0
+* Initial web support
+
 ## 2.19.5
 * Better .bmx source file encoding detection
 

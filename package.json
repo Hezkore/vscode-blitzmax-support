@@ -1,6 +1,6 @@
 {
 	"name": "blitzmax",
-	"version": "2.19.5",
+	"version": "2.20.0",
 	"publisher": "Hezkore",
 	"displayName": "BlitzMax",
 	"description": "BlitzMax for Visual Studio Code.",
@@ -38,6 +38,9 @@
 		"compile": "tsc -p ./src",
 		"lint": "eslint src --ext ts",
 		"watch": "tsc -watch -p ./src",
+		"compile-web": "webpack --config ./build/web-extension.webpack.config.js",
+		"watch-web": "webpack --watch --config ./build/web-extension.webpack.config.js",
+		"package-web": "webpack --mode production --devtool hidden-source-map --config ./build/web-extension.webpack.config.js",
 		"package": "vsce package",
 		"publish": "vsce publish"
 	},
@@ -56,6 +59,7 @@
 		"@types/vscode": "^1.58.0",
 		"@typescript-eslint/eslint-plugin": "^4.29.1",
 		"@typescript-eslint/parser": "4.29.1",
+		"@vscode/test-web": "^0.0.8",
 		"eslint": "7.26.0",
 		"glob": "^7.1.7",
 		"mocha": "^8.4.0",
@@ -64,10 +68,11 @@
 		"vsce": "1.88.0",
 		"vscode-debugadapter-testsupport": "^1.47.0",
 		"vscode-test": "1.5.2",
-		"webpack": "5.36.2",
-		"webpack-cli": "4.7.0"
+		"webpack": "^5.38.1",
+		"webpack-cli": "^4.7.0"
 	},
 	"main": "./out/extension",
+	"browser": "./out/web/extension",
 	"activationEvents": [
 		"workspaceContains:/.bmx",
 		"onLanguage:blitzmax",

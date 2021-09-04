@@ -1,3 +1,7 @@
+## 2.21.0
+* Filter debug call stack
+* Added MaxIDE-like call stack step
+
 ## 2.20.0
 * Initial web support
 

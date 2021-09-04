@@ -23,9 +23,12 @@ interface BmxDebuggerEvent {
 }
 
 export interface BmxDebugStackFrame extends StackFrame {
+	presentationHint?: 'normal' | 'label' | 'subtle'
+	isAppStack?: boolean
 }
 
 export interface BmxDebugScope extends Scope {
+	parent: BmxDebugStackFrame
 }
 
 export interface BmxDebugVariable extends Variable {
@@ -48,6 +51,7 @@ export class BmxDebugger {
 	private eventProcess = new awaitNotify.Subject()
 	private processingVariables: boolean
 	private nextReferenceId: number
+	stacks: BmxDebugStackFrame[]
 	scopes: BmxDebugScope[]
 	cachedDumpForReference: BmxCachedDump[]
 	referenceVariables: BmxDebugVariable[]
@@ -178,6 +182,15 @@ export class BmxDebugger {
 		}
 		return false
 	}
+	
+	isAppStack( id: number ): boolean {
+		for ( let i = 0; i < this.stacks.length; i++ ) {
+			const stacks = this.stacks[i]
+			if ( !stacks || !stacks.id ) continue
+			if ( stacks.id == id && stacks.isAppStack ) return true
+		}
+		return false
+	}
 
 	convertToVariable( str: string ): BmxDebugVariable {
 		let value: string = ''
@@ -252,6 +265,7 @@ export class BmxDebugger {
 
 			this.resetReferenceId()
 			if ( !this.variableMap ) this.variableMap = new Map()
+			this.stacks = []
 			this.scopes = []
 			this.referenceVariables = []
 
@@ -273,8 +287,9 @@ export class BmxDebugger {
 
 			// Process event
 			let currentStackFrame: BmxDebugStackFrame | undefined
+			let lastStackFrame: BmxDebugStackFrame | undefined
 			let lastScope: BmxDebugScope | undefined
-
+			
 			for ( let i = 0; i < event.data.length; i++ ) {
 				const line = event.data[i]
 
@@ -306,11 +321,16 @@ export class BmxDebugger {
 				} else {
 					// Get the name of this scope from the next line
 					if ( currentStackFrame.name.length <= 0 ) {
+						if ( line == 'Local <local>' ) {
+							currentStackFrame = undefined
+							continue
+						}
 
 						this.scopes[currentStackFrame.id] = {
 							name: line,
 							expensive: false,
-							variablesReference: this.getNextReferenceId()
+							variablesReference: this.getNextReferenceId(),
+							parent: currentStackFrame
 						}
 						lastScope = this.scopes[currentStackFrame.id]
 
@@ -320,21 +340,47 @@ export class BmxDebugger {
 								currentStackFrame.name.indexOf( ' ' ) + 1
 							)
 						}
+						this.stacks.unshift( currentStackFrame )
 						response.body.stackFrames.unshift( currentStackFrame )
 						response.body.totalFrames = response.body.stackFrames.length
 						//console.log(lastScope.variablesReference+': @'+currentStackFrame.name)
+						lastStackFrame = currentStackFrame
 						currentStackFrame = undefined
 					}
 				}
 			}
-
+			
+			// application stack
+			const useAppStack = true
+			if ( useAppStack && lastStackFrame ) {
+				currentStackFrame = {
+					name: `<${this.stacks[this.stacks.length - 1].name}>`,
+					id: this.getNextReferenceId(),
+					source: lastStackFrame.source,
+					line: lastStackFrame.line,
+					column: lastStackFrame.column,
+					isAppStack: true,
+					presentationHint: 'subtle'
+				}
+				this.stacks.unshift( currentStackFrame )
+				response.body.stackFrames.unshift( currentStackFrame )
+				response.body.totalFrames = response.body.totalFrames ? response.body.totalFrames++ : 1
+			}
+			
 			return resolve( response )
 		} )
 	}
 
 	onScopesRequest( response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments ) {
 		const scope = this.scopes[args.frameId]
-		if ( this.showEmptyScopes || this.cachedDumpForReference[scope.variablesReference] ) {
+		
+		if (this.isAppStack(args.frameId)) {
+			response.body = { scopes: [] }
+			this.scopes.forEach( s => {
+				if (!s.parent.isAppStack)
+					response.body.scopes.unshift( s )
+			})
+		} else if ( this.showEmptyScopes || this.cachedDumpForReference[scope.variablesReference] ) {
 			response.body = { scopes: [scope] }
 		}
 		return response
@@ -348,7 +394,7 @@ export class BmxDebugger {
 			response.body = { variables: [] }
 
 			let convertedVariable: BmxDebugVariable
-
+			
 			if ( this.cachedDumpForReference[args.variablesReference] ) {
 				// Use the cached response (from initial stack call)
 				this.cachedDumpForReference[args.variablesReference].data.forEach( line => {

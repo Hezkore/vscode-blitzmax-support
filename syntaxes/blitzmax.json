@@ -255,6 +255,10 @@
 					"name": "storage.type.type.bmx"
 				},
 				{
+					"match": "(?i)\\b((End\\s*)?Struct)\\b",
+					"name": "storage.type.struct.bmx"
+				},
+				{
 					"match": "(?i)\\b((End\\s*)?Function)\\b",
 					"name": "storage.type.function.bmx"
 				},

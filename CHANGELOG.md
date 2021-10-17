@@ -1,3 +1,7 @@
+## 2.22.1
+* Removed incorrect < > highlight
+* Updated build, debug and launch tooltips
+
 ## 2.22.0
 * Search function for documentation
 * Fixed syntax highlight for struct (ProPuke)

@@ -1,3 +1,7 @@
+## 2.22.0
+* Search function for documentation
+* Fixed syntax highlight for struct (ProPuke)
+
 ## 2.21.0
 * Filter debug call stack
 * Added MaxIDE-like call stack step

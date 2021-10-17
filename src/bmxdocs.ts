@@ -14,6 +14,10 @@ let _modulesList: BmxModule[]
 
 export function registerDocsProvider( context: vscode.ExtensionContext ) {
 	// Related commands
+	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.searchDocs', async () => {
+		searchDocs()
+	} ) )
+	
 	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.quickHelp', ( word: any ) => {
 		// If no word was specified, we look at the word under the cursor
 		if ( !word || typeof word !== "string" ) word = getCurrentDocumentWord( undefined, undefined, undefined, true, false )
@@ -80,6 +84,28 @@ export function registerDocsProvider( context: vscode.ExtensionContext ) {
 	} ) )
 }
 
+export async function searchDocs() {
+	cacheCommandsAndModulesIfEmpty( true )
+	if ( !_commandsList ) return
+	
+	let allCommands = getCommand()
+	
+	let pickItems: vscode.QuickPickItem[] = []
+	allCommands.forEach( match => {
+		pickItems.push( { label: match.realName, detail: match.description, description: match.module } )
+	} )
+
+	vscode.window.showQuickPick( pickItems, {title: 'Search for', matchOnDescription: true, matchOnDetail: true} ).then( selection => {
+		for ( let index = 0; index < pickItems.length; index++ ) {
+			const pickItem = pickItems[index];
+			if ( pickItem === selection ) {
+				showBmxDocs( vscode.Uri.file( BlitzMaxPath + '/' + allCommands[index].url ).fsPath, allCommands[index].urlLocation )
+				return
+			}
+		}
+	} )
+}
+
 export async function showQuickHelp( command: string ) {
 	cacheCommandsAndModulesIfEmpty( true )
 	if ( !_commandsList ) return
@@ -87,14 +113,14 @@ export async function showQuickHelp( command: string ) {
 
 	// Multi match
 	if ( commands.length > 1 ) {
-		let pickOptions: vscode.QuickPickItem[] = []
+		let pickItems: vscode.QuickPickItem[] = []
 		commands.forEach( match => {
-			pickOptions.push( { label: match.realName, detail: match.module } )
+			pickItems.push( { label: match.realName, detail: match.description, description: match.module } )
 		} )
 
-		vscode.window.showQuickPick( pickOptions ).then( selection => {
-			for ( let index = 0; index < pickOptions.length; index++ ) {
-				const pickItem = pickOptions[index];
+		vscode.window.showQuickPick( pickItems, {matchOnDescription: true, matchOnDetail: true} ).then( selection => {
+			for ( let index = 0; index < pickItems.length; index++ ) {
+				const pickItem = pickItems[index];
 				if ( pickItem === selection ) {
 					showBmxDocs( vscode.Uri.file( BlitzMaxPath + '/' + commands[index].url ).fsPath, commands[index].urlLocation )
 					return

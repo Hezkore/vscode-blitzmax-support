@@ -90,6 +90,16 @@ export class BmxDocsTreeProvider implements vscode.TreeDataProvider<vscode.TreeI
 		if ( !BlitzMaxPath ) return Promise.resolve( [] )
 
 		let roots: vscode.TreeItem[] = []
+		
+		// Search bar at the top
+		let searchRoot = new vscode.TreeItem( 'Search', vscode.TreeItemCollapsibleState.None )
+		searchRoot.tooltip = 'Search documentation'
+		searchRoot.iconPath = new vscode.ThemeIcon( 'search' )
+		searchRoot.command = {
+			command: 'blitzmax.searchDocs',
+			title: 'Search docs'
+		}
+		roots.push( searchRoot )
 
 		// Fetch folders with a capital letter from \docs\html\
 		const dirPath = path.join( BlitzMaxPath, 'docs', 'html' )

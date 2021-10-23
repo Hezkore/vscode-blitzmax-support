@@ -124,10 +124,16 @@ export function jointBmxWord( document: vscode.TextDocument, wordRange: vscode.R
 export function workspaceOrGlobalConfig( workspace: vscode.WorkspaceFolder | undefined, section: string ): unknown {
 	const rootSection = section.substr( 0, section.indexOf( '.' ) )
 	const childSection = section.slice( rootSection.length + 1 )
-
-	return workspace ?
-		vscode.workspace.getConfiguration( rootSection, workspace ).get( childSection ) :
-		vscode.workspace.getConfiguration( rootSection ).inspect( childSection )?.globalValue
+	
+	if ( workspace ) {
+		return vscode.workspace.getConfiguration( rootSection, workspace ).get( childSection )
+	} {
+		const gVal = vscode.workspace.getConfiguration( rootSection ).inspect( childSection )?.globalValue
+		if ( gVal )
+			return gVal
+		else
+		return vscode.workspace.getConfiguration( rootSection, undefined ).get( childSection ) 
+	}
 }
 
 export function workspaceOrGlobalConfigString( workspace: vscode.WorkspaceFolder | undefined, section: string ): string | undefined {

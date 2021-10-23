@@ -1,3 +1,6 @@
+## 2.23.0
+* Added new LSP option
+
 ## 2.22.1
 * Removed incorrect < > highlight
 * Updated build, debug and launch tooltips

@@ -7,6 +7,7 @@ import { existsSync } from './common'
 import * as lsp from 'vscode-languageclient'
 import { workspaceOrGlobalConfigBoolean, workspaceOrGlobalConfigArray, workspaceOrGlobalConfigString } from './common'
 
+let multiInstance: boolean | undefined
 let forcedStop: boolean
 let outputChannel: vscode.OutputChannel
 let activeBmxLsp: BmxLSP | undefined
@@ -55,6 +56,9 @@ export function activeLspCapabilities(): lsp.ServerCapabilities {
 }
 
 export function registerLSP( context: vscode.ExtensionContext ) {
+	
+	multiInstance = workspaceOrGlobalConfigBoolean( undefined, 'blitzmax.lsp.multi' )
+	if (multiInstance == undefined) multiInstance = false
 
 	// Create our output channel
 	outputChannel = vscode.window.createOutputChannel( 'BlitzMax Language Server' )
@@ -117,29 +121,46 @@ export function registerLSP( context: vscode.ExtensionContext ) {
 	context.subscriptions.push( lspStatusBarItem )
 
 	// Start LSP for each document with unique workspace
-	changeBmxDocument( vscode.window.activeTextEditor?.document )
-	vscode.window.onDidChangeActiveTextEditor( ( event ) => {
-		changeBmxDocument( event?.document )
-	} )
-
+	if ( multiInstance ) {
+		changeBmxDocument( vscode.window.activeTextEditor?.document )
+		vscode.window.onDidChangeActiveTextEditor( ( event ) => {
+			changeBmxDocument( event?.document )
+		} )
+	} else {
+		activateBmxLSP( undefined )
+	}
+	
 	// Reset LSPs when settings change
-	vscode.workspace.onDidChangeConfiguration( ( event ) => {
-		if ( event.affectsConfiguration( 'blitzmax.base.path' ) ||
-			event.affectsConfiguration( 'blitzmax.lsp' ) ) {
-			restartAllLSP()
-		}
-	} )
-
-	// Remove LSPs for removed folders
-	vscode.workspace.onDidChangeWorkspaceFolders( ( event ) => {
-		for ( let folder of event.removed ) {
-			let bmxLsp = runningBmxLsps.get( folder.uri.toString() )
-			if ( bmxLsp ) {
-				runningBmxLsps.delete( folder.uri.toString() )
-				bmxLsp.client.stop()
+	if ( multiInstance ) {
+		vscode.workspace.onDidChangeConfiguration( ( event ) => {
+			if ( event.affectsConfiguration( 'blitzmax.base.path' ) ||
+				event.affectsConfiguration( 'blitzmax.lsp' ) ) {
+				restartAllLSP()
 			}
+		} )
+	}
+	
+	// Notify about multi instance reload
+	vscode.workspace.onDidChangeConfiguration( ( event ) => {
+		if ( event.affectsConfiguration( 'blitzmax.lsp.multi' ) ) {
+			vscode.window.showInformationMessage( 'Restart or reload VS Code to apply settings.', "Reload" ).then( choice => {
+				if (choice) vscode.commands.executeCommand('workbench.action.reloadWindow')
+			})
 		}
 	} )
+	
+	// Remove LSPs for removed folders
+	if ( multiInstance ) {
+		vscode.workspace.onDidChangeWorkspaceFolders( ( event ) => {
+			for ( let folder of event.removed ) {
+				let bmxLsp = runningBmxLsps.get( folder.uri.toString() )
+				if ( bmxLsp ) {
+					runningBmxLsps.delete( folder.uri.toString() )
+					bmxLsp.client.stop()
+				}
+			}
+		} )
+	}
 }
 
 export function deactivateLSP(): Thenable<void> {
@@ -339,6 +360,7 @@ class BmxLSP {
 
 		// Detect LSP path
 		this.clientPath = workspaceOrGlobalConfigString( this.workspace, 'blitzmax.lsp.path' )
+		console.log(this.clientPath)
 		if ( !this.clientPath ) return
 
 		// Relative LSP path?

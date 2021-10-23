@@ -1,6 +1,6 @@
 {
 	"name": "blitzmax",
-	"version": "2.22.1",
+	"version": "2.23.0",
 	"publisher": "Hezkore",
 	"displayName": "BlitzMax",
 	"description": "BlitzMax for Visual Studio Code.",
@@ -289,6 +289,12 @@
 					"type": "string",
 					"markdownDescription": "Relative or absolute path to the [LSP](https://github.com/search?q=topic%3ABlitzMax+topic%3Alsp).",
 					"default": "./bin/bls",
+					"scope": "machine-overridable"
+				},
+				"blitzmax.lsp.multi": {
+					"type": "boolean",
+					"markdownDescription": "Run a separate instance of the [LSP](https://github.com/search?q=topic%3ABlitzMax+topic%3Alsp) per workspace folder.",
+					"default": false,
 					"scope": "machine-overridable"
 				},
 				"blitzmax.lsp.args": {

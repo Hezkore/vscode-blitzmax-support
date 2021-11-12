@@ -1,3 +1,6 @@
+## 2.24.0
+* Updated LSP version
+
 ## 2.23.0
 * Added new LSP option
 

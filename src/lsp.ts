@@ -378,7 +378,9 @@ class BmxLSP {
 		}
 
 		// Setup LSP
-		this.client = new lsp.LanguageClient( 'BlitzMax Language Server',
+		this.client = new lsp.LanguageClient(
+			'blitzmax',
+			'BlitzMax Language Server',
 			{ command: this.clientPath, args: workspaceOrGlobalConfigArray( this.workspace, 'blitzmax.lsp.args' ), options: { env: undefined } },
 			this.clientOptions
 		)

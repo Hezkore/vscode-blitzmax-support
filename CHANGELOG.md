@@ -1,3 +1,6 @@
+## 2.25.0
+* Added LSP trace option
+
 ## 2.24.0
 * Updated LSP version
 

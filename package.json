@@ -1,6 +1,6 @@
 {
 	"name": "blitzmax",
-	"version": "2.24.0",
+	"version": "2.25.0",
 	"publisher": "Hezkore",
 	"displayName": "BlitzMax",
 	"description": "BlitzMax for Visual Studio Code.",
@@ -260,6 +260,17 @@
 			"type": "object",
 			"title": "BlitzMax",
 			"properties": {
+				"blitzmax.trace.server": {
+					"scope": "window",
+					"type": "string",
+					"enum": [
+						"off",
+						"messages",
+						"verbose"
+					],
+					"default": "off",
+					"description": "Traces the communication between VS Code and the BlitzMax language server."
+				},
 				"blitzmax.base.path": {
 					"type": "string",
 					"description": "Absolute path to BlitzMax root.",

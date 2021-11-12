@@ -50,7 +50,7 @@
 	"dependencies": {
 		"await-notify": "1.0.1",
 		"vscode-debugadapter": "^1.48.0",
-		"vscode-languageclient": "6.1.4"
+		"vscode-languageclient": "^7.0.0"
 	},
 	"devDependencies": {
 		"@types/glob": "^7.1.3",

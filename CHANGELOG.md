@@ -1,3 +1,6 @@
+## 2.25.1
+* Fixed an issues where the LSP didn't restart when changing settings
+
 ## 2.25.0
 * Added LSP trace option
 

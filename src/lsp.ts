@@ -130,14 +130,15 @@ export function registerLSP( context: vscode.ExtensionContext ) {
 	}
 	
 	// Reset LSPs when settings change
-	if ( multiInstance ) {
-		vscode.workspace.onDidChangeConfiguration( ( event ) => {
-			if ( event.affectsConfiguration( 'blitzmax.base.path' ) ||
-				event.affectsConfiguration( 'blitzmax.lsp' ) ) {
+	vscode.workspace.onDidChangeConfiguration( ( event ) => {
+		if ( event.affectsConfiguration( 'blitzmax.base.path' ) ||
+			event.affectsConfiguration( 'blitzmax.lsp' ) ) {
+			if ( multiInstance )
 				restartAllLSP()
-			}
-		} )
-	}
+			else
+				restartSingleLSP( activeBmxLsp )
+		}
+	} )
 	
 	// Notify about multi instance reload
 	vscode.workspace.onDidChangeConfiguration( ( event ) => {

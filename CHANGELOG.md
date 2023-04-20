@@ -1,3 +1,7 @@
+## 2.26.0
+* Build option 'args' has been renamed to 'bmkargs'
+* Added 'appargs' to debug options
+
 ## 2.25.1
 * Fixed an issues where the LSP didn't restart when changing settings
 

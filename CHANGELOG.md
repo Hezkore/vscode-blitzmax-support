@@ -1,6 +1,10 @@
+## 2.26.1
+* Added .bmx file icons
+* Added 'make' and 'appargs' to default debug configuration
+
 ## 2.26.0
-* Build option 'args' has been renamed to 'bmkargs'
-* Added 'appargs' to debug options
+* Tasks (tasks.json) now support 'bmkargs' (renamed from 'args')
+* Debug (launch.json) now supports 'appargs'
 
 ## 2.25.1
 * Fixed an issues where the LSP didn't restart when changing settings

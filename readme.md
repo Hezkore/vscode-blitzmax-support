@@ -88,7 +88,6 @@ The extension will guide you through this process on the first format.
 Extension by [Hezkore](https://github.com/Hezkore).\
 Icons by [GWRon](https://github.com/GWRon).
 
-
 ### **Contributing**
 ---
 Contributions are greatly appreciated.\

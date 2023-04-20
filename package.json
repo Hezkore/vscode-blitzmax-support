@@ -1,6 +1,6 @@
 {
 	"name": "blitzmax",
-	"version": "2.26.0",
+	"version": "2.26.1",
 	"publisher": "Hezkore",
 	"displayName": "BlitzMax",
 	"description": "BlitzMax for Visual Studio Code.",
@@ -577,6 +577,10 @@
 		"languages": [
 			{
 				"id": "blitzmax",
+				"icon": {
+					"light": "./icons/bmx-light.svg",
+					"dark": "./icons/bmx-dark.svg"
+				},
 				"extensions": [
 					".bmx"
 				],
@@ -844,7 +848,9 @@
 						"type": "bmx",
 						"name": "Default BlitzMax debug",
 						"request": "launch",
-						"source": "${file}"
+						"source": "${file}",
+						"make": "application",
+						"appargs": []
 					}
 				],
 				"configurationSnippets": [

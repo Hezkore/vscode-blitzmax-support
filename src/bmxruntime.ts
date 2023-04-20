@@ -102,6 +102,7 @@ export class BmxDebugSession extends LoggingDebugSession {
 	bmxProcess: process.ChildProcess
 	workspace: vscode.WorkspaceFolder | undefined
 	bmxProcessPath: string | undefined
+	bmxProcessArgs: string[] = []
 	debugParser: BmxDebugger
 	killSignal: NodeJS.Signals = 'SIGKILL'
 	isRestart: boolean
@@ -196,6 +197,9 @@ export class BmxDebugSession extends LoggingDebugSession {
 				'.app/Contents/MacOS/' +
 				this.bmxProcessPath.substr( this.bmxProcessPath.lastIndexOf( '/' ) + 1 )
 		}
+		
+		// Set the user arguments
+		this.bmxProcessArgs = debuggerTaskDefinition.appargs || []
 		
 		// Launch!
 		//console.log("LAUNCHING: " + this._bmxProcessPath)
@@ -357,7 +361,7 @@ class BmxDebugTerminal implements vscode.Pseudoterminal {
 				}
 			}
 
-			this.debugSession.bmxProcess = process.spawn( this.debugSession.bmxProcessPath )
+			this.debugSession.bmxProcess = process.spawn( this.debugSession.bmxProcessPath, this.debugSession.bmxProcessArgs )
 
 			// Any normal stdout goes to debug console
 			if ( this.debugSession.bmxProcess.stdout ) this.debugSession.bmxProcess.stdout.on( 'data', ( data ) => {

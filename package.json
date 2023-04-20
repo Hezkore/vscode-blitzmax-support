@@ -1,6 +1,6 @@
 {
 	"name": "blitzmax",
-	"version": "2.25.1",
+	"version": "2.26.0",
 	"publisher": "Hezkore",
 	"displayName": "BlitzMax",
 	"description": "BlitzMax for Visual Studio Code.",
@@ -62,10 +62,10 @@
 		"@vscode/test-web": "^0.0.8",
 		"eslint": "7.26.0",
 		"glob": "^7.1.7",
-		"mocha": "^8.4.0",
+		"mocha": "^10.2.0",
 		"ts-loader": "9.1.2",
 		"typescript": "^4.3.5",
-		"vsce": "1.88.0",
+		"vsce": "^1.97.0",
 		"vscode-debugadapter-testsupport": "^1.47.0",
 		"vscode-test": "1.5.2",
 		"webpack": "^5.38.1",
@@ -828,9 +828,13 @@
 								"type": "array",
 								"markdownDescription": "User defined conditionals, usable via `?myconditional`  \n`bmk -ud <user-defined-conditionals>`  \n[More info](https://blitzmax.org/docs/en/tools/bcc/#-ud-user-defined-conditionals)"
 							},
-							"args": {
+							"bmkargs": {
 								"type": "array",
-								"description": "User defined arguments"
+								"description": "User defined arguments passed to the compiler"
+							},
+							"appargs": {
+								"type": "array",
+								"description": "User defined arguments passed to the application"
 							}
 						}
 					}
@@ -1057,9 +1061,9 @@
 						"type": "array",
 						"markdownDescription": "User defined conditionals, usable via `?myconditional`  \n`bmk -ud <user-defined-conditionals>`  \n[More info](https://blitzmax.org/docs/en/tools/bcc/#-ud-user-defined-conditionals)"
 					},
-					"args": {
+					"bmkargs": {
 						"type": "array",
-						"description": "User defined arguments"
+						"description": "User defined arguments passed to the compiler"
 					}
 				}
 			}

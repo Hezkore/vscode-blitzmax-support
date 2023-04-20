@@ -50,7 +50,8 @@ export interface BmxBuildOptions {
 	nopie?: boolean
 	upx?: boolean
 	conditionals?: string[]
-	args?: string[]
+	bmkargs?: string[]
+	appargs?: string[]
 }
 
 export interface BmxBuildTaskDefinition extends BmxBuildOptions, vscode.TaskDefinition {
@@ -374,7 +375,7 @@ export function makeTask( definition: BmxBuildTaskDefinition ): vscode.Task {
 
 		if ( resolvedDefinition.threaded ) args.push( '-h' )
 
-		if ( resolvedDefinition.args ) args = args.concat( resolvedDefinition.args )
+		if ( resolvedDefinition.bmkargs ) args = args.concat( resolvedDefinition.bmkargs )
 
 		// Figure out output
 		// Which will either be user defined, or <source>/<source>.debug

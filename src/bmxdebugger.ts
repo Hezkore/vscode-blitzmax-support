@@ -322,6 +322,13 @@ export class BmxDebugger {
 					// Get the name of this scope from the next line
 					if ( currentStackFrame.name.length <= 0 ) {
 						if ( line == 'Local <local>' ) {
+							// update the last stack frame with the current stack frame, as this is just a local scope
+							if ( lastStackFrame ) {
+								lastStackFrame.source = currentStackFrame.source;
+								lastStackFrame.line = currentStackFrame.line;
+								lastStackFrame.column = currentStackFrame.column;
+								lastScope = this.scopes[lastStackFrame.id];
+							}
 							currentStackFrame = undefined
 							continue
 						}
@@ -351,7 +358,7 @@ export class BmxDebugger {
 			}
 			
 			// application stack
-			const useAppStack = true
+			const useAppStack = false;
 			if ( useAppStack && lastStackFrame ) {
 				currentStackFrame = {
 					name: `<${this.stacks[this.stacks.length - 1].name}>`,

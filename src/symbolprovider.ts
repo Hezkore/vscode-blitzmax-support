@@ -92,6 +92,7 @@ function GetBmxDocSymbols( document: vscode.TextDocument ): vscode.DocumentSymbo
 	let symbols: vscode.DocumentSymbol[] = []
 	let containers: vscode.DocumentSymbol[] = []
 	let inRemBlock: boolean = false
+	let inExternBlock: boolean = false
 
 	workspaceSymbols.set( document.uri.fsPath, [] )
 
@@ -120,23 +121,24 @@ function GetBmxDocSymbols( document: vscode.TextDocument ): vscode.DocumentSymbo
 		if ( lineCleanText.length < 2 ) continue
 		const words: string[] = lineCleanText.split( ' ' )
 		if ( words.length < 0 ) continue
+		const lowerWords: string[] = lineCleanText.toLowerCase().split( ' ' )
 
 		if ( words.length > 1 && words[1].startsWith( "'" ) ) continue
 
 		let firstWordOffset: number = 0
-		let firstWord: string = words[0].toLowerCase()
+		let firstWord: string = lowerWords[0]
 		let firstWordLength: number = firstWord.length
-		if ( firstWord == 'end' && words.length > 1 ) {
+		if ( firstWord == 'end' && lowerWords.length > 1 ) {
 
 			let foundWord: string | undefined
-			words.forEach( scanWord => {
+			lowerWords.forEach( scanWord => {
 
 				if ( scanWord.trim().length > 2 )
 					foundWord = scanWord.trim()
 			} )
 
 			if ( foundWord )
-				firstWord += foundWord.toLowerCase()
+				firstWord += foundWord
 		}
 
 		if ( inRemBlock ) {
@@ -154,12 +156,12 @@ function GetBmxDocSymbols( document: vscode.TextDocument ): vscode.DocumentSymbo
 		}
 
 		// Skip some words
-		if ( words.length > 1 ) {
+		if ( lowerWords.length > 1 ) {
 			switch ( firstWord ) {
 				case 'public':
 				case 'private':
 					firstWordOffset += 1
-					firstWord = words[firstWordOffset].toLowerCase()
+					firstWord = lowerWords[firstWordOffset].toLowerCase()
 					firstWordLength += firstWord.length
 					break
 			}
@@ -175,12 +177,12 @@ function GetBmxDocSymbols( document: vscode.TextDocument ): vscode.DocumentSymbo
 		switch ( firstWord ) {
 			case 'function':
 				isSymbolKind = vscode.SymbolKind.Function
-				isContainer = true
+				isContainer = !inExternBlock
 				break
 
 			case 'method':
 				isSymbolKind = vscode.SymbolKind.Method
-				isContainer = true
+				isContainer = !lowerWords.includes( 'abstract' )
 				break
 
 			case 'interface':
@@ -222,6 +224,15 @@ function GetBmxDocSymbols( document: vscode.TextDocument ): vscode.DocumentSymbo
 				isSymbolKind = vscode.SymbolKind.Field
 				supportsMultiDefine = true
 				break
+			
+			case 'extern':
+				isContainer = true
+				inExternBlock = true
+				break;
+
+			case 'endextern':
+				inExternBlock = false
+				// intentional fallthrough
 
 			case 'endtype':
 			case 'endenum':
@@ -312,7 +323,7 @@ function GetBmxDocSymbols( document: vscode.TextDocument ): vscode.DocumentSymbo
 					words[firstWordOffset + 1] == '' ) {
 					firstWordOffset++
 				}
-				names.push( words[firstWordOffset + 1].trimLeft() )
+				names.push( words[firstWordOffset + 1].trimStart() )
 			}
 
 			for ( let nameNr = 0; nameNr < names.length; nameNr++ ) {

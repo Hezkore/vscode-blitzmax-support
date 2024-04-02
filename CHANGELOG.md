@@ -1,3 +1,7 @@
+## 2.26.2
+* Fixed Fixed broken debug stack frames (woollybah)
+* Fixed extern functions and abstract methods (woollybah)
+
 ## 2.26.1
 * Added .bmx file icons
 * Added 'make' and 'appargs' to default debug configuration

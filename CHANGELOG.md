@@ -1,5 +1,5 @@
 ## 2.26.2
-* Fixed Fixed broken debug stack frames (woollybah)
+* Fixed broken debug stack frames (woollybah)
 * Fixed extern functions and abstract methods (woollybah)
 
 ## 2.26.1

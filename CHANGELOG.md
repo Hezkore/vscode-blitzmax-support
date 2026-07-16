@@ -1,3 +1,6 @@
+## 2.27.0
+* Updated language client to version 8 (woollybah)
+
 ## 2.26.2
 * Fixed broken debug stack frames (woollybah)
 * Fixed extern functions and abstract methods (woollybah)

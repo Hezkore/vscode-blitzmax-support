@@ -41,6 +41,6 @@ export function activate( context: vscode.ExtensionContext ) {
 	registerSignatureHelpProvider( context )
 }
 
-export function deactivate() {
-	deactivateLSP()
+export function deactivate(): Thenable<void> {
+	return deactivateLSP()
 }

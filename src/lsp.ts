@@ -14,6 +14,10 @@ let defaultBmxLsp: BmxLSP | undefined
 let runningBmxLsps: Map<string, BmxLSP> = new Map()
 let lspStatusBarItem: vscode.StatusBarItem
 
+function runLSPTask( task: Promise<void>, action: string ): void {
+	void task.catch( error => outputChannel.appendLine( `Unable to ${action}: ${String( error )}` ) )
+}
+
 let _sortedWorkspaceFolders: string[] | undefined
 function sortedWorkspaceFolders(): string[] {
 	if ( _sortedWorkspaceFolders === void 0 ) {
@@ -83,11 +87,11 @@ export function registerLSP( context: vscode.ExtensionContext ) {
 
 					switch ( pick?.split( ' ' )[0] ) {
 						case 'Restart':
-							restartSingleLSP( activeBmxLsp )
+							runLSPTask( restartSingleLSP( activeBmxLsp ), 'restart language server' )
 							break
 						case 'Stop':
 							forcedStop = true
-							restartAllLSP()
+							runLSPTask( restartAllLSP(), 'stop language servers' )
 							break
 						case 'About':
 							vscode.window.showInformationMessage( `${activeBmxLsp.name}\r\n${activeBmxLsp.version}` )
@@ -102,7 +106,7 @@ export function registerLSP( context: vscode.ExtensionContext ) {
 					switch ( pick?.split( ' ' )[0] ) {
 						case 'Start':
 							forcedStop = false
-							restartAllLSP()
+							runLSPTask( restartAllLSP(), 'prepare language servers' )
 							changeBmxDocument( vscode.window.activeTextEditor?.document )
 							break
 						case 'View':
@@ -134,9 +138,9 @@ export function registerLSP( context: vscode.ExtensionContext ) {
 		if ( event.affectsConfiguration( 'blitzmax.base.path' ) ||
 			event.affectsConfiguration( 'blitzmax.lsp' ) ) {
 			if ( multiInstance )
-				restartAllLSP()
+				runLSPTask( restartAllLSP(), 'restart language servers' )
 			else
-				restartSingleLSP( activeBmxLsp )
+				runLSPTask( restartSingleLSP( activeBmxLsp ), 'restart language server' )
 		}
 	} )
 	
@@ -156,15 +160,18 @@ export function registerLSP( context: vscode.ExtensionContext ) {
 				let bmxLsp = runningBmxLsps.get( folder.uri.toString() )
 				if ( bmxLsp ) {
 					runningBmxLsps.delete( folder.uri.toString() )
-					bmxLsp.client.stop()
+					runLSPTask( bmxLsp.client.stop(), 'stop language server' )
 				}
 			}
 		} )
 	}
 }
 
-export function deactivateLSP(): Thenable<void> {
-	let promises: Thenable<void>[] = []
+export function deactivateLSP(): Promise<void> {
+	let promises: Promise<void>[] = []
+	if ( defaultBmxLsp && defaultBmxLsp.client ) {
+		promises.push( defaultBmxLsp.client.stop() )
+	}
 	for ( let bmxLsp of runningBmxLsps.values() ) {
 		promises.push( bmxLsp.client.stop() )
 	}
@@ -193,7 +200,7 @@ function activateBmxLSP( workspace: vscode.WorkspaceFolder | undefined ) {
 			return activeBmxLsp
 		} else {
 			// Nope!
-			activeBmxLsp.pause()
+			void activeBmxLsp.pause()
 			activeBmxLsp = undefined
 		}
 	}
@@ -210,7 +217,7 @@ function activateBmxLSP( workspace: vscode.WorkspaceFolder | undefined ) {
 	if ( existingBmxLsp ) {
 		// Yep!
 		activeBmxLsp = existingBmxLsp
-		existingBmxLsp.resume()
+		void existingBmxLsp.resume()
 		return activeBmxLsp
 	}
 
@@ -229,19 +236,21 @@ function activateBmxLSP( workspace: vscode.WorkspaceFolder | undefined ) {
 	return activeBmxLsp
 }
 
-function restartAllLSP() {
+async function restartAllLSP() {
 	activeBmxLsp = undefined
 
+	let promises: Promise<void>[] = []
 	if ( defaultBmxLsp ) {
-		if ( defaultBmxLsp.client ) defaultBmxLsp.client.stop()
+		if ( defaultBmxLsp.client ) promises.push( defaultBmxLsp.client.stop() )
 		defaultBmxLsp = undefined
 	}
 
-	runningBmxLsps.forEach( async bmxLsp => {
-		if ( bmxLsp.client ) await bmxLsp.client.stop()
+	runningBmxLsps.forEach( bmxLsp => {
+		if ( bmxLsp.client ) promises.push( bmxLsp.client.stop() )
 	} )
 
 	runningBmxLsps.clear()
+	await Promise.all( promises )
 
 	updateStatusBarItem()
 }
@@ -321,18 +330,52 @@ class BmxLSP {
 		return false
 	}
 
-	pause() {
+	async pause(): Promise<void> {
 		if ( this.client && this._started ) {
-			this.client.sendNotification( '$/pause', { state: true } )
 			this._started = false
+			try {
+				await this.client.sendNotification( '$/pause', { state: true } )
+			} catch ( error ) {
+				outputChannel.appendLine( `Unable to pause language server: ${String( error )}` )
+			}
 		}
 	}
 
-	resume() {
+	async resume(): Promise<void> {
 		if ( this.client && !this._started ) {
-			this.client.sendNotification( '$/pause', { state: false } )
 			this._started = true
+			try {
+				await this.client.sendNotification( '$/pause', { state: false } )
+			} catch ( error ) {
+				outputChannel.appendLine( `Unable to resume language server: ${String( error )}` )
+			}
 		}
+	}
+
+	private async startClient(): Promise<void> {
+		try {
+			await this.client.start()
+			if ( this.client.initializeResult && this.client.initializeResult.serverInfo ) {
+				this.name = this.client.initializeResult.serverInfo.name
+				this.version = this.client.initializeResult.serverInfo.version
+			} else {
+				this.name = "BlitzMax Language Server"
+				this.version = "Unknown Version"
+			}
+			this.status.icon = '$(check-all)'
+			this.status.color = undefined
+			this.status.error = undefined
+			this.status.tooltip = 'Language server ready'
+		} catch ( error ) {
+			const message = error instanceof Error ? error.message : String( error )
+			this.status.icon = '$(circle-slash)'
+			this.status.color = 'errorForeground'
+			this.status.error = message
+			this.status.tooltip = `Language server failed to start: ${message}`
+			this._started = false
+			this._running = false
+		}
+		if ( activeBmxLsp === this ) updateStatusBarItem()
 	}
 
 	constructor( workspace: vscode.WorkspaceFolder | undefined ) {
@@ -386,21 +429,6 @@ class BmxLSP {
 			this.clientOptions
 		)
 
-		// Track ready state and update statusbar
-		this.client.onReady().then( () => {
-			if ( this.client.initializeResult && this.client.initializeResult.serverInfo ) {
-				this.name = this.client.initializeResult.serverInfo.name
-				this.version = this.client.initializeResult.serverInfo.version
-			} else {
-				this.name = "BlitzMax Language Server"
-				this.version = "Unknown Version"
-			}
-			this.status.icon = '$(check-all)'
-			this.status.color = undefined
-			this.status.tooltip = 'Language server ready'
-			if ( activeBmxLsp === this ) updateStatusBarItem()
-		} )
-
 		// Track state change
 		this.client.onDidChangeState( ( event ) => {
 			if ( activeBmxLsp === this ) {
@@ -434,8 +462,8 @@ class BmxLSP {
 		} )
 
 		// START!
-		this.client.start()
 		this._started = true
+		void this.startClient()
 
 		// Watcher for hot reloading LSP
 		if ( workspaceOrGlobalConfigBoolean( this.workspace, 'blitzmax.lsp.hotReload' ) ) {
@@ -449,10 +477,8 @@ class BmxLSP {
 						clearInterval( timeout )
 
 						outputChannel.appendLine( 'LSP binary updated, restarting...' )
-						if ( this.client ) this.client.stop() // Do early closing
-
 						// Wait before restarting
-						setTimeout( () => restartSingleLSP( this ), 100 )
+						setTimeout( () => runLSPTask( restartSingleLSP( this ), 'restart language server' ), 100 )
 					}
 				}, 100 )
 			} )

@@ -1,3 +1,6 @@
+## 2.27.1
+* Fixed architecture build options being restricted by the host CPU instead of the target platform
+
 ## 2.27.0
 * Updated language client to version 8 (woollybah)
 

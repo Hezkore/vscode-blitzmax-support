@@ -275,32 +275,18 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 				break
 
 			case 'arch':
-				let archIndex: number = 0
-				switch ( os.arch() ) {
-					case 'x86':
-						archIndex = 1
-						break
-
-					case 'x64':
-						archIndex = 2
-						break
-
-					default:
-						archIndex = 3
-						break
-				}
-
+				// Valid architectures depend on the target platform, not the host
 				items.push(
-					this.createChildItem( !def.legacy && archIndex <= 2, 'arch_x86', 'x86', 'Compile for architecture x86  \n`bmk -g x86`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)', def.architecture == 'x86' ),
-					this.createChildItem( !def.legacy && archIndex <= 2, 'arch_x64', 'x64', 'Compile for architecture x64  \n`bmk -g x64`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)', def.architecture == 'x64' ),
-					this.createChildItem( !def.legacy && archIndex >= 3, 'arch_ppc', 'PPC', 'Compile for architecture ppc  \n`bmk -g ppc`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)', def.architecture == 'ppc' ),
-					this.createChildItem( !def.legacy && archIndex >= 3, 'arch_arm', 'ARM', 'Compile for architecture arm  \n`bmk -g arm`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)', def.architecture == 'arm' ),
-					this.createChildItem( !def.legacy && archIndex >= 3, 'arch_armeabiv5', 'ARMeabi v5', 'Compile for architecture armeabiv5  \n`bmk -g armeabiv5`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)', def.architecture == 'armeabiv5' ),
-					this.createChildItem( !def.legacy && archIndex >= 3, 'arch_armeabiv7a', 'ARMeabi v7a', 'Compile for architecture armeabiv7a  \n`bmk -g armeabiv7a`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)', def.architecture == 'armeabiv7a' ),
-					this.createChildItem( !def.legacy && archIndex >= 3, 'arch_arm64v8a', 'ARM64 v8a', 'Compile for architecture arm64v8a  \n`bmk -g arm64v8a`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)', def.architecture == 'arm64v8a' ),
-					this.createChildItem( !def.legacy && archIndex >= 3, 'arch_js', 'js', 'Compile for architecture js  \n`bmk -g js`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)', def.architecture == 'js' ),
-					this.createChildItem( !def.legacy && archIndex >= 3, 'arch_armv7', 'ARMv7', 'Compile for architecture armv7  \n`bmk -g armv7`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)', def.architecture == 'armv7' ),
-					this.createChildItem( !def.legacy && archIndex >= 3, 'arch_arm64', 'ARM64', 'Compile for architecture arm64  \n`bmk -g arm64`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)', def.architecture == 'arm64' )
+					this.createChildItem( !def.legacy && ( def.target == 'win32' || def.target == 'linux' || def.target == 'macos' || def.target == 'android' ), 'arch_x86', 'x86', 'Compile for architecture x86  \n`bmk -g x86`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)', def.architecture == 'x86' ),
+					this.createChildItem( !def.legacy && ( def.target == 'win32' || def.target == 'linux' || def.target == 'macos' || def.target == 'android' ), 'arch_x64', 'x64', 'Compile for architecture x64  \n`bmk -g x64`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)', def.architecture == 'x64' ),
+					this.createChildItem( !def.legacy && def.target == 'macos', 'arch_ppc', 'PPC', 'Compile for architecture ppc  \n`bmk -g ppc`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)', def.architecture == 'ppc' ),
+					this.createChildItem( !def.legacy && ( def.target == 'linux' || def.target == 'raspberrypi' ), 'arch_arm', 'ARM', 'Compile for architecture arm  \n`bmk -g arm`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)', def.architecture == 'arm' ),
+					this.createChildItem( !def.legacy && def.target == 'android', 'arch_armeabiv5', 'ARMeabi v5', 'Compile for architecture armeabiv5  \n`bmk -g armeabiv5`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)', def.architecture == 'armeabiv5' ),
+					this.createChildItem( !def.legacy && def.target == 'android', 'arch_armeabiv7a', 'ARMeabi v7a', 'Compile for architecture armeabiv7a  \n`bmk -g armeabiv7a`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)', def.architecture == 'armeabiv7a' ),
+					this.createChildItem( !def.legacy && def.target == 'android', 'arch_arm64v8a', 'ARM64 v8a', 'Compile for architecture arm64v8a  \n`bmk -g arm64v8a`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)', def.architecture == 'arm64v8a' ),
+					this.createChildItem( !def.legacy && def.target == 'emscripten', 'arch_js', 'js', 'Compile for architecture js  \n`bmk -g js`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)', def.architecture == 'js' ),
+					this.createChildItem( !def.legacy && def.target == 'win32', 'arch_armv7', 'ARMv7', 'Compile for architecture armv7  \n`bmk -g armv7`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)', def.architecture == 'armv7' ),
+					this.createChildItem( !def.legacy && ( def.target == 'win32' || def.target == 'linux' || def.target == 'macos' || def.target == 'raspberrypi' || def.target == 'nx' ), 'arch_arm64', 'ARM64', 'Compile for architecture arm64  \n`bmk -g arm64`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)', def.architecture == 'arm64' )
 				)
 				break
 
@@ -309,7 +295,7 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 					this.createChildItem( !def.legacy, 'misc_upx', 'Pack App with UPX', 'Compress the created binary with UPX  \n`bmk -upx`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-upx)', def.upx )
 				)
 				break
-				os.arch()
+
 			case 'stub':
 				// Hmm... do I really need to scan for app stubs? :S
 				items.push(

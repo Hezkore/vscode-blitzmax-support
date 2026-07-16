@@ -235,6 +235,19 @@ export function makeSimpleTask( label: string, detail: string, make: string, app
 	return makeTask( definition )
 }
 
+function hostArchitecture(): string {
+	// Node's os.arch() names don't all match bmk's, so translate the ones that differ
+	switch ( os.arch() ) {
+		case 'ia32':
+			return 'x86'
+		case 'ppc':
+		case 'ppc64':
+			return 'ppc'
+		default:
+			return os.arch()
+	}
+}
+
 export function makeTaskDefinition( label: string, detail: string, make: string, apptype: string | undefined = undefined ): BmxBuildTaskDefinition {
 	let definition: BmxBuildTaskDefinition = {
 		type: 'bmx',
@@ -247,7 +260,7 @@ export function makeTaskDefinition( label: string, detail: string, make: string,
 		fullcompile: false,
 		quick: false,
 		hidpi: true,
-		architecture: os.arch(),
+		architecture: hostArchitecture(),
 		target: os.platform() == 'darwin' ? 'macos' : os.platform(),
 		debug: false
 	}

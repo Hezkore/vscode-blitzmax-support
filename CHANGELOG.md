@@ -1,3 +1,7 @@
+## 2.27.2
+* Fixed default architecture on 32bit x86 hosts sending an invalid value to bmk
+* Fixed Android ARMeabi v5 option sending an invalid architecture to bmk
+
 ## 2.27.1
 * Fixed architecture build options being restricted by the host CPU instead of the target platform (woollybah)
 

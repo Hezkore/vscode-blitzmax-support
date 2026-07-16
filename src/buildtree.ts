@@ -281,7 +281,7 @@ export class BmxBuildTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 					this.createChildItem( !def.legacy && ( def.target == 'win32' || def.target == 'linux' || def.target == 'macos' || def.target == 'android' ), 'arch_x64', 'x64', 'Compile for architecture x64  \n`bmk -g x64`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)', def.architecture == 'x64' ),
 					this.createChildItem( !def.legacy && def.target == 'macos', 'arch_ppc', 'PPC', 'Compile for architecture ppc  \n`bmk -g ppc`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)', def.architecture == 'ppc' ),
 					this.createChildItem( !def.legacy && ( def.target == 'linux' || def.target == 'raspberrypi' ), 'arch_arm', 'ARM', 'Compile for architecture arm  \n`bmk -g arm`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)', def.architecture == 'arm' ),
-					this.createChildItem( !def.legacy && def.target == 'android', 'arch_armeabiv5', 'ARMeabi v5', 'Compile for architecture armeabiv5  \n`bmk -g armeabiv5`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)', def.architecture == 'armeabiv5' ),
+					this.createChildItem( !def.legacy && def.target == 'android', 'arch_armeabi', 'ARMeabi v5', 'Compile for architecture armeabi  \n`bmk -g armeabi`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)', def.architecture == 'armeabi' ),
 					this.createChildItem( !def.legacy && def.target == 'android', 'arch_armeabiv7a', 'ARMeabi v7a', 'Compile for architecture armeabiv7a  \n`bmk -g armeabiv7a`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)', def.architecture == 'armeabiv7a' ),
 					this.createChildItem( !def.legacy && def.target == 'android', 'arch_arm64v8a', 'ARM64 v8a', 'Compile for architecture arm64v8a  \n`bmk -g arm64v8a`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)', def.architecture == 'arm64v8a' ),
 					this.createChildItem( !def.legacy && def.target == 'emscripten', 'arch_js', 'js', 'Compile for architecture js  \n`bmk -g js`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#-g-architecture)', def.architecture == 'js' ),
@@ -437,7 +437,7 @@ export async function toggleBuildOptions( definition: BmxBuildTaskDefinition | u
 		case 'arch_x64':
 		case 'arch_ppc':
 		case 'arch_arm':
-		case 'arch_armeabiv5':
+		case 'arch_armeabi':
 		case 'arch_armeabiv7a':
 		case 'arch_arm64v8a':
 		case 'arch_js':

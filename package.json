@@ -1,6 +1,6 @@
 {
 	"name": "blitzmax",
-	"version": "2.27.6",
+	"version": "2.27.7",
 	"publisher": "Hezkore",
 	"displayName": "BlitzMax",
 	"description": "BlitzMax for Visual Studio Code.",
@@ -335,6 +335,34 @@
 					"type": "boolean",
 					"default": true,
 					"markdownDescription": "Name the arguments of a call and fill in the ones left out, so `Print()` reads as `Print(str= \"\")`.",
+					"scope": "language-overridable"
+				},
+				"blitzmax.lsp.format.blankLineIndent": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Indent a blank line to the block it sits in, instead of leaving it empty.",
+					"scope": "language-overridable"
+				},
+				"blitzmax.lsp.format.operatorSpacing": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Put one space either side of an assignment, so `a=1` becomes `a = 1`.",
+					"scope": "language-overridable"
+				},
+				"blitzmax.lsp.format.parenSpacing": {
+					"type": "string",
+					"default": "always",
+					"enum": [
+						"off",
+						"declarations",
+						"always"
+					],
+					"enumDescriptions": [
+						"Leave brackets as they are.",
+						"Space a `Function` or `Method` declaration, leave calls tight, the way the official docs write them.",
+						"Space every bracket, so `Print(\"x\")` becomes `Print( \"x\" )`."
+					],
+					"markdownDescription": "Spacing just inside brackets. A comma always gets one space after it.",
 					"scope": "language-overridable"
 				},
 				"blitzmax.help.customStyle": {

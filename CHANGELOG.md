@@ -1,3 +1,6 @@
+## 2.27.7
+* Added settings for the language server's formatting rules
+
 ## 2.27.6
 * Added settings for the language server's inline hints, so each kind can be turned off
 

@@ -298,56 +298,163 @@
 				},
 				"blitzmax.lsp.path": {
 					"type": "string",
-					"markdownDescription": "Relative or absolute path to the [LSP](https://github.com/search?q=topic%3ABlitzMax+topic%3Alsp).",
+					"markdownDescription": "Relative or absolute path to the [LSP](https://github.com/Hezkore/blitzmax-language-server).",
 					"default": "./bin/bls",
 					"scope": "machine-overridable"
 				},
 				"blitzmax.lsp.multi": {
 					"type": "boolean",
-					"markdownDescription": "Run a separate instance of the [LSP](https://github.com/search?q=topic%3ABlitzMax+topic%3Alsp) per workspace folder.",
+					"markdownDescription": "Run a separate instance of the [LSP](https://github.com/Hezkore/blitzmax-language-server) per workspace folder.",
 					"default": false,
 					"scope": "machine-overridable"
 				},
 				"blitzmax.lsp.args": {
 					"type": "array",
-					"markdownDescription": "[LSP](https://github.com/search?q=topic%3ABlitzMax+topic%3Alsp) specfic arguments.",
+					"markdownDescription": "[LSP](https://github.com/Hezkore/blitzmax-language-server) specfic arguments.",
 					"scope": "machine-overridable"
 				},
 				"blitzmax.lsp.hotReload": {
 					"type": "boolean",
 					"default": false,
-					"markdownDescription": "Restart [LSP](https://github.com/search?q=topic%3ABlitzMax+topic%3Alsp) if changes to the [LSP](https://github.com/search?q=topic%3ABlitzMax+topic%3Alsp) binary are detected.  \n*(only supported on Linux)*",
+					"markdownDescription": "Restart [LSP](https://github.com/Hezkore/blitzmax-language-server) if changes to the [LSP](https://github.com/Hezkore/blitzmax-language-server) binary are detected.  \n*(only supported on Linux)*",
 					"scope": "machine-overridable"
 				},
-				"blitzmax.lsp.hints.constantValues": {
-					"type": "boolean",
-					"default": true,
-					"markdownDescription": "Show what a `Const` adds up to, so `1 Shl 4` also shows `16`.",
+								"blitzmax.lsp.hints.constantValues": {
+					"type": ["boolean", "string"],
+					"enum": [true, false, "off", "otherFile", "outOfView", "always"],
+					"enumDescriptions": [
+						"Draw it every time.",
+						"Never draw it.",
+						"Never draw it.",
+						"Only when the thing was declared in a different file.",
+						"Only when the declaration is not among the lines on screen.",
+						"Draw it every time."
+					],
+					"default": "always",
+					"scope": "language-overridable",
+					"markdownDescription": "Draws what a `Const` adds up to, so `1 Shl 4` also shows `16`."
+				},
+								"blitzmax.lsp.hints.assignedTypes": {
+					"type": ["boolean", "string"],
+					"enum": [true, false, "off", "otherFile", "outOfView", "always"],
+					"enumDescriptions": [
+						"Draw it every time.",
+						"Never draw it.",
+						"Never draw it.",
+						"Only when the thing was declared in a different file.",
+						"Only when the declaration is not among the lines on screen.",
+						"Draw it every time."
+					],
+					"default": "always",
+					"scope": "language-overridable",
+					"markdownDescription": "Draws the type being assigned to, so `count = 3` reads as `count:Int = 3`."
+				},
+								"blitzmax.lsp.hints.argumentNames": {
+					"type": ["boolean", "string"],
+					"enum": [true, false, "off", "otherFile", "outOfView", "always"],
+					"enumDescriptions": [
+						"Draw it every time.",
+						"Never draw it.",
+						"Never draw it.",
+						"Only when the thing was declared in a different file.",
+						"Only when the declaration is not among the lines on screen.",
+						"Draw it every time."
+					],
+					"default": "always",
+					"scope": "language-overridable",
+					"markdownDescription": "Draws the name of each argument, so `Print( x )` reads as `Print( str = x )`."
+				},
+								"blitzmax.lsp.hints.argumentTypes": {
+					"type": ["boolean", "string"],
+					"enum": [true, false, "off", "otherFile", "outOfView", "always"],
+					"enumDescriptions": [
+						"Draw it every time.",
+						"Never draw it.",
+						"Never draw it.",
+						"Only when the thing was declared in a different file.",
+						"Only when the declaration is not among the lines on screen.",
+						"Draw it every time."
+					],
+					"default": "always",
+					"scope": "language-overridable",
+					"markdownDescription": "Draws the type each argument wants, so `Print( x )` reads as `Print( str:String = x )`."
+				},
+								"blitzmax.lsp.hints.returnValues": {
+					"type": ["boolean", "string"],
+					"enum": [true, false, "off", "otherFile", "outOfView", "always"],
+					"enumDescriptions": [
+						"Draw it every time.",
+						"Never draw it.",
+						"Never draw it.",
+						"Only when the thing was declared in a different file.",
+						"Only when the declaration is not among the lines on screen.",
+						"Draw it every time."
+					],
+					"default": "always",
+					"scope": "language-overridable",
+					"markdownDescription": "Draws what a `Return` hands back, so `Return out` reads as `Return:String[] out`."
+				},
+								"blitzmax.lsp.hints.nameKinds": {
+					"type": "array",
+					"items": {
+						"type": "string",
+						"enum": ["local", "field", "argument", "global", "const"]
+					},
+					"default": [],
+					"markdownDescription": "Which kinds of name get a type drawn next to them. Empty means every kind.",
 					"scope": "language-overridable"
 				},
-				"blitzmax.lsp.hints.assignedTypes": {
-					"type": "boolean",
-					"default": true,
-					"markdownDescription": "Show the type being assigned to, so `count = 3` reads as `count:Int = 3`.",
+				"blitzmax.lsp.hints.maxLength": {
+					"type": "integer",
+					"default": 0,
+					"minimum": 0,
+					"markdownDescription": "Cut a hint short once it passes this many characters. `0` never cuts.",
 					"scope": "language-overridable"
 				},
-				"blitzmax.lsp.hints.argumentNames": {
-					"type": "boolean",
-					"default": true,
-					"markdownDescription": "Name the arguments of a call and fill in the ones left out, so `Print()` reads as `Print(str= \"\")`.",
-					"scope": "language-overridable"
+				"blitzmax.lsp.hints.nameTypes": {
+					"type": ["boolean", "string"],
+					"enum": [true, false, "off", "otherFile", "outOfView", "always"],
+					"enumDescriptions": [
+						"Draw it every time.",
+						"Never draw it.",
+						"Never draw it.",
+						"Only when the thing was declared in a different file.",
+						"Only when the declaration is not among the lines on screen.",
+						"Draw it every time."
+					],
+					"default": "always",
+					"scope": "language-overridable",
+					"markdownDescription": "Draws the type of every name where it is used, so `If Not direct Then` reads as `If Not direct:TList Then`."
 				},
-				"blitzmax.lsp.hints.returnTypes": {
-					"type": "boolean",
-					"default": true,
-					"markdownDescription": "Draw what a call hands back, so `scratch.Describe()` reads as `scratch.Describe:String()`. A `Void` shows nothing.",
-					"scope": "language-overridable"
+								"blitzmax.lsp.hints.returnTypes": {
+					"type": ["boolean", "string"],
+					"enum": [true, false, "off", "otherFile", "outOfView", "always"],
+					"enumDescriptions": [
+						"Draw it every time.",
+						"Never draw it.",
+						"Never draw it.",
+						"Only when the thing was declared in a different file.",
+						"Only when the declaration is not among the lines on screen.",
+						"Draw it every time."
+					],
+					"default": "always",
+					"scope": "language-overridable",
+					"markdownDescription": "Draws what a call hands back, so `scratch.Describe()` reads as `scratch.Describe:String()`."
 				},
-				"blitzmax.lsp.hints.missingArguments": {
-					"type": "boolean",
-					"default": false,
-					"markdownDescription": "Draw the arguments a call left out, with the defaults they take.  \n*(off by default, because this text grows and shrinks as you type and shifts the rest of the line about, and signature help says the same thing without moving anything)*",
-					"scope": "language-overridable"
+								"blitzmax.lsp.hints.missingArguments": {
+					"type": ["boolean", "string"],
+					"enum": [true, false, "off", "otherFile", "outOfView", "always"],
+					"enumDescriptions": [
+						"Draw it every time.",
+						"Never draw it.",
+						"Never draw it.",
+						"Only when the thing was declared in a different file.",
+						"Only when the declaration is not among the lines on screen.",
+						"Draw it every time."
+					],
+					"default": "off",
+					"scope": "language-overridable",
+					"markdownDescription": "Draws the arguments a call left out, with what they default to. Off to start with, because the text grows and shrinks as you type and shoves the rest of the line about."
 				},
 				"blitzmax.lsp.advice.silentTraps": {
 					"type": "boolean",
@@ -379,6 +486,18 @@
 					"markdownDescription": "Point out a call written without brackets, like `Print \"hello\"`, which reads like a keyword rather than a call.",
 					"scope": "language-overridable"
 				},
+				"blitzmax.lsp.advice.unusedCode": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Point out a `Local` or a function argument that is declared and then never read.",
+					"scope": "language-overridable"
+				},
+				"blitzmax.lsp.advice.unreachableCode": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Point out statements written after a `Return`, `Throw`, `Exit`, `Continue` or `End`, which can never run.",
+					"scope": "language-overridable"
+				},
 				"blitzmax.lsp.format.blankLineIndent": {
 					"type": "boolean",
 					"default": true,
@@ -393,7 +512,7 @@
 				},
 				"blitzmax.lsp.format.parenSpacing": {
 					"type": "string",
-					"default": "always",
+					"default": "declarations",
 					"enum": [
 						"off",
 						"declarations",

@@ -19,6 +19,9 @@ This extension provides the following features inside VS Code for BlitzMax sourc
 * Debugging
 * Snippets
 
+Install the [BlitzMax Language Server](https://github.com/Hezkore/blitzmax-language-server) alongside it and you also get error checking, auto-complete, outline, go to definition, rename and formatting.\
+See [the note below](#note-about-using-the-language-server-protocol) for how to set it up.
+
 You can discuss this extension on Discord: [![Discord Chat](https://img.shields.io/discord/613699895139762176.svg?logo=discord&style=social)](https://discord.gg/yF6PMaY5aE)\
 We hang out in the **#vscode-extension** channel!
 
@@ -39,11 +42,29 @@ See [CHANGELOG](https://marketplace.visualstudio.com/items/Hezkore.blitzmax/chan
 
 ### ***Note about using the Language Server Protocol***
 ---
-A "LSP" server is an external application that monitors your project and source code.\
-It can provide linting and very accurate auto-complete suggestions, among many other things.\
-\
-You will have to provide _(or write)_ your own LSP server.\
-A work in progress LSP server can be found [here](https://github.com/GWRon/bmxng-languageserver).
+A "LSP" server is an external application that reads your project and source code.\
+It can provide linting and very accurate auto-complete suggestions, among many other things.
+
+[**BlitzMax Language Server**](https://github.com/Hezkore/blitzmax-language-server) is the one to use.\
+It is written in BlitzMax NG and uses the real `bcc` compiler front end, so what it tells you is what a build would tell you.\
+It also works on a project that has never been built, and on edits you have not saved yet.
+
+Put the `bls` binary in the `bin` folder of your BlitzMax NG install, next to `bmk` and `bcc`.\
+The extension looks there on its own, so nothing needs configuring.\
+If you keep it somewhere else, point `blitzmax.lsp.path` at it.
+
+With it installed you get:
+
+* Errors and warnings straight from the compiler, shown as you work
+* Outline, breadcrumbs and Go to Symbol in Workspace
+* Auto-complete offering only what your program can actually reach
+* Go to definition, find all references, and rename across the whole project
+* Hover documentation, signature help and inline hints
+* Formatting, so you no longer need a separate formatter
+* Advice on syntax that compiles cleanly but does not do what it looks like
+
+Any other server will work too, as long as it speaks LSP.\
+An older work in progress server can be found [here](https://github.com/GWRon/bmxng-languageserver).
 
 Useful LSP links for server developers:\
 [VS Code specific information](https://code.visualstudio.com/api/language-extensions/language-server-extension-guide)\
@@ -51,10 +72,9 @@ Useful LSP links for server developers:\
 
 ### ***Note about using formatting***
 ---
-Formatting is currently handled externally.\
-You will have to install a BlitzMax specific formatter.\
-_(Unless your [LSP](#note-about-using-the-language-server-protocol)  server handles it)_\
-\
+The [BlitzMax Language Server](https://github.com/Hezkore/blitzmax-language-server) handles formatting, so installing it is all you need.
+
+Without a server, formatting is handled externally and you will have to install a BlitzMax specific formatter.\
 The extension will guide you through this process on the first format.
 
 ### FAQ
@@ -66,7 +86,7 @@ The extension will guide you through this process on the first format.
 
 * **Q**. Why is the [outlines](https://code.visualstudio.com/docs/getstarted/userinterface#_outline-view) view and [breadcrumbs](https://code.visualstudio.com/docs/editor/editingevolved#_breadcrumbs) not working?
 	* **A**. These features are provided by the [LSP](#note-about-using-the-language-server-protocol) server.\
-	Make sure your current [LSP](#note-about-using-the-language-server-protocol) supports these features.
+	Install the [BlitzMax Language Server](https://github.com/Hezkore/blitzmax-language-server) and they start working.
 
 * **Q**. I've found an issue / I'd like to make a feature request\, what do I do?
 	* **A**. Is the issue or request already listed at [GitHub Issues](https://github.com/Hezkore/vscode-blitzmax-support/issues)?\
@@ -95,4 +115,4 @@ Fork this repository and open your pull requests.
 
 ### **License**
 ---
-Licensed under the [MIT](https://github.com/Hezkore/vscode-blitzmax-support/blob/master/LICENSE.md) License.
+Licensed under the [MIT](https://github.com/Hezkore/vscode-blitzmax-support/blob/master/LICENSE.txt) License.

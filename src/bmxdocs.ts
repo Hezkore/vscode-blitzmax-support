@@ -6,6 +6,7 @@ import * as vscode from 'vscode'
 import * as cp from 'child_process'
 import { BlitzMaxPath } from './helper'
 import { showBmxDocs } from './bmxwebviewer'
+import { lspDocsTarget } from './lsp'
 import { convertTypeTag, generateCommandText, getCurrentDocumentWord } from './common'
 import * as awaitNotify from 'await-notify'
 
@@ -18,9 +19,18 @@ export function registerDocsProvider( context: vscode.ExtensionContext ) {
 		searchDocs()
 	} ) )
 	
-	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.quickHelp', ( word: any ) => {
-		// If no word was specified, we look at the word under the cursor
-		if ( !word || typeof word !== "string" ) word = getCurrentDocumentWord( undefined, undefined, undefined, true, false )
+	context.subscriptions.push( vscode.commands.registerCommand( 'blitzmax.quickHelp', async ( word: any ) => {
+		// If no word was specified, ask the language server what the cursor is on.
+		// It knows what a name means, where reading the line only shows the text.
+		if ( !word || typeof word !== "string" ) {
+			const target = await lspDocsTarget()
+			if ( target ) {
+				showQuickHelp( target.owner ? target.owner + '.' + target.name : target.name, target.name )
+				return
+			}
+
+			word = getCurrentDocumentWord( undefined, undefined, undefined, true, false )
+		}
 		showQuickHelp( word )
 	} ) )
 
@@ -106,7 +116,7 @@ export async function searchDocs() {
 	} )
 }
 
-export async function showQuickHelp( command: string ) {
+export async function showQuickHelp( command: string, orElse?: string ) {
 	cacheCommandsAndModulesIfEmpty( true )
 	if ( !_commandsList ) return
 	let commands = getCommand( command )//, { hasDescription: true } )
@@ -138,7 +148,14 @@ export async function showQuickHelp( command: string ) {
 
 	// No matches, attempt search for command with trimmed spaces
 	if ( command.includes( ' ' ) ) {
-		showQuickHelp( command.replace( ' ', '' ) )
+		showQuickHelp( command.replace( ' ', '' ), orElse )
+		return
+	}
+
+	// Nothing is written up under the full name, so try the plain one.
+	// TMap.Insert has a page of its own, a type of ours does not.
+	if ( orElse && orElse !== command ) {
+		showQuickHelp( orElse )
 		return
 	}
 

@@ -10,7 +10,9 @@ You can also select the specific text you want formatted.
 
 VS Code has many optional settings for automatic formatting, including "Format On Type" and "Format On Save".
 
-The code formatter needs to be installed manually and the "formatter path" needs be set in your [BlitzMax extension settings](command:blitzmax.settings).\
+The [BlitzMax Language Server](https://github.com/Hezkore/blitzmax-language-server) does this for you, so if you have that installed there is nothing else to set up.
+
+Otherwise a formatter needs to be installed manually and the "formatter path" needs be set in your [BlitzMax extension settings](command:blitzmax.settings).\
 Search for BlitzMax code formatters on [GitHub](https://github.com/search?q=topic%3ABlitzMax+topic%3Aformatter).
 
 # Language Server Protocol (LSP)
@@ -18,5 +20,6 @@ Search for BlitzMax code formatters on [GitHub](https://github.com/search?q=topi
 A LSP is an external application that provides diagnostics, document symbols _(outliner)_, better auto-complete, code fixes and suggestions among many other things.\
 The LSP starts automatically and keeps track of your code changes in the background.
 
-The LSP needs to be installed manually and the "LSP path" needs be set in your [BlitzMax extension settings](command:blitzmax.settings).\
-Search for BlitzMax BlitzMax LSPs [GitHub](https://github.com/search?q=topic%3ABlitzMax+topic%3Alsp).
+The one to use is the [BlitzMax Language Server](https://github.com/Hezkore/blitzmax-language-server).\
+Put its `bls` binary in the `bin` folder of your BlitzMax NG install, next to `bmk` and `bcc`, and the extension finds it on its own.\
+If you keep it somewhere else, set the "LSP path" in your [BlitzMax extension settings](command:blitzmax.settings).

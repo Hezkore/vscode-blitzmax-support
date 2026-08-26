@@ -8,8 +8,8 @@
 	_(I highly recommend you upgrade to [BlitzMax NG](https://blitzmax.org/))_
 
 * Why is the "[outline view](https://code.visualstudio.com/docs/getstarted/userinterface#_outline-view)" and [breadcrumbs](https://code.visualstudio.com/docs/editor/editingevolved#_breadcrumbs) not working?
-	* These features are provided by the [LSP](#note-about-using-the-language-server-protocol) server.\
-	Make sure your current [LSP](#note-about-using-the-language-server-protocol) supports these features.
+	* These features are provided by a language server.\
+	Install the [BlitzMax Language Server](https://github.com/Hezkore/blitzmax-language-server) and they start working.
 
 * I've found an issue / I'd like to make a feature request\, what do I do?
 	* Is the issue or request already listed at [GitHub Issues](https://github.com/Hezkore/vscode-blitzmax-support/issues)?\

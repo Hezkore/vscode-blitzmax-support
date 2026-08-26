@@ -58,6 +58,40 @@ export function activeLspCapabilities(): lsp.ServerCapabilities {
 	return activeBmxLsp.capabilities()
 }
 
+export interface BmxDocsTarget {
+	name: string
+	owner?: string
+	module?: string
+	url?: string
+}
+
+// Asks the language server what the docs call whatever the cursor is on.
+//
+// Reading the line ourselves gives "_done.Insert", which no page is named after,
+// because _done is a variable. The server knows it is a TMap, so it can say
+// TMap.Insert instead. Returns undefined when there is no server, or when it has
+// nothing to say, and then the caller falls back to reading the line.
+export async function lspDocsTarget(): Promise<BmxDocsTarget | undefined> {
+
+	if ( !activeBmxLsp || !activeBmxLsp.isRunning() ) return undefined
+
+	const editor = vscode.window.activeTextEditor
+	if ( !editor || editor.document.languageId !== 'blitzmax' ) return undefined
+
+	try {
+		return await activeBmxLsp.client.sendRequest<BmxDocsTarget | null>(
+			'blitzmax/documentation',
+			{
+				textDocument: { uri: editor.document.uri.toString() },
+				position: { line: editor.selection.start.line, character: editor.selection.start.character }
+			}
+		) ?? undefined
+	} catch ( error ) {
+		// An older server does not know this request, and that is not an error
+		return undefined
+	}
+}
+
 export function registerLSP( context: vscode.ExtensionContext ) {
 	
 	multiInstance = workspaceOrGlobalConfigBoolean( undefined, 'blitzmax.lsp.multi' )

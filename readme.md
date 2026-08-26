@@ -45,6 +45,8 @@ It can provide linting and very accurate auto-complete suggestions, among many o
 You will have to provide _(or write)_ your own LSP server.\
 A work in progress LSP server can be found [here](https://github.com/GWRon/bmxng-languageserver).
 
+If different workspace folders use different BlitzMax SDKs, enable `blitzmax.lsp.multi`. Each folder can then override `blitzmax.base.path` and `blitzmax.lsp.path` in its own `.vscode/settings.json`; folders without overrides continue to use your user-level defaults.
+
 Useful LSP links for server developers:\
 [VS Code specific information](https://code.visualstudio.com/api/language-extensions/language-server-extension-guide)\
 [Official LSP specifications](https://microsoft.github.io/language-server-protocol/specifications/specification-current/)

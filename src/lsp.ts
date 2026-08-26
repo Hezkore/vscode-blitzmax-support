@@ -14,6 +14,10 @@ let defaultBmxLsp: BmxLSP | undefined
 let runningBmxLsps: Map<string, BmxLSP> = new Map()
 let lspStatusBarItem: vscode.StatusBarItem
 
+interface LspQuickPickItem extends vscode.QuickPickItem {
+	action?: 'restart' | 'view-output' | 'stop-all' | 'about' | 'copy-sdk' | 'copy-server'
+}
+
 function runLSPTask( task: Promise<void>, action: string ): void {
 	void task.catch( error => outputChannel.appendLine( `Unable to ${action}: ${String( error )}` ) )
 }
@@ -70,51 +74,69 @@ export function registerLSP( context: vscode.ExtensionContext ) {
 	const statusBarCommandId = 'blitzmax.showLspOptions'
 	context.subscriptions.push( vscode.commands.registerCommand( statusBarCommandId, () => {
 
+		if ( activeBmxLsp && activeBmxLsp.status.error ) {
+			vscode.window.showErrorMessage( activeBmxLsp.status.error, 'Open Settings', 'View Output' ).then( choice => {
+				if ( choice === 'Open Settings' ) vscode.commands.executeCommand( 'workbench.action.openSettings', '@ext:hezkore.blitzmax blitzmax.lsp' )
+				if ( choice === 'View Output' ) outputChannel.show()
+			} )
+			return
+		}
+
 		if ( activeBmxLsp && !activeBmxLsp._running ) {
 			outputChannel.show()
 			vscode.commands.executeCommand( 'workbench.action.openSettings', '@ext:hezkore.blitzmax blitzmax.lsp' )
 			return
 		}
 
-		if ( activeBmxLsp && activeBmxLsp.status.error ) {
-			// Show error
-			vscode.window.showErrorMessage( activeBmxLsp.status.error )
-		} else {
-			// Show options
-			if ( activeBmxLsp ) {
-				vscode.window.showQuickPick( [`Restart ${activeBmxLsp.name}`, 'View output', `Stop all`, 'About'] ).then( ( pick ) => {
-					if ( !activeBmxLsp ) return
+		if ( activeBmxLsp ) {
+			const scope = activeBmxLsp.workspace ? `Workspace: ${activeBmxLsp.workspace.name}` : 'All workspaces'
+			const items: LspQuickPickItem[] = [
+				{ label: `$(refresh) Restart ${activeBmxLsp.name}`, action: 'restart' },
+				{ label: '$(output) View output', action: 'view-output' },
+				{ label: '$(debug-stop) Stop all language servers', action: 'stop-all' },
+				{ label: '$(info) About', action: 'about' },
+				{ label: scope, kind: vscode.QuickPickItemKind.Separator }
+			]
+			if ( activeBmxLsp.sdkPath ) items.push( { label: '$(copy) Copy SDK path', description: activeBmxLsp.sdkPath, action: 'copy-sdk' } )
+			if ( activeBmxLsp.clientPath ) items.push( { label: '$(copy) Copy language server path', description: activeBmxLsp.clientPath, action: 'copy-server' } )
 
-					switch ( pick?.split( ' ' )[0] ) {
-						case 'Restart':
-							runLSPTask( restartSingleLSP( activeBmxLsp ), 'restart language server' )
-							break
-						case 'Stop':
-							forcedStop = true
-							runLSPTask( restartAllLSP(), 'stop language servers' )
-							break
-						case 'About':
-							vscode.window.showInformationMessage( `${activeBmxLsp.name}\r\n${activeBmxLsp.version}` )
-							break
-						case 'View':
-							outputChannel.show()
-							break
-					}
-				} )
-			} else {
-				vscode.window.showQuickPick( ['View output', `Start all`] ).then( ( pick ) => {
-					switch ( pick?.split( ' ' )[0] ) {
-						case 'Start':
-							forcedStop = false
-							runLSPTask( restartAllLSP(), 'prepare language servers' )
-							changeBmxDocument( vscode.window.activeTextEditor?.document )
-							break
-						case 'View':
-							outputChannel.show()
-							break
-					}
-				} )
-			}
+			vscode.window.showQuickPick( items ).then( pick => {
+				if ( !activeBmxLsp || !pick ) return
+				switch ( pick.action ) {
+					case 'restart':
+						runLSPTask( restartSingleLSP( activeBmxLsp ), 'restart language server' )
+						break
+					case 'stop-all':
+						forcedStop = true
+						runLSPTask( restartAllLSP(), 'stop language servers' )
+						break
+					case 'about':
+						vscode.window.showInformationMessage( `${activeBmxLsp.name}\r\n${activeBmxLsp.version}` )
+						break
+					case 'view-output':
+						outputChannel.show()
+						break
+					case 'copy-sdk':
+						if ( activeBmxLsp.sdkPath ) vscode.env.clipboard.writeText( activeBmxLsp.sdkPath )
+						break
+					case 'copy-server':
+						if ( activeBmxLsp.clientPath ) vscode.env.clipboard.writeText( activeBmxLsp.clientPath )
+						break
+				}
+			} )
+		} else {
+			vscode.window.showQuickPick( ['View output', `Start all`] ).then( ( pick ) => {
+				switch ( pick?.split( ' ' )[0] ) {
+					case 'Start':
+						forcedStop = false
+						runLSPTask( restartAllLSP(), 'prepare language servers' )
+						changeBmxDocument( vscode.window.activeTextEditor?.document )
+						break
+					case 'View':
+						outputChannel.show()
+						break
+				}
+			} )
 		}
 	} ) )
 
@@ -218,6 +240,7 @@ function activateBmxLSP( workspace: vscode.WorkspaceFolder | undefined ) {
 		// Yep!
 		activeBmxLsp = existingBmxLsp
 		void existingBmxLsp.resume()
+		updateStatusBarItem()
 		return activeBmxLsp
 	}
 
@@ -233,6 +256,7 @@ function activateBmxLSP( workspace: vscode.WorkspaceFolder | undefined ) {
 
 	// Make this our active LSP
 	activeBmxLsp = existingBmxLsp
+	updateStatusBarItem()
 	return activeBmxLsp
 }
 
@@ -276,6 +300,13 @@ async function restartSingleLSP( lsp: BmxLSP | undefined ) {
 
 function updateStatusBarItem() {
 	if ( activeBmxLsp ) {
+		if ( activeBmxLsp.status.error ) {
+			lspStatusBarItem.text = `${activeBmxLsp.status.icon} Language server unavailable`
+			lspStatusBarItem.color = new vscode.ThemeColor( activeBmxLsp.status.color || 'errorForeground' )
+			lspStatusBarItem.tooltip = activeBmxLsp.status.tooltip
+			lspStatusBarItem.show()
+			return
+		}
 		if ( activeBmxLsp.client ) {
 			// Update the icon and text
 			lspStatusBarItem.text = activeBmxLsp.name ? `${activeBmxLsp.status.icon} ${activeBmxLsp.name}` : activeBmxLsp.status.icon
@@ -314,6 +345,7 @@ class BmxLSP {
 	clientOptions: lsp.LanguageClientOptions
 	client: lsp.LanguageClient
 	clientPath: string | undefined
+	sdkPath: string | undefined
 	status: { icon: string, color?: string, error?: string, tooltip?: string } = { icon: '$(sync~spin)', error: undefined }
 
 	_started: boolean
@@ -365,17 +397,35 @@ class BmxLSP {
 			this.status.icon = '$(check-all)'
 			this.status.color = undefined
 			this.status.error = undefined
-			this.status.tooltip = 'Language server ready'
+			this.status.tooltip = this.statusTooltip( 'Language server ready' )
 		} catch ( error ) {
 			const message = error instanceof Error ? error.message : String( error )
+			const failure = `Language server failed to start: ${message}`
 			this.status.icon = '$(circle-slash)'
 			this.status.color = 'errorForeground'
-			this.status.error = message
-			this.status.tooltip = `Language server failed to start: ${message}`
+			this.status.error = failure
+			this.status.tooltip = this.statusTooltip( failure )
 			this._started = false
 			this._running = false
 		}
 		if ( activeBmxLsp === this ) updateStatusBarItem()
+	}
+
+	private statusTooltip( message: string ): string {
+		const scope = this.workspace ? `Workspace: ${this.workspace.name}` : 'Scope: all workspaces'
+		const sdk = this.sdkPath || 'Not configured'
+		const server = this.clientPath || 'Not configured'
+		return `${message}\n${scope}\nSDK: ${sdk}\nLanguage server: ${server}`
+	}
+
+	private setUnavailable( message: string ): void {
+		this.status.icon = '$(circle-slash)'
+		this.status.color = 'errorForeground'
+		this.status.error = message
+		this.status.tooltip = this.statusTooltip( message )
+		this._started = false
+		this._running = false
+		outputChannel.appendLine( message )
 	}
 
 	constructor( workspace: vscode.WorkspaceFolder | undefined ) {
@@ -405,24 +455,34 @@ class BmxLSP {
 		}
 
 		// Detect LSP path
+		this.sdkPath = workspaceOrGlobalConfigString( this.workspace, 'blitzmax.base.path' )
 		this.clientPath = workspaceOrGlobalConfigString( this.workspace, 'blitzmax.lsp.path' )
-		console.log(this.clientPath)
-		if ( !this.clientPath ) return
+		if ( !this.clientPath ) {
+			this.setUnavailable( 'No BlitzMax language server path is configured. Configure blitzmax.lsp.path.' )
+			return
+		}
 
 		// Relative LSP path?
 		const isRelativePath: boolean = this.clientPath.startsWith( '.' )
 		if ( isRelativePath ) {
-			// relative
-			this.clientPath = this.clientPath.slice( 1 )
-			const bmxPath = workspaceOrGlobalConfigString( this.workspace, 'blitzmax.base.path' )
-			if ( bmxPath ) this.clientPath = vscode.Uri.file( bmxPath + this.clientPath ).fsPath
-
-			// Does it exist?
-			if ( !existsSync( this.clientPath ) ) {
-				// We can ignore non-existant binary quietly if it's a relative path
+			if ( !this.sdkPath ) {
+				this.setUnavailable( `Cannot resolve the relative language server path '${this.clientPath}' because no BlitzMax SDK path is configured.` )
 				return
 			}
+			// relative
+			this.clientPath = this.clientPath.slice( 1 )
+			this.clientPath = vscode.Uri.file( this.sdkPath + this.clientPath ).fsPath
 		}
+
+		if ( !existsSync( this.clientPath ) ) {
+			const scope = this.workspace ? ` for workspace '${this.workspace.name}'` : ''
+			this.setUnavailable( `BlitzMax language server not found${scope}: ${this.clientPath}. Configure blitzmax.base.path or blitzmax.lsp.path.` )
+			return
+		}
+
+		const scope = this.workspace ? `Workspace '${this.workspace.name}'` : 'All workspaces'
+		outputChannel.appendLine( `${scope} SDK: ${this.sdkPath || 'Not configured'}` )
+		outputChannel.appendLine( `${scope} language server: ${this.clientPath}` )
 
 		// Setup LSP
 		this.client = new lsp.LanguageClient(
@@ -440,7 +500,7 @@ class BmxLSP {
 						// Starting
 						this.status.icon = '$(sync~spin)'
 						this.status.color = undefined
-						this.status.tooltip = 'Language server is starting...'
+						this.status.tooltip = this.statusTooltip( 'Language server is starting...' )
 						this._running = false
 						break
 
@@ -448,7 +508,7 @@ class BmxLSP {
 						// Running
 						this.status.icon = '$(check)'
 						this.status.color = undefined
-						this.status.tooltip = 'Language server started, waiting for initialization...'
+						this.status.tooltip = this.statusTooltip( 'Language server started, waiting for initialization...' )
 						this._running = true
 						break
 
@@ -456,7 +516,7 @@ class BmxLSP {
 						// Stopped
 						this.status.icon = '$(circle-slash)'
 						this.status.color = 'errorForeground'
-						this.status.tooltip = 'Language server encountered an error'
+						this.status.tooltip = this.statusTooltip( 'Language server encountered an error' )
 						this._running = false
 						break
 				}

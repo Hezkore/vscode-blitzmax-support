@@ -1,6 +1,6 @@
 {
 	"name": "blitzmax",
-	"version": "2.27.8",
+	"version": "2.27.9",
 	"publisher": "Hezkore",
 	"displayName": "BlitzMax",
 	"description": "BlitzMax for Visual Studio Code.",
@@ -347,6 +347,30 @@
 					"type": "boolean",
 					"default": false,
 					"markdownDescription": "Draw the arguments a call left out, with the defaults they take.  \n*(off by default, because this text grows and shrinks as you type and shifts the rest of the line about, and signature help says the same thing without moving anything)*",
+					"scope": "language-overridable"
+				},
+				"blitzmax.lsp.advice.silentTraps": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Report syntax that compiles cleanly and behaves differently from how it reads, such as `a != b`, which tests equality because `!` is the Double suffix.",
+					"scope": "language-overridable"
+				},
+				"blitzmax.lsp.advice.borrowedSyntax": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Report syntax borrowed from other languages that BlitzMax NG does not have, such as `+=`, `&&`, `EndFor` or `Break`.",
+					"scope": "language-overridable"
+				},
+				"blitzmax.lsp.advice.modernStyle": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Report older ways of writing things that have a clearer modern form, such as `Include` and the `$ % # !` type suffixes.",
+					"scope": "language-overridable"
+				},
+				"blitzmax.lsp.advice.strictness": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Report a file that starts with neither `SuperStrict` nor `Strict`.",
 					"scope": "language-overridable"
 				},
 				"blitzmax.lsp.advice.bracketlessCalls": {

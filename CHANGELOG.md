@@ -1,3 +1,6 @@
+## 2.27.9
+* Added settings for the language server's new advice groups
+
 ## 2.27.8
 * Added settings for the language server's return type hints and its advice
 

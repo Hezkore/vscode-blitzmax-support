@@ -1,6 +1,6 @@
 {
 	"name": "blitzmax",
-	"version": "2.27.7",
+	"version": "2.27.8",
 	"publisher": "Hezkore",
 	"displayName": "BlitzMax",
 	"description": "BlitzMax for Visual Studio Code.",
@@ -335,6 +335,24 @@
 					"type": "boolean",
 					"default": true,
 					"markdownDescription": "Name the arguments of a call and fill in the ones left out, so `Print()` reads as `Print(str= \"\")`.",
+					"scope": "language-overridable"
+				},
+				"blitzmax.lsp.hints.returnTypes": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Draw what a call hands back, so `scratch.Describe()` reads as `scratch.Describe:String()`. A `Void` shows nothing.",
+					"scope": "language-overridable"
+				},
+				"blitzmax.lsp.hints.missingArguments": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Draw the arguments a call left out, with the defaults they take.  \n*(off by default, because this text grows and shrinks as you type and shifts the rest of the line about, and signature help says the same thing without moving anything)*",
+					"scope": "language-overridable"
+				},
+				"blitzmax.lsp.advice.bracketlessCalls": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Point out a call written without brackets, like `Print \"hello\"`, which reads like a keyword rather than a call.",
 					"scope": "language-overridable"
 				},
 				"blitzmax.lsp.format.blankLineIndent": {

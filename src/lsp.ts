@@ -384,7 +384,10 @@ class BmxLSP {
 		// Setup client
 		this.clientOptions = {
 			diagnosticCollectionName: 'bmx-lsp',
-			outputChannel: outputChannel
+			outputChannel: outputChannel,
+			// Lets a language server put command links in its hovers, which is how
+			// it offers to open the docs for whatever you are pointing at
+			markdown: { isTrusted: true }
 		}
 
 		if ( workspace ) {

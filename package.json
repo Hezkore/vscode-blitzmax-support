@@ -1,6 +1,6 @@
 {
 	"name": "blitzmax",
-	"version": "2.27.5",
+	"version": "2.27.6",
 	"publisher": "Hezkore",
 	"displayName": "BlitzMax",
 	"description": "BlitzMax for Visual Studio Code.",
@@ -318,6 +318,24 @@
 					"default": false,
 					"markdownDescription": "Restart [LSP](https://github.com/search?q=topic%3ABlitzMax+topic%3Alsp) if changes to the [LSP](https://github.com/search?q=topic%3ABlitzMax+topic%3Alsp) binary are detected.  \n*(only supported on Linux)*",
 					"scope": "machine-overridable"
+				},
+				"blitzmax.lsp.hints.constantValues": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Show what a `Const` adds up to, so `1 Shl 4` also shows `16`.",
+					"scope": "language-overridable"
+				},
+				"blitzmax.lsp.hints.assignedTypes": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Show the type being assigned to, so `count = 3` reads as `count:Int = 3`.",
+					"scope": "language-overridable"
+				},
+				"blitzmax.lsp.hints.argumentNames": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Name the arguments of a call and fill in the ones left out, so `Print()` reads as `Print(str= \"\")`.",
+					"scope": "language-overridable"
 				},
 				"blitzmax.help.customStyle": {
 					"type": "boolean",

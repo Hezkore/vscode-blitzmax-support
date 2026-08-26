@@ -1,3 +1,6 @@
+## 2.27.6
+* Added settings for the language server's inline hints, so each kind can be turned off
+
 ## 2.27.5
 * The built in formatter is no longer offered when there is no formatter binary to run it
 

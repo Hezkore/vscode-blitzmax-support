@@ -10,16 +10,16 @@ You can also select the specific text you want formatted.
 
 VS Code has many optional settings for automatic formatting, including "Format On Type" and "Format On Save".
 
-The [BlitzMax Language Server](https://github.com/Hezkore/blitzmax-language-server) does this for you, so if you have that installed there is nothing else to set up.
-
-Otherwise a formatter needs to be installed manually and the "formatter path" needs be set in your [BlitzMax extension settings](command:blitzmax.settings).\
+The language server does not format, so this one is a separate program.\
+The extension looks for a formatter called `bfm` in the `bin` folder of your BlitzMax NG install.\
+If yours has a different name or lives somewhere else, set the "formatter path" in your [BlitzMax extension settings](command:blitzmax.settings).\
 Search for BlitzMax code formatters on [GitHub](https://github.com/search?q=topic%3ABlitzMax+topic%3Aformatter).
 
 # Language Server Protocol (LSP)
 
-A LSP is an external application that provides diagnostics, document symbols _(outliner)_, better auto-complete, code fixes and suggestions among many other things.\
-The LSP starts automatically and keeps track of your code changes in the background.
+A language server is a separate program that provides diagnostics, document symbols _(outliner)_, better auto-complete, code fixes and suggestions among many other things.\
+It starts automatically and keeps track of your code changes in the background.
 
-The one to use is the [BlitzMax Language Server](https://github.com/Hezkore/blitzmax-language-server).\
-Put its `bls` binary in the `bin` folder of your BlitzMax NG install, next to `bmk` and `bcc`, and the extension finds it on its own.\
+BlitzMax NG 1.00 and newer ships with one, so a recent release is all you need and there is nothing to install or set up.\
+It is called `bls` and it sits in the `bin` folder of your BlitzMax NG install, next to `bmk` and `bcc`, which is where the extension looks.\
 If you keep it somewhere else, set the "LSP path" in your [BlitzMax extension settings](command:blitzmax.settings).

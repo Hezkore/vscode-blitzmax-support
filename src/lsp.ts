@@ -57,9 +57,86 @@ function getOuterMostWorkspaceFolder( folder: vscode.WorkspaceFolder | undefined
 }
 
 export function activeLspCapabilities(): lsp.ServerCapabilities {
-	
+
 	if (!activeBmxLsp) return {}
 	return activeBmxLsp.capabilities()
+}
+
+// What bls reads its settings from, at startup through initializationOptions and
+// afterwards through workspace/didChangeConfiguration
+//
+// A key left out keeps whatever the server already had, so anything still at its
+// VS Code default is omitted rather than sent as an empty string, which the
+// server would take literally
+interface BmxLspSettings {
+	sdkPath?: string
+	buildMode?: string
+	targetPlatform?: string
+	targetArchitecture?: string
+	conditionalSymbols?: string[]
+	requireCoreInterface?: boolean
+	useDependencySnapshots?: boolean
+	warnImplicitDefaultReturns?: boolean
+}
+
+function lspSettingsFor( workspace: vscode.WorkspaceFolder | undefined ): BmxLspSettings {
+
+	const settings: BmxLspSettings = {}
+
+	const sdkPath = workspaceOrGlobalConfigString( workspace, 'blitzmax.base.path' )
+	if ( sdkPath ) settings.sdkPath = sdkPath
+
+	const buildMode = workspaceOrGlobalConfigString( workspace, 'blitzmax.lsp.buildMode' )
+	if ( buildMode ) settings.buildMode = buildMode
+
+	const targetPlatform = workspaceOrGlobalConfigString( workspace, 'blitzmax.lsp.targetPlatform' )
+	if ( targetPlatform ) settings.targetPlatform = targetPlatform
+
+	const targetArchitecture = workspaceOrGlobalConfigString( workspace, 'blitzmax.lsp.targetArchitecture' )
+	if ( targetArchitecture ) settings.targetArchitecture = targetArchitecture
+
+	// Sending this replaces the server's whole set rather than adding to it, so an
+	// empty array has to mean "leave the target's own symbols alone"
+	const conditionalSymbols = workspaceOrGlobalConfigArray( workspace, 'blitzmax.lsp.conditionalSymbols' )
+	if ( conditionalSymbols && conditionalSymbols.length > 0 ) settings.conditionalSymbols = conditionalSymbols
+
+	const requireCoreInterface = workspaceOrGlobalConfigBoolean( workspace, 'blitzmax.lsp.requireCoreInterface' )
+	if ( requireCoreInterface !== undefined ) settings.requireCoreInterface = requireCoreInterface
+
+	const useDependencySnapshots = workspaceOrGlobalConfigBoolean( workspace, 'blitzmax.lsp.useDependencySnapshots' )
+	if ( useDependencySnapshots !== undefined ) settings.useDependencySnapshots = useDependencySnapshots
+
+	const warnImplicitDefaultReturns = workspaceOrGlobalConfigBoolean( workspace, 'blitzmax.lsp.warnImplicitDefaultReturns' )
+	if ( warnImplicitDefaultReturns !== undefined ) settings.warnImplicitDefaultReturns = warnImplicitDefaultReturns
+
+	return settings
+}
+
+// Defaults go under 'blitzmax', then each folder overrides them in 'workspaces'
+//
+// The server matches those entries on the URI string it was handed at startup, so
+// they have to be written the same way the client writes them
+function lspSettingsPayload( workspace: vscode.WorkspaceFolder | undefined ): object {
+
+	const payload: { blitzmax: BmxLspSettings, workspaces?: object[] } = {
+		blitzmax: lspSettingsFor( workspace )
+	}
+
+	const folders = workspace ? [workspace] : vscode.workspace.workspaceFolders
+	if ( folders && folders.length > 0 ) {
+		payload.workspaces = folders.map( folder => {
+			return { uri: folder.uri.toString(), ...lspSettingsFor( folder ) }
+		} )
+	}
+
+	return payload
+}
+
+function sendSettingsToAllLSP() {
+	if ( defaultBmxLsp ) runLSPTask( defaultBmxLsp.sendSettings(), 'send settings to language server' )
+	for ( let bmxLsp of runningBmxLsps.values() ) {
+		runLSPTask( bmxLsp.sendSettings(), 'send settings to language server' )
+	}
 }
 
 export interface BmxDocsTarget {
@@ -190,14 +267,24 @@ export function registerLSP( context: vscode.ExtensionContext ) {
 	}
 	
 	// Reset LSPs when settings change
+	//
+	// A different binary or a different SDK means a different process, but the rest
+	// the server takes as a notification, which leaves its analysis standing
 	vscode.workspace.onDidChangeConfiguration( ( event ) => {
-		if ( event.affectsConfiguration( 'blitzmax.base.path' ) ||
-			event.affectsConfiguration( 'blitzmax.lsp' ) ) {
+		const needsRestart = event.affectsConfiguration( 'blitzmax.base.path' ) ||
+			event.affectsConfiguration( 'blitzmax.lsp.path' ) ||
+			event.affectsConfiguration( 'blitzmax.lsp.args' ) ||
+			event.affectsConfiguration( 'blitzmax.lsp.hotReload' )
+
+		if ( needsRestart ) {
 			if ( multiInstance )
 				runLSPTask( restartAllLSP(), 'restart language servers' )
 			else
 				runLSPTask( restartSingleLSP( activeBmxLsp ), 'restart language server' )
+			return
 		}
+
+		if ( event.affectsConfiguration( 'blitzmax.lsp' ) ) sendSettingsToAllLSP()
 	} )
 	
 	// Notify about multi instance reload
@@ -221,6 +308,10 @@ export function registerLSP( context: vscode.ExtensionContext ) {
 			}
 		} )
 	}
+
+	// A folder that arrives later still needs its own settings, which are keyed by
+	// folder URI and so cannot have been sent before the folder existed
+	vscode.workspace.onDidChangeWorkspaceFolders( () => sendSettingsToAllLSP() )
 }
 
 export function deactivateLSP(): Promise<void> {
@@ -407,6 +498,11 @@ class BmxLSP {
 		}
 	}
 
+	async sendSettings(): Promise<void> {
+		if ( !this.isRunning() ) return
+		await this.client.sendNotification( 'workspace/didChangeConfiguration', { settings: lspSettingsPayload( this.workspace ) } )
+	}
+
 	async resume(): Promise<void> {
 		if ( this.client && !this._started ) {
 			this._started = true
@@ -471,7 +567,10 @@ class BmxLSP {
 			outputChannel: outputChannel,
 			// Lets a language server put command links in its hovers, which is how
 			// it offers to open the docs for whatever you are pointing at
-			markdown: { isTrusted: true }
+			markdown: { isTrusted: true },
+			// The server wants its settings before it reads anything, so they go in
+			// here rather than waiting for the first notification
+			initializationOptions: lspSettingsPayload( workspace )
 		}
 
 		if ( workspace ) {

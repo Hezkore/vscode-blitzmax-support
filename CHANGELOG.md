@@ -1,3 +1,10 @@
+## 2.29.0
+* BlitzMax NG 1.00 ships with its own language server, so there is nothing to install or set up anymore
+* Removed the inline hint, advice and formatting settings, they belonged to the old separate server
+* Added settings for how the language server reads your project, build mode, target platform, target architecture and conditional symbols
+* Settings now reach the language server as a notification instead of restarting it, so it keeps what it already worked out
+* The formatter is now looked for at bin/bfm, next to bls
+
 ## 2.28.0
 * Merged woollybah's per-workspace language server work, so the status bar says which SDK and server a folder is using and why one is unavailable
 * Language server settings and links now point at the BlitzMax Language Server

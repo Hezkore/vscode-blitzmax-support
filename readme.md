@@ -10,7 +10,7 @@ If you are new to BlitzMax or VS Code, make sure you read [how to get started](#
 This extension provides the following features inside VS Code for BlitzMax source files:
 
 * Built-in documentation, examples and help
-* [Language Server Protocol *](#note-about-using-the-language-server-protocol)
+* [Language Server Protocol](#note-about-using-the-language-server-protocol)
 * Easy quick build buttons
 * Syntax highlighting
 * Build options view
@@ -19,8 +19,7 @@ This extension provides the following features inside VS Code for BlitzMax sourc
 * Debugging
 * Snippets
 
-Install the [BlitzMax Language Server](https://github.com/Hezkore/blitzmax-language-server) alongside it and you also get error checking, auto-complete, outline, go to definition, rename and formatting.\
-See [the note below](#note-about-using-the-language-server-protocol) for how to set it up.
+BlitzMax NG 1.00 and newer ships with its own language server, so error checking, auto-complete, outline, go to definition and rename work straight away with nothing to install and nothing to set up.
 
 You can discuss this extension on Discord: [![Discord Chat](https://img.shields.io/discord/613699895139762176.svg?logo=discord&style=social)](https://discord.gg/yF6PMaY5aE)\
 We hang out in the **#vscode-extension** channel!
@@ -42,29 +41,34 @@ See [CHANGELOG](https://marketplace.visualstudio.com/items/Hezkore.blitzmax/chan
 
 ### ***Note about using the Language Server Protocol***
 ---
-A "LSP" server is an external application that reads your project and source code.\
-It can provide linting and very accurate auto-complete suggestions, among many other things.
+A language server is a separate program that reads your project and your code, and tells the editor what it found.\
+Error checking, auto-complete, the outline, go to definition, rename and hover documentation all come from it.
 
-[**BlitzMax Language Server**](https://github.com/Hezkore/blitzmax-language-server) is the one to use.\
-It is written in BlitzMax NG and uses the real `bcc` compiler front end, so what it tells you is what a build would tell you.\
+**BlitzMax NG 1.00 and newer ships with one, so a recent release is all you need.**
+
+It is called `bls` and it sits in the `bin` folder of your BlitzMax NG install, next to `bcc` and `bmk`, which is exactly where the extension looks.\
+If you moved it somewhere else, point `blitzmax.lsp.path` at it.
+
+`bls` shares its parser and its model of the language with the compiler, so what it tells you is what a build would tell you.\
 It also works on a project that has never been built, and on edits you have not saved yet.
 
-Put the `bls` binary in the `bin` folder of your BlitzMax NG install, next to `bmk` and `bcc`.\
-The extension looks there on its own, so nothing needs configuring.\
-If you keep it somewhere else, point `blitzmax.lsp.path` at it.
-
-With it installed you get:
+You get:
 
 * Errors and warnings straight from the compiler, shown as you work
-* Outline, breadcrumbs and Go to Symbol in Workspace
+* Outline, breadcrumbs, folding and Go to Symbol in Workspace
 * Auto-complete offering only what your program can actually reach
-* Go to definition, find all references, and rename across the whole project
+* Go to definition, go to type, find all references, and rename across the whole project
+* Type hierarchy, so you can walk up and down from any type
 * Hover documentation, signature help and inline hints
-* Formatting, so you no longer need a separate formatter
-* Advice on syntax that compiles cleanly but does not do what it looks like
+* Colouring by what a name really is, so a type and a local no longer look alike
+* Quick fixes on the problems it reports
 
 Any other server will work too, as long as it speaks LSP.\
-An older work in progress server can be found [here](https://github.com/GWRon/bmxng-languageserver).
+Point `blitzmax.lsp.path` at it and put anything it needs on the command line in `blitzmax.lsp.args`.
+
+The server reads your project the way a build would, so it needs to know which build you mean.\
+`blitzmax.lsp.buildMode` picks debug or release, `blitzmax.lsp.targetPlatform` and `blitzmax.lsp.targetArchitecture` pick the target, and leaving those two empty means the machine you are sitting at.\
+The rest of the `blitzmax.lsp` settings are described in the settings editor.
 
 If different workspace folders use different BlitzMax SDKs, enable `blitzmax.lsp.multi`. Each folder can then override `blitzmax.base.path` and `blitzmax.lsp.path` in its own `.vscode/settings.json`; folders without overrides continue to use your user-level defaults.
 
@@ -74,10 +78,11 @@ Useful LSP links for server developers:\
 
 ### ***Note about using formatting***
 ---
-The [BlitzMax Language Server](https://github.com/Hezkore/blitzmax-language-server) handles formatting, so installing it is all you need.
+Formatting is not part of the language server, so this one still needs a separate program.
 
-Without a server, formatting is handled externally and you will have to install a BlitzMax specific formatter.\
-The extension will guide you through this process on the first format.
+The extension looks for a formatter called `bfm` in the `bin` folder of your BlitzMax NG install, next to `bls`.\
+If yours has a different name or lives somewhere else, point `blitzmax.formatter.path` at it.\
+The extension will offer to help the first time you format without one.
 
 ### FAQ
 ---
@@ -87,8 +92,8 @@ The extension will guide you through this process on the first format.
 	_(I highly recommend you upgrade to [BlitzMax NG](https://blitzmax.org/))_
 
 * **Q**. Why is the [outlines](https://code.visualstudio.com/docs/getstarted/userinterface#_outline-view) view and [breadcrumbs](https://code.visualstudio.com/docs/editor/editingevolved#_breadcrumbs) not working?
-	* **A**. These features are provided by the [LSP](#note-about-using-the-language-server-protocol) server.\
-	Install the [BlitzMax Language Server](https://github.com/Hezkore/blitzmax-language-server) and they start working.
+	* **A**. These come from the [language server](#note-about-using-the-language-server-protocol).\
+	BlitzMax NG 1.00 and newer ships with one, so updating BlitzMax is usually the fix.
 
 * **Q**. I've found an issue / I'd like to make a feature request\, what do I do?
 	* **A**. Is the issue or request already listed at [GitHub Issues](https://github.com/Hezkore/vscode-blitzmax-support/issues)?\

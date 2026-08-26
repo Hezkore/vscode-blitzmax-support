@@ -1,3 +1,9 @@
+## 2.28.0
+* Merged woollybah's per-workspace language server work, so the status bar says which SDK and server a folder is using and why one is unavailable
+* Language server settings and links now point at the BlitzMax Language Server
+* Added settings for its inline hints, each taking off, otherFile, outOfView or always
+* Quick help asks the language server what the cursor is on, so a method resolves instead of failing
+
 ## 2.27.9
 * Added settings for the language server's new advice groups
 

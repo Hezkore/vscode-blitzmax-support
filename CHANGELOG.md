@@ -1,3 +1,6 @@
+## 2.27.4
+* Fixed marketplace badges not showing
+
 ## 2.27.3
 * Language server hovers can now link to the documentation
 

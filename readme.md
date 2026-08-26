@@ -1,7 +1,7 @@
 # BlitzMax for Visual Studio Code
-[![Version](https://img.shields.io/visual-studio-marketplace/v/hezkore.BlitzMax)](https://marketplace.visualstudio.com/items?itemName=hezkore.Blitzmax)
-[![Installs](https://img.shields.io/visual-studio-marketplace/i/hezkore.BlitzMax)](https://marketplace.visualstudio.com/items?itemName=hezkore.BlitzMax)
-[![Rating](https://img.shields.io/visual-studio-marketplace/stars/hezkore.BlitzMax)](https://marketplace.visualstudio.com/items?itemName=hezkore.BlitzMax)
+[![Version](https://badgen.net/vs-marketplace/v/hezkore.BlitzMax)](https://marketplace.visualstudio.com/items?itemName=hezkore.Blitzmax)
+[![Installs](https://badgen.net/vs-marketplace/i/hezkore.BlitzMax)](https://marketplace.visualstudio.com/items?itemName=hezkore.BlitzMax)
+[![Rating](https://badgen.net/vs-marketplace/rating/hezkore.BlitzMax)](https://marketplace.visualstudio.com/items?itemName=hezkore.BlitzMax)
 [![Discord Chat](https://img.shields.io/discord/613699895139762176.svg?logo=discord&style=social)](https://discord.gg/yF6PMaY5aE)
 
 Welcome to the [BlitzMax](https://blitzmax.org/) extension for [Visual Studio Code](https://code.visualstudio.com/)!\

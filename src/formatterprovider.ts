@@ -7,6 +7,7 @@ import { existsSync, workspaceOrGlobalConfigString } from './common'
 import { triggerBmxFormatterHelp } from './helper'
 
 let formatterBusy = new awaitNotify.Subject()
+let formatterProviders: vscode.Disposable[] = []
 let formatterOptions: FormatterOptions = {
 	ready: false,
 	initAttempts: 0,
@@ -32,16 +33,39 @@ function resetFormatter() {
 	formatterOptions.ready = false
 }
 
-export function registerFormatterProvider( context: vscode.ExtensionContext ) {
+// Where the formatter binary would be, if there is one
+// Does not touch formatterOptions, so it is safe to ask at any time
+function formatterPath(): string | undefined {
 
-	vscode.workspace.onDidChangeConfiguration( ( event ) => {
-		if ( event.affectsConfiguration( 'blitzmax.formatter' ) ) {
-			console.log( 'FORMATTER CHANGES' )
-			resetFormatter()
-		}
-	} )
+	let path: string | undefined = vscode.workspace.getConfiguration( 'blitzmax' ).get( 'formatter.path' )
+	if ( !path ) return undefined
 
-	context.subscriptions.push(
+	if ( path.startsWith( '.' ) ) {
+		const bmxPath = workspaceOrGlobalConfigString( undefined, 'blitzmax.base.path' )
+		if ( !bmxPath ) return undefined
+		path = vscode.Uri.file( bmxPath + path.slice( 1 ) ).fsPath
+	}
+
+	return path
+}
+
+// The language server also offers formatting
+// Registering these when there is no formatter binary just leaves the user
+// with two providers to choose between, one of which cannot format anything
+function updateFormatterProviders() {
+
+	const path = formatterPath()
+	const wanted = !!path && !!existsSync( path )
+	const registered = formatterProviders.length > 0
+	if ( wanted === registered ) return
+
+	if ( !wanted ) {
+		formatterProviders.forEach( provider => provider.dispose() )
+		formatterProviders = []
+		return
+	}
+
+	formatterProviders.push(
 		vscode.languages.registerDocumentFormattingEditProvider( 'blitzmax', {
 			async provideDocumentFormattingEdits( document: vscode.TextDocument ): Promise<vscode.TextEdit[]> {
 
@@ -85,6 +109,24 @@ export function registerFormatterProvider( context: vscode.ExtensionContext ) {
 			}
 		}, ' ', '\r', '\n' ),
 	)
+}
+
+export function registerFormatterProvider( context: vscode.ExtensionContext ) {
+
+	vscode.workspace.onDidChangeConfiguration( ( event ) => {
+		if ( event.affectsConfiguration( 'blitzmax.formatter' )
+			|| event.affectsConfiguration( 'blitzmax.base.path' ) ) {
+			resetFormatter()
+			updateFormatterProviders()
+		}
+	} )
+
+	context.subscriptions.push( { dispose: () => {
+		formatterProviders.forEach( provider => provider.dispose() )
+		formatterProviders = []
+	} } )
+
+	updateFormatterProviders()
 }
 
 async function initFormatter(): Promise<boolean> {

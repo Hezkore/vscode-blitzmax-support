@@ -66,6 +66,8 @@ With it installed you get:
 Any other server will work too, as long as it speaks LSP.\
 An older work in progress server can be found [here](https://github.com/GWRon/bmxng-languageserver).
 
+If different workspace folders use different BlitzMax SDKs, enable `blitzmax.lsp.multi`. Each folder can then override `blitzmax.base.path` and `blitzmax.lsp.path` in its own `.vscode/settings.json`; folders without overrides continue to use your user-level defaults.
+
 Useful LSP links for server developers:\
 [VS Code specific information](https://code.visualstudio.com/api/language-extensions/language-server-extension-guide)\
 [Official LSP specifications](https://microsoft.github.io/language-server-protocol/specifications/specification-current/)

@@ -304,7 +304,7 @@
 				},
 				"blitzmax.lsp.multi": {
 					"type": "boolean",
-					"markdownDescription": "Run a separate instance of the [LSP](https://github.com/Hezkore/blitzmax-language-server) per workspace folder.",
+					"markdownDescription": "Run a separate language server for each workspace folder. Enable this when folders use different BlitzMax SDKs or LSP executables: each folder resolves #blitzmax.base.path# and #blitzmax.lsp.path# independently, while folders without overrides use your default settings. When disabled, one language server handles all BlitzMax files using the global SDK and LSP paths.",
 					"default": false,
 					"scope": "machine-overridable"
 				},

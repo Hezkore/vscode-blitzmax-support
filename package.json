@@ -1,6 +1,6 @@
 {
 	"name": "blitzmax",
-	"version": "2.29.0",
+	"version": "2.30.0",
 	"publisher": "Hezkore",
 	"displayName": "BlitzMax",
 	"description": "BlitzMax for Visual Studio Code.",
@@ -442,6 +442,11 @@
 					"type": "string",
 					"markdownDescription": "[Code formatter](https://github.com/search?q=topic%3ABlitzMax+topic%3Aformatter) arguments for end of format range.",
 					"default": "-end"
+				},
+				"blitzmax.formatter.file": {
+					"type": "string",
+					"markdownDescription": "Argument used to tell the code formatter which file the text came from. A formatter reading standard input cannot otherwise find a settings file sitting next to your source, so this is what makes per folder formatting settings work. Leave it empty for a formatter that does not take one.",
+					"default": "-file"
 				},
 				"blitzmax.syntax.colorFunctions": {
 					"type": "array",

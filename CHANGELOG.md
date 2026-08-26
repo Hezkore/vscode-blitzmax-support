@@ -1,3 +1,7 @@
+## 2.30.0
+* The code formatter is now told which file the text came from, so it can find settings that live next to your source instead of guessing
+* Added blitzmax.formatter.file for the argument that carries the name, leave it empty for a formatter that does not take one
+
 ## 2.29.0
 * BlitzMax NG 1.00 ships with its own language server, so there is nothing to install or set up anymore
 * Removed the inline hint, advice and formatting settings, they belonged to the old separate server

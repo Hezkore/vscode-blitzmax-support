@@ -23,7 +23,8 @@ interface FormatterOptions {
 	arg?: string[],
 	onTypeArg?: string[],
 	startArg?: string,
-	endArg?: string
+	endArg?: string,
+	fileArg?: string
 }
 
 function resetFormatter() {
@@ -75,7 +76,7 @@ function updateFormatterProviders() {
 				const text = document.getText( textRange )
 				if ( text.length <= 0 ) return []
 
-				return [vscode.TextEdit.replace( textRange, await format( text, false ) )]
+				return [vscode.TextEdit.replace( textRange, await format( text, false, undefined, document ) )]
 			}
 		} ),
 
@@ -89,12 +90,12 @@ function updateFormatterProviders() {
 					const text = document.getText( textRange )
 					if ( text.length <= 0 ) return []
 
-					return [vscode.TextEdit.replace( textRange, await format( text, false, range ) )]
+					return [vscode.TextEdit.replace( textRange, await format( text, false, range, document ) )]
 				} else {
 					const text = document.getText( range )
 					if ( text.length <= 0 ) return []
 
-					return [vscode.TextEdit.replace( range, await format( text, false ) )]
+					return [vscode.TextEdit.replace( range, await format( text, false, undefined, document ) )]
 				}
 			}
 		} ),
@@ -105,7 +106,7 @@ function updateFormatterProviders() {
 				const line = document.lineAt( position.line )
 				if ( line.isEmptyOrWhitespace ) return []
 
-				return [vscode.TextEdit.replace( line.range, await format( line.text, true ) )]
+				return [vscode.TextEdit.replace( line.range, await format( line.text, true, undefined, document ) )]
 			}
 		}, ' ', '\r', '\n' ),
 	)
@@ -168,12 +169,13 @@ async function initFormatter(): Promise<boolean> {
 		formatterOptions.onTypeArg = vscode.workspace.getConfiguration( 'blitzmax' ).get( 'formatter.onType' )
 		formatterOptions.startArg = vscode.workspace.getConfiguration( 'blitzmax' ).get( 'formatter.range.start' )
 		formatterOptions.endArg = vscode.workspace.getConfiguration( 'blitzmax' ).get( 'formatter.range.end' )
+		formatterOptions.fileArg = vscode.workspace.getConfiguration( 'blitzmax' ).get( 'formatter.file' )
 
 		return resolve( true )
 	} )
 }
 
-async function format( text: string, onType: boolean, range: vscode.Range | undefined = undefined ): Promise<string> {
+async function format( text: string, onType: boolean, range: vscode.Range | undefined = undefined, document: vscode.TextDocument | undefined = undefined ): Promise<string> {
 	return new Promise( async ( resolve, reject ) => {
 
 		// Only init on the first "Format On Type"
@@ -191,6 +193,13 @@ async function format( text: string, onType: boolean, range: vscode.Range | unde
 		if ( onType && formatterOptions.onTypeArg ) args = args.concat( formatterOptions.onTypeArg )
 		if ( range && formatterOptions.startArg ) args.push( formatterOptions.startArg, range.start.line.toString() )
 		if ( range && formatterOptions.endArg ) args.push( formatterOptions.endArg, range.end.line.toString() )
+
+		// A formatter reading the text on standard input has no idea which file it came
+		// from, so it cannot find a settings file that lives next to it
+		// Telling it the name is what makes per folder settings work at all
+		if ( document && formatterOptions.fileArg && document.uri.scheme === 'file' ) {
+			args.push( formatterOptions.fileArg, document.uri.fsPath )
+		}
 
 		try {
 			let proc = process.spawn( formatterOptions.path, args )

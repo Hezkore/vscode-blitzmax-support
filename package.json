@@ -45,18 +45,18 @@
 		"publish": "vsce publish"
 	},
 	"engines": {
-		"vscode": "^1.67.0"
+		"vscode": "^1.91.0"
 	},
 	"dependencies": {
 		"await-notify": "1.0.1",
 		"vscode-debugadapter": "^1.48.0",
-		"vscode-languageclient": "^8.0.0"
+		"vscode-languageclient": "^10.1.0"
 	},
 	"devDependencies": {
 		"@types/glob": "^7.1.3",
 		"@types/mocha": "^8.2.2",
 		"@types/node": "^16.6.1",
-		"@types/vscode": "^1.67.0",
+		"@types/vscode": "^1.91.0",
 		"@typescript-eslint/eslint-plugin": "^4.29.1",
 		"@typescript-eslint/parser": "4.29.1",
 		"@vscode/test-web": "^0.0.8",
@@ -64,7 +64,7 @@
 		"glob": "^7.1.7",
 		"mocha": "^8.4.0",
 		"ts-loader": "9.4.2",
-		"typescript": "^4.7.4",
+		"typescript": "^5.9.3",
 		"vsce": "1.88.0",
 		"vscode-debugadapter-testsupport": "^1.47.0",
 		"vscode-test": "1.5.2",

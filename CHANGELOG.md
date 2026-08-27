@@ -1,19 +1,22 @@
+## 2.31.1
+* The formatter search now opens GitHub's repositories tab
+
 ## 2.31.0
-* Formatting now picks in order: a formatter you pointed at, then a language server that offers formatting, then nothing
-* Asking to format with no formatter installed now explains what is missing instead of leaving you with VS Code's "no formatter installed"
-* That message appears once rather than on every save, and points at the GitHub topic so you can pick any BlitzMax formatter
-* A formatter that changes nothing no longer marks the file as edited
+* A formatter you pointed at is now always used, falling back to the language server only when it offers formatting
+* Fixed formatting with no formatter installed leaving you with VS Code's "no formatter installed" and no way to find one
+* The formatter help now shows once instead of on every save
+* Fixed a formatter that changed nothing marking the file as edited
 
 ## 2.30.0
-* The code formatter is now told which file the text came from, so it can find settings that live next to your source instead of guessing
-* Added blitzmax.formatter.file for the argument that carries the name, leave it empty for a formatter that does not take one
+* Added blitzmax.formatter.file, the argument naming the file being formatted
+* Code formatters can now find settings sitting next to your source instead of guessing
 
 ## 2.29.0
-* BlitzMax NG 1.00 ships with its own language server, so there is nothing to install or set up anymore
+* BlitzMax NG 1.00 ships with its own language server, so there is nothing left to install
+* Added settings for build mode, target platform, target architecture and conditional symbols
 * Removed the inline hint, advice and formatting settings, they belonged to the old separate server
-* Added settings for how the language server reads your project, build mode, target platform, target architecture and conditional symbols
-* Settings now reach the language server as a notification instead of restarting it, so it keeps what it already worked out
-* The formatter is now looked for at bin/bfm, next to bls
+* Language server settings no longer restart the server, so it keeps what it already worked out
+* Changed the default formatter path to bin/bfm, next to bls
 
 ## 2.28.0
 * Merged woollybah's per-workspace language server work, so the status bar says which SDK and server a folder is using and why one is unavailable

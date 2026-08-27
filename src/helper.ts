@@ -84,7 +84,7 @@ export function registerHelperGuide( context: vscode.ExtensionContext ) {
 
 // Anyone can write a formatter for BlitzMax NG, so this points at the GitHub topic
 // rather than at any one of them
-const FORMATTER_SEARCH: string = 'https://github.com/search?q=topic%3ABlitzMax+topic%3Aformatter'
+const FORMATTER_SEARCH: string = 'https://github.com/search?q=topic%3ABlitzMax+topic%3Aformatter&type=repositories'
 
 // Help with BlitzMax external formatter
 export function triggerBmxFormatterHelp() {

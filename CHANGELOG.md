@@ -1,3 +1,7 @@
+## 2.32.0
+* Updated language client to LSP 3.18 (woollybah)
+* The language server output is now a log channel, so you can filter it by level
+
 ## 2.31.1
 * The formatter search now opens GitHub's repositories tab
 

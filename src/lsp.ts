@@ -8,7 +8,7 @@ import * as lsp from 'vscode-languageclient/node'
 import { workspaceOrGlobalConfigBoolean, workspaceOrGlobalConfigArray, workspaceOrGlobalConfigString } from './common'
 let multiInstance: boolean | undefined
 let forcedStop: boolean
-let outputChannel: vscode.OutputChannel
+let outputChannel: vscode.LogOutputChannel
 let activeBmxLsp: BmxLSP | undefined
 let defaultBmxLsp: BmxLSP | undefined
 let runningBmxLsps: Map<string, BmxLSP> = new Map()
@@ -196,7 +196,7 @@ export function registerLSP( context: vscode.ExtensionContext ) {
 	if (multiInstance == undefined) multiInstance = false
 
 	// Create our output channel
-	outputChannel = vscode.window.createOutputChannel( 'BlitzMax Language Server' )
+	outputChannel = vscode.window.createOutputChannel( 'BlitzMax Language Server', { log: true } )
 
 	// Creatus status bar item
 	const statusBarCommandId = 'blitzmax.showLspOptions'

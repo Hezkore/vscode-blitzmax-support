@@ -1,7 +1,8 @@
 {
 	"compilerOptions": {
-		"module": "commonjs",
-		"target": "es6",
+		"module": "node16",
+		"moduleResolution": "node16",
+		"target": "es2022",
 
 		"noImplicitAny": false,
 		"removeComments": false,

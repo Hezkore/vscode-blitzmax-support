@@ -56,6 +56,23 @@ function getOuterMostWorkspaceFolder( folder: vscode.WorkspaceFolder | undefined
 	return folder
 }
 
+// Fires whenever a language server starts, stops, or finishes telling us what it
+// can do
+//
+// The formatter needs to know, because a server that formats should be left to do
+// it, and that is not known until the server has answered
+const lspChanged = new vscode.EventEmitter<void>()
+export const onLspChanged = lspChanged.event
+
+// Whether the running language server offers to format documents itself
+export function lspFormats(): boolean {
+
+	const capabilities = activeLspCapabilities()
+
+	return !!capabilities.documentFormattingProvider
+		|| !!capabilities.documentRangeFormattingProvider
+}
+
 export function activeLspCapabilities(): lsp.ServerCapabilities {
 
 	if (!activeBmxLsp) return {}
@@ -528,6 +545,7 @@ class BmxLSP {
 			this.status.color = undefined
 			this.status.error = undefined
 			this.status.tooltip = this.statusTooltip( 'Language server ready' )
+			lspChanged.fire()
 		} catch ( error ) {
 			const message = error instanceof Error ? error.message : String( error )
 			const failure = `Language server failed to start: ${message}`
@@ -537,6 +555,7 @@ class BmxLSP {
 			this.status.tooltip = this.statusTooltip( failure )
 			this._started = false
 			this._running = false
+			lspChanged.fire()
 		}
 		if ( activeBmxLsp === this ) updateStatusBarItem()
 	}
@@ -556,6 +575,7 @@ class BmxLSP {
 		this._started = false
 		this._running = false
 		outputChannel.appendLine( message )
+		lspChanged.fire()
 	}
 
 	constructor( workspace: vscode.WorkspaceFolder | undefined ) {

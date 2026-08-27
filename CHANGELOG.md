@@ -1,3 +1,9 @@
+## 2.31.0
+* Formatting now picks in order: a formatter you pointed at, then a language server that offers formatting, then nothing
+* Asking to format with no formatter installed now explains what is missing instead of leaving you with VS Code's "no formatter installed"
+* That message appears once rather than on every save, and points at the GitHub topic so you can pick any BlitzMax formatter
+* A formatter that changes nothing no longer marks the file as edited
+
 ## 2.30.0
 * The code formatter is now told which file the text came from, so it can find settings that live next to your source instead of guessing
 * Added blitzmax.formatter.file for the argument that carries the name, leave it empty for a formatter that does not take one

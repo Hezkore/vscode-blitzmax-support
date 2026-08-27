@@ -82,33 +82,22 @@ export function registerHelperGuide( context: vscode.ExtensionContext ) {
 	triggerBmxInstallHelp()
 }
 
-// bfm is the BlitzMax NG formatter, and the extension already looks for it in
-// bin next to bls
-// Flip this to true once the repository is public and the button below starts
-// pointing people straight at it instead of at a search
-const BFM_IS_PUBLIC: boolean = false
-const BFM_URL: string = 'https://github.com/Hezkore/blitzmax-formatter'
-
-// What to look for on GitHub when there is nothing better to offer
+// Anyone can write a formatter for BlitzMax NG, so this points at the GitHub topic
+// rather than at any one of them
 const FORMATTER_SEARCH: string = 'https://github.com/search?q=topic%3ABlitzMax+topic%3Aformatter'
 
 // Help with BlitzMax external formatter
 export function triggerBmxFormatterHelp() {
 
-	const getLabel = BFM_IS_PUBLIC ? 'Get bfm' : 'Download'
-	const message = BFM_IS_PUBLIC
-		? 'No BlitzMax formatter found. Drop bfm into your BlitzMax NG bin folder and it is picked up on its own.'
-		: 'No BlitzMax formatter found.'
-
 	vscode.window.showWarningMessage(
-		message,
+		'No BlitzMax formatter found. A formatter is a separate program, and dropping one into the bin folder of your BlitzMax NG install is enough for it to be picked up.',
 		'Select Path',
-		getLabel
+		'Find One'
 	).then( selection => {
 		if ( selection ) {
-			if ( selection === getLabel ) {
+			if ( selection === 'Find One' ) {
 
-				vscode.env.openExternal( vscode.Uri.parse( BFM_IS_PUBLIC ? BFM_URL : FORMATTER_SEARCH ) )
+				vscode.env.openExternal( vscode.Uri.parse( FORMATTER_SEARCH ) )
 			} else {
 
 				// Pick path

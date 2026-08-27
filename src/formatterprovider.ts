@@ -5,8 +5,10 @@ import * as process from 'child_process'
 import * as awaitNotify from 'await-notify'
 import { existsSync, workspaceOrGlobalConfigString } from './common'
 import { triggerBmxFormatterHelp } from './helper'
+import { lspFormats, onLspChanged } from './lsp'
 
 let formatterBusy = new awaitNotify.Subject()
+let alreadyOffered: boolean = false
 let formatterProviders: vscode.Disposable[] = []
 let formatterOptions: FormatterOptions = {
 	ready: false,
@@ -28,6 +30,7 @@ interface FormatterOptions {
 }
 
 function resetFormatter() {
+	alreadyOffered = false
 	formatterOptions.exists = false
 	formatterOptions.path = undefined
 	formatterOptions.initAttempts = 0
@@ -50,13 +53,17 @@ function formatterPath(): string | undefined {
 	return path
 }
 
-// The language server also offers formatting
-// Registering these when there is no formatter binary just leaves the user
-// with two providers to choose between, one of which cannot format anything
+// Who formats a .bmx file, in order of preference
+//
+// A formatter binary always wins, because pointing at one is a deliberate choice
+// A language server that offers formatting is next, and is left to get on with it
+// With neither, we still register, so that asking to format reaches the message
+// explaining what is missing instead of a dead end from VS Code
 function updateFormatterProviders() {
 
 	const path = formatterPath()
-	const wanted = !!path && !!existsSync( path )
+	const haveBinary = !!path && !!existsSync( path )
+	const wanted = haveBinary || !lspFormats()
 	const registered = formatterProviders.length > 0
 	if ( wanted === registered ) return
 
@@ -76,7 +83,10 @@ function updateFormatterProviders() {
 				const text = document.getText( textRange )
 				if ( text.length <= 0 ) return []
 
-				return [vscode.TextEdit.replace( textRange, await format( text, false, undefined, document ) )]
+				const formatted = await format( text, false, undefined, document )
+				if ( formatted === text ) return []
+
+				return [vscode.TextEdit.replace( textRange, formatted )]
 			}
 		} ),
 
@@ -90,12 +100,18 @@ function updateFormatterProviders() {
 					const text = document.getText( textRange )
 					if ( text.length <= 0 ) return []
 
-					return [vscode.TextEdit.replace( textRange, await format( text, false, range, document ) )]
+					const formatted = await format( text, false, range, document )
+					if ( formatted === text ) return []
+
+					return [vscode.TextEdit.replace( textRange, formatted )]
 				} else {
 					const text = document.getText( range )
 					if ( text.length <= 0 ) return []
 
-					return [vscode.TextEdit.replace( range, await format( text, false, undefined, document ) )]
+					const formatted = await format( text, false, undefined, document )
+					if ( formatted === text ) return []
+
+					return [vscode.TextEdit.replace( range, formatted )]
 				}
 			}
 		} ),
@@ -106,7 +122,10 @@ function updateFormatterProviders() {
 				const line = document.lineAt( position.line )
 				if ( line.isEmptyOrWhitespace ) return []
 
-				return [vscode.TextEdit.replace( line.range, await format( line.text, true, undefined, document ) )]
+				const formatted = await format( line.text, true, undefined, document )
+				if ( formatted === line.text ) return []
+
+				return [vscode.TextEdit.replace( line.range, formatted )]
 			}
 		}, ' ', '\r', '\n' ),
 	)
@@ -121,6 +140,10 @@ export function registerFormatterProvider( context: vscode.ExtensionContext ) {
 			updateFormatterProviders()
 		}
 	} )
+
+	// A server only says whether it formats once it has started, so this has to be
+	// worked out again when that answer arrives
+	context.subscriptions.push( onLspChanged( () => updateFormatterProviders() ) )
 
 	context.subscriptions.push( { dispose: () => {
 		formatterProviders.forEach( provider => provider.dispose() )
@@ -183,8 +206,12 @@ async function format( text: string, onType: boolean, range: vscode.Range | unde
 			// Make sure the formatter is properly setup
 			if ( !formatterOptions.ready ) await initFormatter()
 
-			// Help with setting up the formatter if it doesn't exist
-			if ( !formatterOptions.ready && !onType ) triggerBmxFormatterHelp()
+			// Say what is missing, but only once, or turning on Format On Save would
+			// put the same message up on every save
+			if ( !formatterOptions.ready && !onType && !alreadyOffered ) {
+				alreadyOffered = true
+				triggerBmxFormatterHelp()
+			}
 		}
 		if ( !formatterOptions.ready || !formatterOptions.path ) return resolve( text )
 

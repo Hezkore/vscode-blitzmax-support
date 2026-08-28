@@ -6,6 +6,7 @@ import * as vscode from 'vscode'
 import { existsSync } from './common'
 import * as lsp from 'vscode-languageclient/node'
 import { workspaceOrGlobalConfigBoolean, workspaceOrGlobalConfigArray, workspaceOrGlobalConfigString } from './common'
+import { lockedBuildSourcePath } from './taskprovider'
 let multiInstance: boolean | undefined
 let forcedStop: boolean
 let outputChannel: vscode.LogOutputChannel
@@ -87,6 +88,7 @@ export function activeLspCapabilities(): lsp.ServerCapabilities {
 // server would take literally
 interface BmxLspSettings {
 	sdkPath?: string
+	rootSourcePath: string
 	buildMode?: string
 	targetPlatform?: string
 	targetArchitecture?: string
@@ -98,7 +100,7 @@ interface BmxLspSettings {
 
 function lspSettingsFor( workspace: vscode.WorkspaceFolder | undefined ): BmxLspSettings {
 
-	const settings: BmxLspSettings = {}
+	const settings: BmxLspSettings = { rootSourcePath: lockedBuildSourcePath( workspace ) }
 
 	const sdkPath = workspaceOrGlobalConfigString( workspace, 'blitzmax.base.path' )
 	if ( sdkPath ) settings.sdkPath = sdkPath
@@ -301,7 +303,7 @@ export function registerLSP( context: vscode.ExtensionContext ) {
 			return
 		}
 
-		if ( event.affectsConfiguration( 'blitzmax.lsp' ) ) sendSettingsToAllLSP()
+		if ( event.affectsConfiguration( 'blitzmax.lsp' ) || event.affectsConfiguration( 'tasks' ) ) sendSettingsToAllLSP()
 	} )
 	
 	// Notify about multi instance reload

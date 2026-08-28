@@ -130,6 +130,45 @@ export function getBuildDefinitionFromWorkspace( workspace: vscode.WorkspaceFold
 	return internalBuildDefinition
 }
 
+export function isBuildFileLocked( definition: BmxBuildTaskDefinition | undefined ): boolean {
+	return !!definition && !!definition.source && definition.source !== '${file}'
+}
+
+export function workspaceFolderVariable( workspace: vscode.WorkspaceFolder ): string {
+	const folders = vscode.workspace.workspaceFolders
+	if ( folders && folders.length > 1 ) return '${workspaceFolder:' + workspace.name + '}'
+	return '${workspaceFolder}'
+}
+
+// The build task remains the single source of truth. The language server cannot
+// expand VS Code task variables itself, so pass it an absolute path only when
+// the task names a stable build file. An empty path means "follow the active
+// source", matching the unlocked MaxIDE-style workflow.
+export function lockedBuildSourcePath( workspace: vscode.WorkspaceFolder | undefined ): string {
+	if ( !workspace ) return ''
+	const definition = getBuildDefinitionFromWorkspace( workspace )
+	if ( !isBuildFileLocked( definition ) ) return ''
+	let unresolvedVariable = false
+	let source = definition.source.replace( /\$\{workspaceFolder(?::([^}]+))?\}/g, ( original, folderName: string | undefined ) => {
+		let sourceWorkspace = workspace
+		if ( folderName ) {
+			const folders = vscode.workspace.workspaceFolders
+			const namedWorkspace = folders ? folders.find( folder => folder.name === folderName ) : undefined
+			if ( !namedWorkspace ) {
+				unresolvedVariable = true
+				return original
+			}
+			sourceWorkspace = namedWorkspace
+		}
+		return sourceWorkspace.uri.fsPath
+	} )
+	if ( unresolvedVariable ) return ''
+	if ( source.includes( '${' ) ) return ''
+	if ( !path.isAbsolute( source ) ) source = path.resolve( workspace.uri.fsPath, source )
+	if ( path.extname( source ).toLowerCase() !== '.bmx' ) return ''
+	return vscode.Uri.file( source ).fsPath
+}
+
 export function saveAsDefaultTaskDefinition( newDef: BmxBuildTaskDefinition | undefined, workspace: vscode.WorkspaceFolder | undefined ): boolean {
 
 	if ( !newDef ) return false
@@ -146,7 +185,7 @@ export function saveAsDefaultTaskDefinition( newDef: BmxBuildTaskDefinition | un
 	}
 
 	// Try to update the task with the same label
-	const tasksFile = vscode.workspace.getConfiguration( 'tasks' )
+	const tasksFile = vscode.workspace.getConfiguration( 'tasks', workspace )
 	const tasksList: BmxBuildTaskDefinition[] | undefined = tasksFile.get( 'tasks' )
 	
 	if ( tasksList ) {

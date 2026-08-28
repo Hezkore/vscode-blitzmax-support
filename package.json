@@ -90,6 +90,7 @@
 		"onCommand:blitzmax.toggleBuildOption",
 		"onCommand:blitzmax.pickBlitzMaxPath",
 		"onCommand:blitzmax.setSourceFile",
+		"onCommand:blitzmax.unlockSourceFile",
 		"onCommand:blitzmax.build",
 		"onCommand:blitzmax.buildAndRun",
 		"onCommand:blitzmax.buildAndDebug",
@@ -530,8 +531,14 @@
 			},
 			{
 				"command": "blitzmax.setSourceFile",
-				"title": "Set As Default Build Task Source File",
+				"title": "Lock Current File for Building",
 				"category": "BlitzMax"
+			},
+			{
+				"command": "blitzmax.unlockSourceFile",
+				"title": "Unlock Build File",
+				"category": "BlitzMax",
+				"icon": "$(unlock)"
 			},
 			{
 				"command": "blitzmax.build",
@@ -609,6 +616,10 @@
 				{
 					"command": "blitzmax.resetBuildOptions",
 					"when": "view == blitzmax-build-options"
+				},
+				{
+					"command": "blitzmax.unlockSourceFile",
+					"when": "view == blitzmax-build-options && blitzmax:buildFileLocked"
 				}
 			],
 			"view/item/context": [
@@ -762,7 +773,7 @@
 							"source": {
 								"type": "string",
 								"default": "${file}",
-								"markdownDescription": "Absolute path to root source file  \n`bmk <source>`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#command-line-syntax)"
+								"markdownDescription": "Build root source file. Use `${file}` to build the active editor file, or choose a `.bmx` file to lock builds to that application root.  \n`bmk <source>`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#command-line-syntax)"
 							},
 							"fullcompile": {
 								"type": "boolean",
@@ -997,7 +1008,7 @@
 					"source": {
 						"type": "string",
 						"default": "${file}",
-						"markdownDescription": "Absolute path to root source file  \n`bmk <source>`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#command-line-syntax)"
+						"markdownDescription": "Build root source file. Use `${file}` to build the active editor file, or choose a `.bmx` file to lock builds to that application root.  \n`bmk <source>`  \n[More info](https://blitzmax.org/docs/en/tools/bmk/#command-line-syntax)"
 					},
 					"fullcompile": {
 						"type": "boolean",

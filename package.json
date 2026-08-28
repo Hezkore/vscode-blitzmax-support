@@ -1,6 +1,6 @@
 {
 	"name": "blitzmax",
-	"version": "2.32.0",
+	"version": "2.33.0",
 	"publisher": "Hezkore",
 	"displayName": "BlitzMax",
 	"description": "BlitzMax for Visual Studio Code.",
@@ -409,9 +409,9 @@
 					"description": "Use custom CSS style for help documentation."
 				},
 				"blitzmax.formatter.path": {
-				"type": "string",
-				"markdownDescription": "Relative or absolute path to the code formatter. A relative path starts at #blitzmax.base.path#, so the default finds a `bfm` dropped into BlitzMax NG's `bin` folder.",
-				"default": "./bin/bfm",
+					"type": "string",
+					"markdownDescription": "Relative or absolute path to the code formatter. A relative path starts at #blitzmax.base.path#, so the default finds a `bfm` dropped into BlitzMax NG's `bin` folder.",
+					"default": "./bin/bfm",
 					"scope": "machine-overridable"
 				},
 				"blitzmax.formatter.args": {

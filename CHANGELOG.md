@@ -1,3 +1,11 @@
+## 2.33.0
+* Added MaxIDE-style build file locking (woollybah)
+* The build options view now shows a Build File item with a lock or unlock icon, and the unlock button sits in its title bar
+* Lock Current File for Building replaces Set As Default Build Task Source File, and Unlock Build File returns to building the active editor file
+* A locked build file is sent to the language server as the project root, and it is told again when tasks.json changes
+* Locked paths use ${workspaceFolder:name} in multi-root workspaces and forward slashes on every platform
+* Locking a file saves the task into the folder that owns it instead of the first BlitzMax folder
+
 ## 2.32.0
 * Updated language client to LSP 3.18 (woollybah)
 * The language server output is now a log channel, so you can filter it by level

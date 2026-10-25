@@ -416,6 +416,142 @@
 					"default": true,
 					"description": "Use custom CSS style for help documentation."
 				},
+				"blitzmax.format.indent": {
+				"type": "boolean",
+				"default": true,
+				"markdownDescription": "Indent parsed block bodies using the editor's tab size and spaces-or-tabs setting. Example: `Function Show()` ↵ `Print value` becomes `Function Show()` ↵ `····Print value` (each `·` represents a space). Comments, directives, multiline text, and continuation lines keep their existing indentation.",
+				"scope": "resource"
+				},
+				"blitzmax.format.trimTrailingWhitespace": {
+				"type": "boolean",
+				"default": true,
+				"markdownDescription": "Remove spaces and tabs at the ends of ordinary code and single-line comment lines. Example: `Print value··` → `Print value` (each `·` represents a space). Multiline strings, block comments, directives, pragmas, and native lines retain their contents.",
+				"scope": "resource"
+				},
+				"blitzmax.format.spaceAfterComma": {
+				"type": "boolean",
+				"default": true,
+				"markdownDescription": "Use one space after commas when the next code token is on the same line. Example: `Draw(x,y)` → `Draw(x, y)`. When disabled, existing comma spacing is preserved. Wrapped lists, comments, and multiline strings keep their layout.",
+				"scope": "resource"
+				},
+				"blitzmax.format.caseIndent": {
+				"type": "string",
+				"enum": ["indented", "aligned"],
+				"markdownEnumDescriptions": [
+					"Lines from top to bottom: `Select n` ↵ `····Case 1` ↵ `········Print n` (each `·` represents a space).",
+					"Lines from top to bottom: `Select n` ↵ `Case 1` ↵ `····Print n` (each `·` represents a space)."
+				],
+				"default": "indented",
+				"markdownDescription": "Indent `Case` and `Default` under `Select`, or align them with `Select`. Statements in each case remain one level deeper than the case label.",
+				"scope": "resource"
+				},
+				"blitzmax.format.metadataBraceSpacing": {
+				"type": "string",
+				"enum": ["preserve", "spaced", "compact"],
+				"markdownEnumDescriptions": [
+					"Keep existing spacing: `{nomangle}` stays `{nomangle}`; `{ nomangle }` stays `{ nomangle }`.",
+					"Add one space inside single-line metadata braces: `{nomangle}` → `{ nomangle }`.",
+					"Remove optional spaces inside single-line metadata braces: `{ nomangle }` → `{nomangle}`."
+				],
+				"default": "preserve",
+				"markdownDescription": "Spacing inside single-line metadata braces: `{ nomangle }` or `{nomangle}`. Empty and multiline braces retain their layout.",
+				"scope": "resource"
+				},
+				"blitzmax.format.callParenSpacing": {
+				"type": "string",
+				"enum": ["preserve", "spaced", "compact"],
+				"markdownEnumDescriptions": [
+					"Keep existing spacing: `Call(value)` stays `Call(value)`; `Call( value )` stays `Call( value )`.",
+					"Add one space inside single-line call parentheses: `Call(value)` → `Call( value )`.",
+					"Remove optional spaces inside single-line call parentheses: `Call( value )` → `Call(value)`."
+				],
+				"default": "preserve",
+				"markdownDescription": "Spacing inside single-line call and constructor parentheses: `Call( value )` or `Call(value)`. Declarations and wrapped calls retain their layout.",
+				"scope": "resource"
+				},
+				"blitzmax.format.assignmentSpacing": {
+				"type": "string",
+				"enum": ["preserve", "spaced", "compact"],
+				"markdownEnumDescriptions": [
+					"Keep existing spacing around assignments: `value=1` stays `value=1`.",
+					"Add one space on each side: `value=1` → `value = 1`.",
+					"Remove optional spaces: `value = 1` → `value=1`, where this keeps the same tokens."
+				],
+				"default": "preserve",
+				"markdownDescription": "Preserve spacing, use one space, or remove spaces around parsed assignments and initializers. Compact spacing is used only when adjacent tokens remain unchanged.",
+				"scope": "resource"
+				},
+				"blitzmax.format.binarySpacing": {
+				"type": "string",
+				"enum": ["preserve", "spaced", "compact"],
+				"markdownEnumDescriptions": [
+					"Keep existing spacing around binary operators: `a+b` stays `a+b`.",
+					"Add one space on each side: `a+b` → `a + b`.",
+					"Remove optional spaces: `a + b` → `a+b`. Word operators such as `And` keep required spaces."
+				],
+				"default": "preserve",
+				"markdownDescription": "Preserve spacing, use one space, or remove spaces around parsed binary operators. Word operators such as `And` keep the spaces needed to remain separate tokens. Unary operators and type syntax retain their layout.",
+				"scope": "resource"
+				},
+				"blitzmax.format.thenStyle": {
+				"type": "string",
+				"enum": ["preserve", "add", "remove"],
+				"markdownEnumDescriptions": [
+					"Keep the current header: `If ready` and `If ready Then` stay as written.",
+					"Add `Then` to multiline headers: `If ready` → `If ready Then`.",
+					"Remove `Then` from multiline headers: `If ready Then` → `If ready`."
+				],
+				"default": "preserve",
+				"markdownDescription": "How to write `Then` in multiline `If` and `ElseIf` headers. Inline statements keep their existing `Then`.",
+				"scope": "resource"
+				},
+				"blitzmax.format.endStyle": {
+				"type": "string",
+				"enum": ["preserve", "combined", "spaced"],
+				"markdownEnumDescriptions": [
+					"Keep the current ending: `EndFunction` and `End Function` stay as written.",
+					"Combine named endings: `End Function` → `EndFunction`.",
+					"Separate named endings: `EndFunction` → `End Function`."
+				],
+				"default": "preserve",
+				"markdownDescription": "How to write named block endings, such as `EndFunction` or `End Function`.",
+				"scope": "resource"
+				},
+				"blitzmax.format.inlineIfStyle": {
+				"type": "string",
+				"enum": ["preserve", "expand"],
+				"markdownEnumDescriptions": [
+					"Keep simple one-line statements such as `If ready Then Print value` on one line.",
+					"Split `If ready Then Print value` into three lines: `If ready Then` ↵ `····Print value` ↵ `End If` (each `·` represents a space)."
+				],
+				"default": "preserve",
+				"markdownDescription": "Expand simple one-statement inline `If` statements into a multiline block. Inline statements with `Else`, comments, or other code on the line remain unchanged.",
+				"scope": "resource"
+				},
+				"blitzmax.format.declarationBlankLines": {
+				"type": "string",
+				"enum": ["preserve", "one", "none"],
+				"markdownEnumDescriptions": [
+					"Keep existing blank lines after declarations.",
+					"Use one blank line between a completed declaration and the next statement: `End Method` ↵ *(blank line)* ↵ `Method Next()`.",
+					"Use no blank line between a completed declaration and the next statement: `End Method` ↵ `Method Next()`."
+				],
+				"default": "preserve",
+				"markdownDescription": "Blank lines after completed functions, methods, types, enums and extern blocks when another statement follows at the same level. Gaps containing comments or directives are preserved.",
+				"scope": "resource"
+				},
+				"blitzmax.format.controlBlankLines": {
+				"type": "string",
+				"enum": ["preserve", "one", "none"],
+				"markdownEnumDescriptions": [
+					"Keep existing blank lines after control blocks.",
+					"Use one blank line after a completed control block when a sibling statement follows: `End If` ↵ *(blank line)* ↵ `Print result`.",
+					"Use no blank line after a completed control block when a sibling statement follows: `End If` ↵ `Print result`."
+				],
+				"default": "preserve",
+				"markdownDescription": "Blank lines after `End If`, `Next`, `Wend`, `Until`/`Forever`, `End Select`, and similar completed control blocks. Nested closing lines and gaps containing comments or directives are preserved.",
+				"scope": "resource"
+				},
 				"blitzmax.formatter.path": {
 					"type": "string",
 					"markdownDescription": "Relative or absolute path to the code formatter. A relative path starts at #blitzmax.base.path#, so the default finds a `bfm` dropped into BlitzMax NG's `bin` folder.",

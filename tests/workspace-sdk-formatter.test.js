@@ -17,6 +17,8 @@ const folderA = { uri: { fsPath: path.join(root, 'project-a') } }
 const folderB = { uri: { fsPath: path.join(root, 'project-b') } }
 let activeFolder = folderA
 let editorChanged
+let lspChanged
+let serverFormats = false
 let registered = 0
 let disposed = 0
 const vscode = {
@@ -46,7 +48,7 @@ function register() {
 const originalLoad = Module._load
 Module._load = function(request, parent, isMain) {
 	if (request === 'vscode') return vscode
-	if (request === './lsp') return { lspFormats: () => true, onLspChanged: () => ({ dispose() {} }) }
+	if (request === './lsp') return { lspFormats: () => serverFormats, onLspChanged: listener => { lspChanged = listener; return { dispose() {} } } }
 	if (request === './bmxdocs') return {}
 	return originalLoad.apply(this, arguments)
 }
@@ -59,13 +61,17 @@ try {
 
 	activeFolder = folderB
 	editorChanged()
-	assert.strictEqual(disposed, 3)
+	assert.strictEqual(disposed, 0)
 	assert.strictEqual(registered, 3)
 
 	activeFolder = folderA
 	editorChanged()
-	assert.strictEqual(registered, 6)
-	console.log('Workspace SDK formatter selection passed')
+	assert.strictEqual(registered, 3)
+	serverFormats = true
+	lspChanged()
+	assert.strictEqual(disposed, 3)
+	assert.strictEqual(registered, 3, 'a server formatter avoids registering a competing external provider')
+	console.log('LSP formatter priority and legacy fallback passed')
 } finally {
 	Module._load = originalLoad
 	fs.rmSync(root, { recursive: true, force: true })

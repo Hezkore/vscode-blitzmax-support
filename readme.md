@@ -78,9 +78,11 @@ Useful LSP links for server developers:\
 
 ### ***Note about using formatting***
 ---
-Formatting is not part of the language server, so this one still needs a separate program.
+Recent BlitzMax language servers provide document and selection formatting. The extension uses the server when it advertises that capability.
 
-The extension looks for a formatter called `bfm` in the `bin` folder of your BlitzMax NG install, next to `bls`.\
+The built-in formatter indents parsed block bodies using the editor's tab and space settings, trims trailing whitespace on ordinary code lines, and uses one space after commas on the same line. Configure `blitzmax.format.indent`, `blitzmax.format.trimTrailingWhitespace`, `blitzmax.format.spaceAfterComma`, `blitzmax.format.caseIndent` (`indented` or `aligned`), `blitzmax.format.metadataBraceSpacing`, `blitzmax.format.callParenSpacing`, `blitzmax.format.assignmentSpacing`, and `blitzmax.format.binarySpacing` (`preserve`, `spaced`, or `compact`), `blitzmax.format.thenStyle` (`preserve`, `add`, `remove`), `blitzmax.format.endStyle` (`preserve`, `combined`, `spaced`), `blitzmax.format.inlineIfStyle` (`preserve`, `expand`), `blitzmax.format.declarationBlankLines`, and `blitzmax.format.controlBlankLines` (`preserve`, `one`, `none`) in Settings or your workspace's `.vscode/settings.json`. `caseIndent` defaults to `indented`; the other style choices default to `preserve`. Blank-line rules act between sibling statements and leave comments and directives in the gap untouched. Compact operator spacing retains spaces where removing them would change the tokens, such as around `And`. Inline `If` expansion is deliberately limited to simple statements without `Else` or trailing comments. Wrapped argument lines and multiline strings keep their layout.
+
+With an older server, the extension looks for a formatter called `bfm` in the `bin` folder of your BlitzMax NG install, next to `bls`.\
 If yours has a different name or lives somewhere else, point `blitzmax.formatter.path` at it.\
 The extension will offer to help the first time you format without one.
 

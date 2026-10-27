@@ -96,6 +96,19 @@ interface BmxLspSettings {
 	requireCoreInterface?: boolean
 	useDependencySnapshots?: boolean
 	warnImplicitDefaultReturns?: boolean
+	formatThenStyle?: string
+	formatEndStyle?: string
+	formatInlineIfStyle?: string
+	formatIndent?: boolean
+	formatSpaceAfterComma?: boolean
+	formatCaseIndent?: string
+	formatMetadataBraceSpacing?: string
+	formatCallParenSpacing?: string
+	formatAssignmentSpacing?: string
+	formatBinarySpacing?: string
+	formatTrimTrailingWhitespace?: boolean
+	formatDeclarationBlankLines?: string
+	formatControlBlankLines?: string
 }
 
 function lspSettingsFor( workspace: vscode.WorkspaceFolder | undefined ): BmxLspSettings {
@@ -128,6 +141,20 @@ function lspSettingsFor( workspace: vscode.WorkspaceFolder | undefined ): BmxLsp
 
 	const warnImplicitDefaultReturns = workspaceOrGlobalConfigBoolean( workspace, 'blitzmax.lsp.warnImplicitDefaultReturns' )
 	if ( warnImplicitDefaultReturns !== undefined ) settings.warnImplicitDefaultReturns = warnImplicitDefaultReturns
+
+	settings.formatThenStyle = workspaceOrGlobalConfigString( workspace, 'blitzmax.format.thenStyle' ) || 'preserve'
+	settings.formatEndStyle = workspaceOrGlobalConfigString( workspace, 'blitzmax.format.endStyle' ) || 'preserve'
+	settings.formatInlineIfStyle = workspaceOrGlobalConfigString( workspace, 'blitzmax.format.inlineIfStyle' ) || 'preserve'
+	settings.formatIndent = workspaceOrGlobalConfigBoolean( workspace, 'blitzmax.format.indent' ) ?? true
+	settings.formatSpaceAfterComma = workspaceOrGlobalConfigBoolean( workspace, 'blitzmax.format.spaceAfterComma' ) ?? true
+	settings.formatCaseIndent = workspaceOrGlobalConfigString( workspace, 'blitzmax.format.caseIndent' ) || 'indented'
+	settings.formatMetadataBraceSpacing = workspaceOrGlobalConfigString( workspace, 'blitzmax.format.metadataBraceSpacing' ) || 'preserve'
+	settings.formatCallParenSpacing = workspaceOrGlobalConfigString( workspace, 'blitzmax.format.callParenSpacing' ) || 'preserve'
+	settings.formatAssignmentSpacing = workspaceOrGlobalConfigString( workspace, 'blitzmax.format.assignmentSpacing' ) || 'preserve'
+	settings.formatBinarySpacing = workspaceOrGlobalConfigString( workspace, 'blitzmax.format.binarySpacing' ) || 'preserve'
+	settings.formatTrimTrailingWhitespace = workspaceOrGlobalConfigBoolean( workspace, 'blitzmax.format.trimTrailingWhitespace' ) ?? true
+	settings.formatDeclarationBlankLines = workspaceOrGlobalConfigString( workspace, 'blitzmax.format.declarationBlankLines' ) || 'preserve'
+	settings.formatControlBlankLines = workspaceOrGlobalConfigString( workspace, 'blitzmax.format.controlBlankLines' ) || 'preserve'
 
 	return settings
 }
@@ -304,7 +331,7 @@ export function registerLSP( context: vscode.ExtensionContext ) {
 			return
 		}
 
-		if ( event.affectsConfiguration( 'blitzmax.lsp' ) || event.affectsConfiguration( 'tasks' ) ) sendSettingsToAllLSP()
+		if ( event.affectsConfiguration( 'blitzmax.lsp' ) || event.affectsConfiguration( 'blitzmax.format' ) || event.affectsConfiguration( 'tasks' ) ) sendSettingsToAllLSP()
 	} )
 	
 	// Notify about multi instance reload

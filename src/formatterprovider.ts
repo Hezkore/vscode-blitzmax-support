@@ -56,15 +56,13 @@ function formatterPath( document?: vscode.TextDocument ): string | undefined {
 
 // Who formats a .bmx file, in order of preference
 //
-// A formatter binary always wins, because pointing at one is a deliberate choice
-// A language server that offers formatting is next, and is left to get on with it
-// With neither, we still register, so that asking to format reaches the message
+// The language server owns formatting when it advertises the capability.
+// Older servers can still use the external formatter. With neither, register
+// so that asking to format reaches the message
 // explaining what is missing instead of a dead end from VS Code
 function updateFormatterProviders() {
 
-	const path = formatterPath( vscode.window.activeTextEditor?.document )
-	const haveBinary = !!path && !!existsSync( path )
-	const wanted = haveBinary || !lspFormats()
+	const wanted = !lspFormats()
 	const registered = formatterProviders.length > 0
 	if ( wanted === registered ) return
 

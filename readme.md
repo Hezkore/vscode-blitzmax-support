@@ -115,6 +115,7 @@ The extension will offer to help the first time you format without one.
 [BlitzMax](https://nitrologic.itch.io/blitzmax/) by [Mark Sibly](https://github.com/blitz-research).\
 [BlitzMax NG](https://blitzmax.org/) by [Brucey](https://github.com/woollybah).\
 Extension by [Hezkore](https://github.com/Hezkore).\
+Raspberry Pi Pico, ESP32 and language server formatting support by [Brucey](https://github.com/woollybah).\
 Icons by [GWRon](https://github.com/GWRon).
 
 ### **Contributing**

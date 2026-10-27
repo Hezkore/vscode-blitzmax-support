@@ -1,13 +1,13 @@
 ## 2.35.0
-* Added ESP32 build support
+* Added ESP32 build support (woollybah)
 * Added ESP32 build options with an installed-profile board picker, architecture selection, heap settings and upload support
 * Added the `-nas` No Auto SuperStrict advanced build option
 * Docs, runtime and formatter lookups now respect the workspace BlitzMax SDK
-* Added language server formatting settings under `blitzmax.format`
+* Added language server formatting settings under `blitzmax.format` (woollybah)
 * Formatting now uses the language server when it supports it, falling back to `bfm` for older servers
 
 ## 2.34.0
-* Added Raspberry Pi Pico build support
+* Added Raspberry Pi Pico build support (woollybah)
 * Picking Raspberry Pi Pico as the platform reveals its board, heap, storage, float ABI and picotool upload options
 * The language server now follows the default build task's mode, platform and architecture unless you set those yourself
 

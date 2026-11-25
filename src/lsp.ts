@@ -101,6 +101,10 @@ interface BmxLspSettings {
 	formatInlineIfStyle?: string
 	formatIndent?: boolean
 	formatSpaceAfterComma?: boolean
+	formatIndentConditionalBodies?: boolean
+	formatFlushConditionalDirectives?: boolean
+	formatSplitStatements?: boolean
+	formatExpandInlineRoutines?: boolean
 	formatCaseIndent?: string
 	formatMetadataBraceSpacing?: string
 	formatCallParenSpacing?: string
@@ -147,6 +151,10 @@ function lspSettingsFor( workspace: vscode.WorkspaceFolder | undefined ): BmxLsp
 	settings.formatInlineIfStyle = workspaceOrGlobalConfigString( workspace, 'blitzmax.format.inlineIfStyle' ) || 'preserve'
 	settings.formatIndent = workspaceOrGlobalConfigBoolean( workspace, 'blitzmax.format.indent' ) ?? true
 	settings.formatSpaceAfterComma = workspaceOrGlobalConfigBoolean( workspace, 'blitzmax.format.spaceAfterComma' ) ?? true
+	settings.formatIndentConditionalBodies = workspaceOrGlobalConfigBoolean( workspace, 'blitzmax.format.indentConditionalBodies' ) ?? false
+	settings.formatFlushConditionalDirectives = workspaceOrGlobalConfigBoolean( workspace, 'blitzmax.format.flushConditionalDirectives' ) ?? false
+	settings.formatSplitStatements = workspaceOrGlobalConfigBoolean( workspace, 'blitzmax.format.splitStatements' ) ?? false
+	settings.formatExpandInlineRoutines = workspaceOrGlobalConfigBoolean( workspace, 'blitzmax.format.expandInlineRoutines' ) ?? false
 	settings.formatCaseIndent = workspaceOrGlobalConfigString( workspace, 'blitzmax.format.caseIndent' ) || 'indented'
 	settings.formatMetadataBraceSpacing = workspaceOrGlobalConfigString( workspace, 'blitzmax.format.metadataBraceSpacing' ) || 'preserve'
 	settings.formatCallParenSpacing = workspaceOrGlobalConfigString( workspace, 'blitzmax.format.callParenSpacing' ) || 'preserve'

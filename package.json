@@ -419,7 +419,7 @@
 				"blitzmax.format.indent": {
 				"type": "boolean",
 				"default": true,
-				"markdownDescription": "Indent parsed block bodies using the editor's tab size and spaces-or-tabs setting. Example: `Function Show()` ↵ `Print value` becomes `Function Show()` ↵ `····Print value` (each `·` represents a space). Comments, directives, multiline text, and continuation lines keep their existing indentation.",
+					"markdownDescription": "Indent parsed block bodies and standalone comments using the editor's tab size and spaces-or-tabs setting. Example: `Type TExample` ↵ `' note` ↵ `Method Run()` becomes `Type TExample` ↵ `····' note` ↵ `····Method Run()` (each `·` represents a space). `Rem` blocks move together, keeping their internal spacing. Directives, multiline strings, and continuation lines keep their existing indentation.",
 				"scope": "resource"
 				},
 				"blitzmax.format.trimTrailingWhitespace": {
@@ -434,6 +434,10 @@
 				"markdownDescription": "Use one space after commas when the next code token is on the same line. Example: `Draw(x,y)` → `Draw(x, y)`. When disabled, existing comma spacing is preserved. Wrapped lists, comments, and multiline strings keep their layout.",
 				"scope": "resource"
 				},
+				"blitzmax.format.indentConditionalBodies": {"type": "boolean", "default": false, "description": "Indent code inside compiler conditional branches one extra level.", "scope": "resource"},
+				"blitzmax.format.flushConditionalDirectives": {"type": "boolean", "default": false, "description": "Place compiler conditional directives at the start of the line.", "scope": "resource"},
+				"blitzmax.format.splitStatements": {"type": "boolean", "default": false, "description": "Put semicolon-separated statements on separate lines.", "scope": "resource"},
+				"blitzmax.format.expandInlineRoutines": {"type": "boolean", "default": false, "description": "Expand single-line methods and functions into blocks.", "scope": "resource"},
 				"blitzmax.format.caseIndent": {
 				"type": "string",
 				"enum": ["indented", "aligned"],
@@ -525,7 +529,7 @@
 					"Split `If ready Then Print value` into three lines: `If ready Then` ↵ `····Print value` ↵ `End If` (each `·` represents a space)."
 				],
 				"default": "preserve",
-				"markdownDescription": "Expand simple one-statement inline `If` statements into a multiline block. Inline statements with `Else`, comments, or other code on the line remain unchanged.",
+				"markdownDescription": "Expand inline `If` statements into a multiline block, including semicolon-separated statements and an `Else` branch. Inline statements with comments or nested blocks are preserved.",
 				"scope": "resource"
 				},
 				"blitzmax.format.declarationBlankLines": {
